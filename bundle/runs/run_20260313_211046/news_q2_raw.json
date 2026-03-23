@@ -1,0 +1,65 @@
+{
+  "search_metadata": {
+    "id": "69b46f503f79f55c1dc55dc3",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/kjkDPxN3VwN9m71cR7zUgw/69b46f503f79f55c1dc55dc3.json",
+    "pixel_position_endpoint": "https://serpapi.com/searches/kjkDPxN3VwN9m71cR7zUgw/69b46f503f79f55c1dc55dc3.json_with_pixel_position",
+    "created_at": "2026-03-13 20:10:56 UTC",
+    "processed_at": "2026-03-13 20:10:56 UTC",
+    "google_url": "https://www.google.com/search?q=%28Slovaquie+OR+slovaque+OR+Slovakia+OR+Slovak+OR+Bratislava+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1%29+-inurl%3Arecherche+-inurl%3Asearch+-inurl%3Atag+-inurl%3Atags+-inurl%3Apage&oq=%28Slovaquie+OR+slovaque+OR+Slovakia+OR+Slovak+OR+Bratislava+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1%29+-inurl%3Arecherche+-inurl%3Asearch+-inurl%3Atag+-inurl%3Atags+-inurl%3Apage&hl=fr&gl=dz&num=10&tbm=nws&tbs=qdr:w&start=10&sourceid=chrome&ie=UTF-8",
+    "raw_html_file": "https://serpapi.com/searches/kjkDPxN3VwN9m71cR7zUgw/69b46f503f79f55c1dc55dc3.html",
+    "total_time_taken": 2.96
+  },
+  "search_parameters": {
+    "engine": "google",
+    "q": "(Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) (\"Algérie\" OR \"Algeria\" OR الجزائر) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page",
+    "google_domain": "google.com",
+    "hl": "fr",
+    "gl": "dz",
+    "start": 10,
+    "num": "10",
+    "device": "desktop",
+    "tbm": "nws",
+    "tbs": "qdr:w"
+  },
+  "search_information": {
+    "query_displayed": "(Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) (\"Algérie\" OR \"Algeria\" OR الجزائر) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page",
+    "news_results_state": "Fully empty"
+  },
+  "error": "Google hasn't returned any results for this query.",
+  "news_results": [
+    {
+      "position": 1,
+      "link": "https://www.vatcalc.com/global/live-vat-gst-transaction-e-invoicing-global-tracker/",
+      "title": "e-invoicing global tracker",
+      "source": "vatcalc.com",
+      "date": "Il y a 5 jours",
+      "published_at": "2026-03-08 00:45:24 UTC",
+      "snippet": "World's only single tax engine & reporting application; fully reconciled e-invoicing & government e-reporting.",
+      "favicon": "https://serpapi.com/searches/69b46f4ae82707c6d8c53a46/images/kaj11IrTuJ3d-9uJu3yL5z8qHbxg7h6YdnV-6GziZH4.png",
+      "thumbnail": "https://serpapi.com/searches/69b46f4ae82707c6d8c53a46/images/Wbr08WOnSBOKBWaJF-OMkriE5g8D7qcDv5PQmjRu7ss.jpeg"
+    },
+    {
+      "position": 2,
+      "link": "https://www.algerie360.com/visa-schengen-delais-rapides-et-refus-faibles-les-pays-les-plus-accessibles-en-2026/",
+      "title": "Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026",
+      "source": "Algerie360",
+      "date": "Il y a 3 jours",
+      "published_at": "2026-03-10 12:40:00 UTC",
+      "snippet": "Obtenir un visa Schengen peut relever du parcours du combattant. Pourtant, certains pays européens se distinguent par des délais de traitement plus rapides...",
+      "favicon": "https://serpapi.com/searches/69b46f4ae82707c6d8c53a46/images/qoyAMPJ_J-45zlp0Zbl71A3jxSRx6dcxvS6ifoDr1J8.png",
+      "thumbnail": "https://serpapi.com/searches/69b46f4ae82707c6d8c53a46/images/nUS1PRVNnVvCciqBZSwHSRMjPLezOKJDBRi3VRT9dx0.jpeg"
+    },
+    {
+      "position": 3,
+      "link": "https://www.arabnews.com/node/2636077/amp",
+      "title": "Poland to seek help from two other countries in Epstein investigation",
+      "source": "Arab News",
+      "date": "Il y a 2 jours",
+      "published_at": "2026-03-11 15:51:56 UTC",
+      "snippet": "https://arab.news/nfnwx. The Polish National Prosecutor's ⁠Office confirmed in its statement that it had initiated an investigation into human trafficking...",
+      "favicon": "https://serpapi.com/searches/69b46f4ae82707c6d8c53a46/images/CkLg7F9ZV9E15kEnY6bTpO53NtgcoL4Qq7HqWDSqPr0.png",
+      "thumbnail": "https://serpapi.com/searches/69b46f4ae82707c6d8c53a46/images/QAW7rg9c51yRSw2Dhixcbg89uLSeVu0tLO40ZfgK1cM.jpeg"
+    }
+  ]
+}

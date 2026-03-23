@@ -1,0 +1,38 @@
+{
+  "politics": [
+    "minister",
+    "government",
+    "président",
+    "gouvernement",
+    "ministre",
+    "diplomatie",
+    "ambassadeur",
+    "parlement",
+    "حكومة",
+    "وزير",
+    "رئيس"
+  ],
+  "economy": [
+    "economy",
+    "économie",
+    "commerce",
+    "investment",
+    "investissement",
+    "trade",
+    "industrie",
+    "business",
+    "اقتصاد",
+    "استثمار"
+  ],
+  "security": [
+    "armée",
+    "military",
+    "defense",
+    "sécurité",
+    "terrorism",
+    "terrorisme",
+    "armée nationale",
+    "جيش",
+    "أمن"
+  ]
+}

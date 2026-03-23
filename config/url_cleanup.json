@@ -1,0 +1,16 @@
+{
+  "drop_query_keys": [
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+    "gclid",
+    "fbclid",
+    "yclid",
+    "mc_cid",
+    "mc_eid",
+    "ref",
+    "ref_src"
+  ]
+}

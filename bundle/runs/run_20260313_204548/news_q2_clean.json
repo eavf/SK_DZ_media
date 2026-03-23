@@ -1,0 +1,43 @@
+{
+  "search_metadata": {
+    "id": "69b4666def15ceda40a1c577",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/KWFZlO51usOc5mAqGkRlFQ/69b4666def15ceda40a1c577.json",
+    "pixel_position_endpoint": "https://serpapi.com/searches/KWFZlO51usOc5mAqGkRlFQ/69b4666def15ceda40a1c577.json_with_pixel_position",
+    "created_at": "2026-03-13 19:33:01 UTC",
+    "processed_at": "2026-03-13 19:33:01 UTC",
+    "google_url": "https://www.google.com/search?q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29+-inurl%3Arecherche+-inurl%3Asearch+-inurl%3Atag+-inurl%3Atags+-inurl%3Apage&oq=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29+-inurl%3Arecherche+-inurl%3Asearch+-inurl%3Atag+-inurl%3Atags+-inurl%3Apage&hl=fr&gl=dz&num=10&tbm=nws&tbs=qdr:w&start=0&sourceid=chrome&ie=UTF-8",
+    "raw_html_file": "https://serpapi.com/searches/KWFZlO51usOc5mAqGkRlFQ/69b4666def15ceda40a1c577.html",
+    "total_time_taken": 4.69
+  },
+  "search_parameters": {
+    "engine": "google",
+    "q": "(\"Slovaquie\" OR slovaque OR \"Slovakia\" OR Slovak OR سلوفاكيا OR سلوفاكي) (\"Algérie\" OR \"Algeria\" OR Alger OR \"Algiers\" OR الجزائر OR \"الجزائر العاصمة\") -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page",
+    "google_domain": "google.com",
+    "hl": "fr",
+    "gl": "dz",
+    "start": 0,
+    "num": "10",
+    "device": "desktop",
+    "tbm": "nws",
+    "tbs": "qdr:w"
+  },
+  "search_information": {
+    "query_displayed": "(\"Slovaquie\" OR slovaque OR \"Slovakia\" OR Slovak OR سلوفاكيا OR سلوفاكي) (\"Algérie\" OR \"Algeria\" OR Alger OR \"Algiers\" OR الجزائر OR \"الجزائر العاصمة\") -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page",
+    "news_results_state": "Fully empty"
+  },
+  "error": "Google hasn't returned any results for this query.",
+  "news_results": [],
+  "cleaning_info": {
+    "before": 0,
+    "after": 0,
+    "limit": 20,
+    "blocklist_domains": [
+      "elhanaa.cnas.dz",
+      "ems.dz",
+      "mobilis.dz",
+      "stepmode.dz",
+      "translate.google.dz"
+    ]
+  }
+}

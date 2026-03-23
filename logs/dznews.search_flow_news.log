@@ -1,0 +1,589 @@
+2026-02-23 22:19:41,824 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-02-23 22:19:46,086 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-02-23 22:19:46,349 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-02-23 22:19:46,349 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-02-23 22:19:46,349 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-02-23 22:19:46,349 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-02-23 22:19:46,349 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-02-23 22:19:46,349 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-02-23 22:19:46,349 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-02-23 22:19:46,349 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-01 21:53:02,527 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-01 21:53:03,914 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-01 21:53:04,701 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-01 21:53:04,701 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-01 21:53:04,701 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-01 21:53:04,701 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-01 21:53:04,701 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-01 21:53:04,701 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-01 21:53:04,701 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-01 21:53:04,701 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-01 21:53:21,153 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-01 21:53:22,558 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-01 21:53:22,783 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-01 21:53:22,783 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-01 21:53:22,783 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-01 21:53:22,783 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-01 21:53:22,783 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-01 21:53:22,783 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-01 21:53:22,783 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-01 21:53:22,783 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-01 21:54:23,225 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-01 21:54:24,750 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-01 21:54:24,991 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-01 21:54:24,991 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-01 21:54:24,991 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-01 21:54:24,991 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-01 21:54:24,991 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-01 21:54:24,991 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-01 21:54:24,991 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-01 21:54:24,991 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-01 21:56:18,620 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-01 21:56:20,312 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-01 21:56:20,574 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-01 21:56:20,574 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-01 21:56:20,574 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-01 21:56:20,574 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-01 21:56:20,574 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-01 21:56:20,574 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-01 21:56:20,574 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-01 21:56:20,574 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-01 21:56:34,458 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-01 21:56:35,775 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-01 21:56:36,106 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-01 21:56:36,106 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-01 21:56:36,106 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-01 21:56:36,106 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-01 21:56:36,106 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-01 21:56:36,106 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-01 21:56:36,106 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-01 21:56:36,106 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-03 23:28:58,860 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-03 23:29:05,388 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-03 23:29:06,026 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-03 23:29:06,026 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-03 23:29:06,026 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-03 23:29:06,026 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-03 23:29:06,026 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-03 23:29:06,026 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-03 23:29:06,026 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-03 23:29:06,026 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-03 23:34:50,190 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-03 23:34:51,708 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-03 23:34:51,952 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-03 23:34:51,952 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-03 23:34:51,952 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-03 23:34:51,952 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-03 23:34:51,952 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-03 23:34:51,952 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-03 23:34:51,952 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-03 23:34:51,952 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-03 23:42:17,189 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-03 23:42:19,104 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-03 23:42:19,389 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-03 23:42:19,389 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-03 23:42:19,389 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-03 23:42:19,389 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-03 23:42:19,389 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-03 23:42:19,389 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-03 23:42:19,389 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-03 23:42:19,389 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-04 00:00:48,419 [INFO] search_flow_news: [1/2] Q1 (DZ)     : site:.dz ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:289
+2026-03-04 00:00:50,242 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") when:7d in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:302
+2026-03-04 00:00:50,572 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:318
+2026-03-04 00:00:50,572 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:319
+2026-03-04 00:00:50,572 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:320
+2026-03-04 00:00:50,572 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:322
+2026-03-04 00:00:50,572 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:323
+2026-03-04 00:00:50,572 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:324
+2026-03-04 00:00:50,572 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:327
+2026-03-04 00:00:50,572 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:351
+2026-03-04 00:00:50,573 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1772578848.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:378
+2026-03-04 00:00:50,573 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:379
+2026-03-05 19:07:32,688 [INFO] search_flow_news: [1/2] Q1 (DZ)     : (site:.dzaps.dz OR site:algerie360.com OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:observationalgerie.com OR site:tsa-algerie.com) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:398
+2026-03-05 19:07:37,383 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:418
+2026-03-05 19:07:51,541 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:445
+2026-03-05 19:07:51,541 [INFO] search_flow_news: elmoudjahid.dz: 16 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: elbilad.net: 4 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: al24news.dz: 3 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: aps.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: elhiwar.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: sabqpress.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: eldjazaireldjadida.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: elitihadcom.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: shihabpresse.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: elmawkie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: akhbarelwatane.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: internews.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: khabarpress.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: ennaharonline.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: elkhabar.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: algeriedirect.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: mfa.gov.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,541 [INFO] search_flow_news: el-massa.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:447
+2026-03-05 19:07:51,542 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:454
+2026-03-05 19:07:51,542 [INFO] search_flow_news: Q1 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:455
+2026-03-05 19:07:51,542 [INFO] search_flow_news: Q2 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:456
+2026-03-05 19:07:51,542 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:457
+2026-03-05 19:07:51,542 [INFO] search_flow_news: Q1 clean news_results: 20, preferred=0, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:458
+2026-03-05 19:07:51,542 [INFO] search_flow_news: Q2 clean news_results: 20, preferred=0, domains=16 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:459
+2026-03-05 19:07:51,542 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:466
+2026-03-05 19:07:51,542 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:467
+2026-03-05 19:07:51,542 [INFO] search_flow_news: Unique articles after dedup: 40 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:07:51,542 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:469
+2026-03-05 19:07:51,542 [INFO] search_flow_news: elmoudjahid.dz: 16 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,542 [INFO] search_flow_news: elbilad.net: 4 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,542 [INFO] search_flow_news: al24news.dz: 3 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,542 [INFO] search_flow_news: aps.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,542 [INFO] search_flow_news: elhiwar.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: sabqpress.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: eldjazaireldjadida.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: elitihadcom.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: shihabpresse.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: elmawkie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: akhbarelwatane.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: internews.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: khabarpress.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: ennaharonline.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: elkhabar.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: algeriedirect.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: mfa.gov.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:51,543 [INFO] search_flow_news: el-massa.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:472
+2026-03-05 19:07:52,543 [INFO] search_flow_news: 
+[+fallback] Q3 (PREFERRED): (site:algerie360.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:radioalgerie.dz) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:482
+2026-03-05 19:07:56,806 [INFO] search_flow_news: 
+--- STATS (FALLBACK CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:500
+2026-03-05 19:07:56,806 [INFO] search_flow_news: Q3 clean news_results: 20, preferred=3, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:501
+2026-03-05 19:07:56,808 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1772734052.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:530
+2026-03-05 19:07:56,808 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:531
+2026-03-05 19:11:48,354 [INFO] search_flow_news: [1/2] Q1 (DZ)     : (site:.dz OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:observationalgerie.com OR site:tsa-algerie.com) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:398
+2026-03-05 19:12:21,290 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:418
+2026-03-05 19:12:22,488 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:450
+2026-03-05 19:12:22,488 [INFO] search_flow_news: Q1 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:451
+2026-03-05 19:12:22,488 [INFO] search_flow_news: Q2 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:452
+2026-03-05 19:12:22,488 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:453
+2026-03-05 19:12:22,488 [INFO] search_flow_news: Q1 clean news_results: 19, preferred=0, domains=11 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:454
+2026-03-05 19:12:22,488 [INFO] search_flow_news: Q2 clean news_results: 20, preferred=0, domains=16 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:455
+2026-03-05 19:12:22,488 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:462
+2026-03-05 19:12:22,488 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:463
+2026-03-05 19:12:22,488 [INFO] search_flow_news: Unique articles after dedup: 39 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:464
+2026-03-05 19:12:22,488 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:465
+2026-03-05 19:12:22,488 [INFO] search_flow_news: aps.dz: 6 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,488 [INFO] search_flow_news: al24news.dz: 5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,488 [INFO] search_flow_news: news.radioalgerie.dz: 4 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: elhiwar.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: translate.google.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: apn.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: elbadilabc-ar.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: alfadjr.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: sabqpress.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: eldjazaireldjadida.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: elitihadcom.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: shihabpresse.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: elmawkie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: akhbarelwatane.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: internews.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: khabarpress.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: ennaharonline.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: elkhabar.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: algeriedirect.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: mfa.gov.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: awlyaa.education.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: elhanaa.cnas.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: ems.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: embnairobi.mfa.gov.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: el-massa.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 19:12:22,489 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:470
+2026-03-05 19:12:22,489 [INFO] search_flow_news: aps.dz | Boughali receives Slovakia’s ambassador to Algeria in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:473
+2026-03-05 19:12:22,489 [INFO] search_flow_news: aps.dz | السيد بوغالي يستقبل سفير جمهورية سلوفاكيا لدى الجزائر in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:473
+2026-03-05 19:12:22,489 [INFO] search_flow_news: aps.dz | Boughali reçoit l'ambassadeur slovaque en Algérie in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:473
+2026-03-05 19:12:22,489 [INFO] search_flow_news: aps.dz | عطاف يستقبل من طرف رئيس الوزراء السلوفاكي in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:473
+2026-03-05 19:12:22,489 [INFO] search_flow_news: aps.dz | بتكليف من رئيس الجمهورية, السيد عطاف يحل بسلوفاكيا في زيارة رسمية in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:473
+2026-03-05 19:12:23,489 [INFO] search_flow_news: 
+[+fallback] Q3 (PREFERRED): (site:algerie360.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:radioalgerie.dz) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:485
+2026-03-05 19:14:39,062 [INFO] search_flow_news: 
+--- STATS (FALLBACK CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-05 19:14:39,063 [INFO] search_flow_news: Q3 clean news_results: 20, preferred=3, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:504
+2026-03-05 19:14:39,064 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1772734308.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-05 19:14:39,064 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:534
+2026-03-05 20:09:08,425 [INFO] search_flow_news: Config loaded: 4 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:28
+2026-03-05 20:09:08,426 [INFO] search_flow_news: [1/2] Q1 (DZ)     : (site:.dz OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:observationalgerie.com OR site:tsa-algerie.com) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:411
+2026-03-05 20:09:11,773 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:431
+2026-03-05 20:09:19,778 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:463
+2026-03-05 20:09:19,778 [INFO] search_flow_news: Q1 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:464
+2026-03-05 20:09:19,778 [INFO] search_flow_news: Q2 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:465
+2026-03-05 20:09:19,778 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:466
+2026-03-05 20:09:19,779 [INFO] search_flow_news: Q1 clean news_results: 15, preferred=0, domains=8 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:467
+2026-03-05 20:09:19,779 [INFO] search_flow_news: Q2 clean news_results: 20, preferred=0, domains=16 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-05 20:09:19,779 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:475
+2026-03-05 20:09:19,779 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:476
+2026-03-05 20:09:19,779 [INFO] search_flow_news: Unique articles after dedup: 35 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:477
+2026-03-05 20:09:19,779 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:478
+2026-03-05 20:09:19,779 [INFO] search_flow_news: aps.dz: 6 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: al24news.dz: 5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: news.radioalgerie.dz: 4 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: elhiwar.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: apn.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: elbadilabc-ar.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: alfadjr.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: sabqpress.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: eldjazaireldjadida.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: elitihadcom.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: shihabpresse.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: elmawkie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: akhbarelwatane.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: internews.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: khabarpress.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: ennaharonline.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: elkhabar.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: algeriedirect.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: mfa.gov.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: awlyaa.education.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: embnairobi.mfa.gov.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: el-massa.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-05 20:09:19,779 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:483
+2026-03-05 20:09:19,779 [INFO] search_flow_news: al24news.dz | ضغوطات على أوكرانيا بسبب توقّف إمدادات النفط الروسي in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:486
+2026-03-05 20:09:19,779 [INFO] search_flow_news: al24news.dz | Slovakia threatens to stop electricity to Ukraine unless Kyiv resumes piping Russian oil in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:486
+2026-03-05 20:09:19,779 [INFO] search_flow_news: aps.dz | Boughali receives Slovakia’s ambassador to Algeria in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:486
+2026-03-05 20:09:19,779 [INFO] search_flow_news: aps.dz | السيد بوغالي يستقبل سفير جمهورية سلوفاكيا لدى الجزائر in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:486
+2026-03-05 20:09:19,779 [INFO] search_flow_news: apn.dz | المجلس الشعبي الوطني الجزائري in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:486
+2026-03-05 20:09:20,780 [INFO] search_flow_news: 
+[+fallback] Q3 (PREFERRED): (site:algerie360.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:radioalgerie.dz) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:498
+2026-03-05 20:09:28,176 [INFO] search_flow_news: 
+--- STATS (FALLBACK CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:516
+2026-03-05 20:09:28,176 [INFO] search_flow_news: Q3 clean news_results: 20, preferred=3, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:517
+2026-03-05 20:09:28,178 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1772737748.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:546
+2026-03-05 20:09:28,178 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:547
+2026-03-13 13:49:26,703 [INFO] search_flow_news: Config loaded: 5 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:28
+2026-03-13 13:49:26,719 [INFO] search_flow_news: [1/2] Q1 (DZ)     : (site:.dz OR site:afrik.com OR site:algerie360.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:radioalgerie.dz) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:455
+2026-03-13 13:49:57,865 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:475
+2026-03-13 13:50:01,687 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:507
+2026-03-13 13:50:01,687 [INFO] search_flow_news: Q1 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:508
+2026-03-13 13:50:01,687 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:509
+2026-03-13 13:50:01,687 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:510
+2026-03-13 13:50:01,687 [INFO] search_flow_news: Q1 clean news_results: 19, preferred=1, domains=11 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:511
+2026-03-13 13:50:01,687 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:512
+2026-03-13 13:50:01,687 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): True in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:519
+2026-03-13 13:50:01,687 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:520
+2026-03-13 13:50:01,687 [INFO] search_flow_news: Unique articles after dedup: 19 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:521
+2026-03-13 13:50:01,687 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:522
+2026-03-13 13:50:01,687 [INFO] search_flow_news: infodubled.dz: 7 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: alsahafi.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: al24news.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: elmoudjahid.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: algerie360.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: embjakarta.mfa.gov.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: dzrh.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: lavoiedalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: news.radioalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: syngeb.univ-mila.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: inoxpa.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 13:50:01,687 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:527
+2026-03-13 13:50:01,687 [INFO] search_flow_news: elmoudjahid.dz | Recherche #boughali in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:530
+2026-03-13 13:50:01,687 [INFO] search_flow_news: algerie360.com | Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:530
+2026-03-13 13:50:01,688 [INFO] search_flow_news: infodubled.dz | إيران: الدول التي ظنت أنها ستخرج من الحرب سالمة “مخطئة تماما” in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:530
+2026-03-13 13:50:01,688 [INFO] search_flow_news: infodubled.dz | انتخاب مجتبى خامنئي مرشداً أعلى لإيران خلفاً لوالده in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:530
+2026-03-13 13:50:01,688 [INFO] search_flow_news: infodubled.dz | هدي النبي في النوم واليقظة والعشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:530
+2026-03-13 13:50:01,688 [INFO] search_flow_news: Fallback check: no: raw_not_full (q1_full=True, q2_full=False) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:539
+2026-03-13 13:50:01,688 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:565
+2026-03-13 13:50:01,689 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1773406166.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:592
+2026-03-13 13:50:01,689 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:593
+2026-03-13 20:30:32,484 [INFO] search_flow_news: Config loaded: 5 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:26
+2026-03-13 20:30:32,485 [INFO] search_flow_news: [1/2] Q1 (DZ)     : (site:afrik.com OR site:algerie360.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:radioalgerie.dz) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:428
+2026-03-13 20:33:01,537 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:448
+2026-03-13 20:33:06,550 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:480
+2026-03-13 20:33:06,550 [INFO] search_flow_news: Q1 raw news_results: 4 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-13 20:33:06,550 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:482
+2026-03-13 20:33:06,550 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:483
+2026-03-13 20:33:06,550 [INFO] search_flow_news: Q1 clean news_results: 2, preferred=1, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:484
+2026-03-13 20:33:06,550 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:485
+2026-03-13 20:33:06,550 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): True in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:492
+2026-03-13 20:33:06,550 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:493
+2026-03-13 20:33:06,550 [INFO] search_flow_news: Unique articles after dedup: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:494
+2026-03-13 20:33:06,550 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:495
+2026-03-13 20:33:06,550 [INFO] search_flow_news: algerie360.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:498
+2026-03-13 20:33:06,550 [INFO] search_flow_news: news.radioalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:498
+2026-03-13 20:33:06,550 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:500
+2026-03-13 20:33:06,550 [INFO] search_flow_news: algerie360.com | Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-13 20:33:06,550 [INFO] search_flow_news: news.radioalgerie.dz | قرعة بطولة العالم لكرة اليد 2027: الجزائر في المستوى الرابع in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-13 20:33:06,550 [INFO] search_flow_news: Fallback check: no: raw_not_full (q1_full=False, q2_full=False) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:512
+2026-03-13 20:33:06,550 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:538
+2026-03-13 20:33:06,551 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1773430232.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:565
+2026-03-13 20:33:06,551 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:566
+2026-03-13 20:44:46,335 [INFO] search_flow_news: Config loaded: 5 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:26
+2026-03-13 20:44:46,336 [INFO] search_flow_news: [1/2] Q1 (DZ)     : (site:afrik.com OR site:algerie360.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:radioalgerie.dz) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:428
+2026-03-13 20:44:48,361 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:448
+2026-03-13 20:44:48,459 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:480
+2026-03-13 20:44:48,459 [INFO] search_flow_news: Q1 raw news_results: 4 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-13 20:44:48,459 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:482
+2026-03-13 20:44:48,459 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:483
+2026-03-13 20:44:48,459 [INFO] search_flow_news: Q1 clean news_results: 2, preferred=1, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:484
+2026-03-13 20:44:48,459 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:485
+2026-03-13 20:44:48,459 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): True in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:492
+2026-03-13 20:44:48,459 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:493
+2026-03-13 20:44:48,459 [INFO] search_flow_news: Unique articles after dedup: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:494
+2026-03-13 20:44:48,459 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:495
+2026-03-13 20:44:48,459 [INFO] search_flow_news: algerie360.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:498
+2026-03-13 20:44:48,459 [INFO] search_flow_news: news.radioalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:498
+2026-03-13 20:44:48,459 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:500
+2026-03-13 20:44:48,460 [INFO] search_flow_news: algerie360.com | Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-13 20:44:48,460 [INFO] search_flow_news: news.radioalgerie.dz | قرعة بطولة العالم لكرة اليد 2027: الجزائر في المستوى الرابع in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-13 20:44:48,460 [INFO] search_flow_news: Fallback check: no: raw_not_full (q1_full=False, q2_full=False) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:512
+2026-03-13 20:44:48,460 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:538
+2026-03-13 20:44:48,460 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1773431086.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:565
+2026-03-13 20:44:48,460 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:566
+2026-03-13 20:45:48,042 [INFO] search_flow_news: Config loaded: 12 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:26
+2026-03-13 20:45:48,043 [INFO] search_flow_news: [1/2] Q1 (DZ)     : (site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:428
+2026-03-13 20:45:55,640 [INFO] search_flow_news: [2/2] Q2 (NON-DZ) : ("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة") -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:448
+2026-03-13 20:45:55,745 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:480
+2026-03-13 20:45:55,745 [INFO] search_flow_news: Q1 raw news_results: 4 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:481
+2026-03-13 20:45:55,745 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:482
+2026-03-13 20:45:55,745 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:483
+2026-03-13 20:45:55,745 [INFO] search_flow_news: Q1 clean news_results: 2, preferred=1, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:484
+2026-03-13 20:45:55,745 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:485
+2026-03-13 20:45:55,745 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): True in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:492
+2026-03-13 20:45:55,745 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:493
+2026-03-13 20:45:55,745 [INFO] search_flow_news: Unique articles after dedup: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:494
+2026-03-13 20:45:55,745 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:495
+2026-03-13 20:45:55,745 [INFO] search_flow_news: algerie360.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:498
+2026-03-13 20:45:55,745 [INFO] search_flow_news: news.radioalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:498
+2026-03-13 20:45:55,745 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:500
+2026-03-13 20:45:55,745 [INFO] search_flow_news: algerie360.com | Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-13 20:45:55,745 [INFO] search_flow_news: news.radioalgerie.dz | قرعة بطولة العالم لكرة اليد 2027: الجزائر في المستوى الرابع in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-13 20:45:55,745 [INFO] search_flow_news: Fallback check: no: raw_not_full (q1_full=False, q2_full=False) in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:512
+2026-03-13 20:45:55,745 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:538
+2026-03-13 20:45:55,746 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1773431148.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:565
+2026-03-13 20:45:55,746 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:566
+2026-03-13 21:10:46,177 [INFO] search_flow_news: Config loaded: 12 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:26
+2026-03-13 21:10:46,177 [INFO] search_flow_news: [1/2] Q1 (DZ)     : (site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:439
+2026-03-13 21:10:49,369 [WARNING] search_flow_news: SerpAPI error for query='(site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page': Google hasn't returned any results for this query. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:162
+2026-03-13 21:10:50,370 [INFO] search_flow_news: [2/2] Q2 (CONTEXT): (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR الجزائر) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:459
+2026-03-13 21:10:59,646 [WARNING] search_flow_news: SerpAPI error for query='(Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) ("Algérie" OR "Algeria" OR الجزائر) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page': Google hasn't returned any results for this query. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:162
+2026-03-13 21:10:59,647 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:491
+2026-03-13 21:10:59,647 [INFO] search_flow_news: Q1 raw news_results: 2 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:492
+2026-03-13 21:10:59,647 [INFO] search_flow_news: Q2 raw news_results: 3 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:493
+2026-03-13 21:10:59,647 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:494
+2026-03-13 21:10:59,647 [INFO] search_flow_news: Q1 clean news_results: 2, preferred=1, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:495
+2026-03-13 21:10:59,647 [INFO] search_flow_news: Q2 clean news_results: 3, preferred=1, domains=3 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:496
+2026-03-13 21:10:59,647 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): True in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-13 21:10:59,647 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:504
+2026-03-13 21:10:59,647 [INFO] search_flow_news: Unique articles after dedup: 4 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:505
+2026-03-13 21:10:59,647 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:506
+2026-03-13 21:10:59,647 [INFO] search_flow_news: algerie360.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:509
+2026-03-13 21:10:59,647 [INFO] search_flow_news: vatcalc.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:509
+2026-03-13 21:10:59,647 [INFO] search_flow_news: arabnews.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:509
+2026-03-13 21:10:59,647 [INFO] search_flow_news: news.radioalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:509
+2026-03-13 21:10:59,647 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:511
+2026-03-13 21:10:59,647 [INFO] search_flow_news: algerie360.com | Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:514
+2026-03-13 21:10:59,647 [INFO] search_flow_news: vatcalc.com | e-invoicing global tracker in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:514
+2026-03-13 21:10:59,647 [INFO] search_flow_news: arabnews.com | Poland to seek help from two other countries in Epstein investigation in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:514
+2026-03-13 21:10:59,647 [INFO] search_flow_news: news.radioalgerie.dz | قرعة بطولة العالم لكرة اليد 2027: الجزائر في المستوى الرابع in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:514
+2026-03-13 21:10:59,647 [INFO] search_flow_news: Fallback check: yes: too_few_unique 4<14 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:523
+2026-03-13 21:11:00,647 [INFO] search_flow_news: 
+[+fallback] Q3 (PREFERRED): (site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:11:01,353 [WARNING] search_flow_news: SerpAPI error for query='(site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page': Google hasn't returned any results for this query. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:162
+2026-03-13 21:11:01,354 [INFO] search_flow_news: 
+--- STATS (FALLBACK CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:546
+2026-03-13 21:11:01,354 [INFO] search_flow_news: Q3 clean news_results: 2, preferred=1, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:547
+2026-03-13 21:11:01,354 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1773432646.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:576
+2026-03-13 21:11:01,354 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:577
+2026-03-13 21:27:00,740 [INFO] search_flow_news: Config loaded: 12 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:26
+2026-03-13 21:27:00,741 [INFO] search_flow_news: [1/2] Q1 (PREFERRED): (site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:448
+2026-03-13 21:27:02,530 [INFO] search_flow_news: [2/2] Q2 (CONTEXT): site:.dz (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-13 21:27:05,582 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:500
+2026-03-13 21:27:05,582 [INFO] search_flow_news: Q1 raw news_results: 2 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:501
+2026-03-13 21:27:05,582 [INFO] search_flow_news: Q2 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:502
+2026-03-13 21:27:05,582 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:503
+2026-03-13 21:27:05,582 [INFO] search_flow_news: Q1 clean news_results: 2, preferred=1, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:504
+2026-03-13 21:27:05,582 [INFO] search_flow_news: Q2 clean news_results: 17, preferred=0, domains=8 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:505
+2026-03-13 21:27:05,582 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): True in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:512
+2026-03-13 21:27:05,582 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:513
+2026-03-13 21:27:05,582 [INFO] search_flow_news: Unique articles after dedup: 18 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:514
+2026-03-13 21:27:05,582 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:515
+2026-03-13 21:27:05,582 [INFO] search_flow_news: infodubled.dz: 5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: alsahafi.dz: 5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: syngeb.univ-mila.dz: 2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: algerie360.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: embjakarta.mfa.gov.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: al24news.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: dzrh.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: lavoiedalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: news.radioalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:518
+2026-03-13 21:27:05,582 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:520
+2026-03-13 21:27:05,582 [INFO] search_flow_news: algerie360.com | Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:523
+2026-03-13 21:27:05,582 [INFO] search_flow_news: embjakarta.mfa.gov.dz | Algerian diplomatic and consular representations abroad in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:523
+2026-03-13 21:27:05,582 [INFO] search_flow_news: infodubled.dz | إيران: الدول التي ظنت أنها ستخرج من الحرب سالمة “مخطئة تماما” in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:523
+2026-03-13 21:27:05,582 [INFO] search_flow_news: infodubled.dz | هدي النبي في النوم واليقظة والعشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:523
+2026-03-13 21:27:05,582 [INFO] search_flow_news: infodubled.dz | وقت الدخول للاعتكاف في العشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:523
+2026-03-13 21:27:05,582 [INFO] search_flow_news: Fallback check: no: ok in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:532
+2026-03-13 21:27:05,582 [INFO] search_flow_news: 
+[no fallback] Conditions not met. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:558
+2026-03-13 21:27:05,583 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1773433620.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:585
+2026-03-13 21:27:05,583 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:586
+2026-03-13 21:34:47,194 [INFO] search_flow_news: Config loaded: 12 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:26
+2026-03-13 21:34:47,195 [INFO] search_flow_news: [1/2] Q1 (PREFERRED): (site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:458
+2026-03-13 21:34:49,527 [INFO] search_flow_news: [2/2] Q2 (CONTEXT): site:.dz (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:478
+2026-03-13 21:34:50,737 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:510
+2026-03-13 21:34:50,737 [INFO] search_flow_news: Q1 raw news_results: 2 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:511
+2026-03-13 21:34:50,737 [INFO] search_flow_news: Q2 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:512
+2026-03-13 21:34:50,737 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:513
+2026-03-13 21:34:50,738 [INFO] search_flow_news: Q1 clean news_results: 2, preferred=1, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:514
+2026-03-13 21:34:50,738 [INFO] search_flow_news: Q2 clean news_results: 12, preferred=0, domains=5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:515
+2026-03-13 21:34:50,738 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): True in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:522
+2026-03-13 21:34:50,738 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:523
+2026-03-13 21:34:50,738 [INFO] search_flow_news: Unique articles after dedup: 13 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:524
+2026-03-13 21:34:50,738 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 21:34:50,738 [INFO] search_flow_news: alsahafi.dz: 5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:34:50,738 [INFO] search_flow_news: infodubled.dz: 4 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:34:50,738 [INFO] search_flow_news: algerie360.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:34:50,738 [INFO] search_flow_news: al24news.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:34:50,738 [INFO] search_flow_news: lavoiedalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:34:50,738 [INFO] search_flow_news: news.radioalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:34:50,738 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:530
+2026-03-13 21:34:50,738 [INFO] search_flow_news: algerie360.com | Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:34:50,738 [INFO] search_flow_news: infodubled.dz | إيران: الدول التي ظنت أنها ستخرج من الحرب سالمة “مخطئة تماما” in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:34:50,738 [INFO] search_flow_news: infodubled.dz | هدي النبي في النوم واليقظة والعشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:34:50,738 [INFO] search_flow_news: infodubled.dz | وقت الدخول للاعتكاف في العشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:34:50,738 [INFO] search_flow_news: infodubled.dz | الاجتهاد في العشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:34:50,738 [INFO] search_flow_news: Fallback check: yes: too_few_unique 13<14 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:542
+2026-03-13 21:34:51,738 [INFO] search_flow_news: 
+[+fallback] Q3 (DZ BROAD): site:.dz (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:547
+2026-03-13 21:34:52,948 [INFO] search_flow_news: 
+--- STATS (FALLBACK CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:565
+2026-03-13 21:34:52,948 [INFO] search_flow_news: Q3 clean news_results: 12, preferred=0, domains=5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:566
+2026-03-13 21:34:52,949 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1773434087.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:595
+2026-03-13 21:34:52,949 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:596
+2026-03-13 21:40:03,856 [INFO] search_flow_news: Config loaded: 12 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:26
+2026-03-13 21:40:03,857 [INFO] search_flow_news: [1/2] Q1 (PREFERRED): (site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:458
+2026-03-13 21:40:05,629 [INFO] search_flow_news: [2/2] Q2 (CONTEXT): site:.dz (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:478
+2026-03-13 21:40:06,833 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:510
+2026-03-13 21:40:06,833 [INFO] search_flow_news: Q1 raw news_results: 2 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:511
+2026-03-13 21:40:06,833 [INFO] search_flow_news: Q2 raw news_results: 20 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:512
+2026-03-13 21:40:06,833 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:513
+2026-03-13 21:40:06,833 [INFO] search_flow_news: Q1 clean news_results: 2, preferred=1, domains=2 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:514
+2026-03-13 21:40:06,833 [INFO] search_flow_news: Q2 clean news_results: 12, preferred=0, domains=5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:515
+2026-03-13 21:40:06,833 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): True in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:522
+2026-03-13 21:40:06,833 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:523
+2026-03-13 21:40:06,833 [INFO] search_flow_news: Unique articles after dedup: 13 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:524
+2026-03-13 21:40:06,833 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:525
+2026-03-13 21:40:06,834 [INFO] search_flow_news: alsahafi.dz: 5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:40:06,834 [INFO] search_flow_news: infodubled.dz: 4 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:40:06,834 [INFO] search_flow_news: algerie360.com: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:40:06,834 [INFO] search_flow_news: al24news.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:40:06,834 [INFO] search_flow_news: lavoiedalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:40:06,834 [INFO] search_flow_news: news.radioalgerie.dz: 1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:528
+2026-03-13 21:40:06,834 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:530
+2026-03-13 21:40:06,834 [INFO] search_flow_news: algerie360.com | Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:40:06,834 [INFO] search_flow_news: infodubled.dz | إيران: الدول التي ظنت أنها ستخرج من الحرب سالمة “مخطئة تماما” in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:40:06,834 [INFO] search_flow_news: infodubled.dz | هدي النبي في النوم واليقظة والعشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:40:06,834 [INFO] search_flow_news: infodubled.dz | وقت الدخول للاعتكاف في العشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:40:06,834 [INFO] search_flow_news: infodubled.dz | الاجتهاد في العشر الأواخر من رمضان in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:533
+2026-03-13 21:40:06,834 [INFO] search_flow_news: Fallback check: yes: too_few_unique 13<14 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:542
+2026-03-13 21:40:07,834 [INFO] search_flow_news: 
+[+fallback] Q3 (DZ BROAD): site:.dz (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:547
+2026-03-13 21:40:09,043 [INFO] search_flow_news: 
+--- STATS (FALLBACK CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:565
+2026-03-13 21:40:09,043 [INFO] search_flow_news: Q3 clean news_results: 12, preferred=0, domains=5 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:566
+2026-03-13 21:40:09,044 [INFO] search_flow_news: 
+Saved bundle: news_bundle_1773434403.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:595
+2026-03-13 21:40:09,044 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:596

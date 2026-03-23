@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DZ News – detail článku</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+
+<body>
+  <div class="wrap">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="banner {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="topbar">
+      <div class="left">
+        <a href="/" class="pill">← späť</a>
+
+        {% if r["deleted_at"] %}
+          <span class="pill warn">soft-deleted</span>
+        {% endif %}
+
+        {% if r["extraction_ok"] == 1 %}
+          <span class="pill ok">extraction OK</span>
+        {% else %}
+          <span class="pill bad">extraction NO</span>
+        {% endif %}
+
+        {% if sk_context_found %}
+          <span class="pill ok">SK context found</span>
+        {% else %}
+          <span class="pill">SK context: none</span>
+        {% endif %}
+
+        {% if r["is_avoided"] %}
+          <span class="pill warn">domain excluded</span>
+        {% endif %}
+
+        {% if r["published_conf"] %}
+          <span class="pill">published_conf: {{ r["published_conf"] }}</span>
+        {% endif %}
+      </div>
+
+      <div class="right">
+        <a class="pill" href="{{ online_url }}" target="_blank" rel="noopener">Otvoriť online ↗</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h1>{{ r["title"] or "(bez názvu)" }}</h1>
+
+      <div class="sub">
+        Zdroj: <strong>{{ r["domain"] }}</strong>
+        {% if published_display %} • Publikované: <strong>{{ published_display }}</strong>{% endif %}
+        {% if r["language"] %} • language: <strong>{{ r["language"] }}</strong>{% endif %}
+        {% if r["lang_detected"] %} • detected: <strong>{{ r["lang_detected"] }}</strong>{% endif %}
+      </div>
+
+      <div class="meta">
+        <div class="row"><div class="k">Article ID</div><div class="v">{{ r["id"] }}</div></div>
+        <div class="row"><div class="k">Source ID</div><div class="v">{{ r["source_id"] }}</div></div>
+
+        <div class="row"><div class="k">First seen</div><div class="v">{{ r["first_seen_at"] or "-" }}</div></div>
+        <div class="row"><div class="k">Last seen</div><div class="v">{{ r["last_seen_at"] or "-" }}</div></div>
+
+        <div class="row"><div class="k">Fetched at</div><div class="v">{{ r["fetched_at"] or "-" }}</div></div>
+        <div class="row"><div class="k">HTTP status</div><div class="v">{{ r["http_status"] or "-" }}</div></div>
+
+        <div class="row"><div class="k">Fetch error</div><div class="v">{{ r["fetch_error"] or "-" }}</div></div>
+        <div class="row"><div class="k">Extraction OK</div><div class="v">{{ "1" if r["extraction_ok"] else "0" }}</div></div>
+
+        <div class="row"><div class="k">Relevancia</div>
+          <div class="v">
+            {% if r["relevance"] is none %}—{% else %}{{ r["relevance"] }}{% endif %}
+            {% if r["relevance_note"] %}<span class="pill">pozn.: {{ r["relevance_note"] }}</span>{% endif %}
+          </div>
+        </div>
+
+        <div class="row"><div class="k">Source notes</div><div class="v">{{ r["source_notes"] or "-" }}</div></div>
+
+        <div class="row"><div class="k">Ingest</div>
+          <div class="v">
+            {{ r["ingestion_engine"] or "-" }}
+            {% if r["ingestion_query_id"] %}<span class="pill">{{ r["ingestion_query_id"] }}</span>{% endif %}
+            {% if r["ingestion_rank"] is not none %}<span class="pill">rank={{ r["ingestion_rank"] }}</span>{% endif %}
+          </div>
+        </div>
+
+        <div class="row"><div class="k">URL hash</div><div class="v"><code>{{ r["url_hash"] }}</code></div></div>
+        <div class="row"><div class="k">Content hash</div><div class="v">{% if r["content_hash"] %}<code>{{ r["content_hash"] }}</code>{% else %}-{% endif %}</div></div>
+      </div>
+
+      <div class="actions">
+
+        <!-- Fetch & extract now -->
+        <form method="post" action="/article/{{ r['id'] }}/fetch">
+          <button type="submit" onclick="return confirm('Stiahnuť a extrahovať text teraz?');">
+            Fetch &amp; extract now
+          </button>
+        </form>
+
+        <!-- Mark relevant / irrelevant -->
+        <form method="post" action="/article/{{ r['id'] }}/label">
+          <select name="relevance" title="Relevancia">
+            <option value="null" {% if r["relevance"] is none %}selected{% endif %}>neoznačené</option>
+            <option value="1" {% if r["relevance"] == 1 %}selected{% endif %}>relevantné</option>
+            <option value="0" {% if r["relevance"] == 0 %}selected{% endif %}>nerelevantné</option>
+          </select>
+          <input type="text" name="note" placeholder="poznámka (voliteľné)" value="{{ r['relevance_note'] or '' }}">
+          <button type="submit">Uložiť</button>
+        </form>
+
+        <!-- Exclude / Unmute domain -->
+        {% if r["is_avoided"] %}
+          <form method="post" action="/article/{{ r['id'] }}/unexclude_domain">
+            <button type="submit" onclick="return confirm('Zrušiť umlčanie domény {{ r['domain'] }}?');">
+              Unmute domain
+            </button>
+          </form>
+        {% else %}
+          <form method="post" action="/article/{{ r['id'] }}/exclude_domain">
+            <input type="text" name="note" placeholder="dôvod umlčania (voliteľné)">
+            <button type="submit" onclick="return confirm('Umlčať celý zdroj {{ r['domain'] }}?');">
+              Exclude domain
+            </button>
+          </form>
+        {% endif %}
+
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="sub">
+        URL (raw): <a href="{{ r['url'] }}" target="_blank" rel="noopener">{{ r["url"] }}</a><br>
+        {% if r["final_url"] %}
+          URL (final): <a href="{{ r['final_url'] }}" target="_blank" rel="noopener">{{ r["final_url"] }}</a><br>
+        {% endif %}
+        {% if r["url_canonical"] %}
+          canonical (raw): <a href="{{ r['url_canonical'] }}" target="_blank" rel="noopener">{{ r["url_canonical"] }}</a><br>
+        {% endif %}
+        {% if r["final_url_canonical"] %}
+          canonical (final): <a href="{{ r['final_url_canonical'] }}" target="_blank" rel="noopener">{{ r["final_url_canonical"] }}</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- NEW LAYOUT: left column (snippet + ctx) / right column (content) -->
+    <div class="article-grid">
+
+      <div class="article-side">
+
+        <div class="box">
+          <h2>Snippet (z vyhľadávania)</h2>
+          {% if r["snippet"] %}
+            <div class="snippet" id="snippet">{{ r["snippet"] }}</div>
+          {% else %}
+            <div class="muted">Snippet nie je dostupný (Google News často nevracia snippet).</div>
+          {% endif %}
+        </div>
+
+        {% if ctx_hl and ctx_hl|length > 0 %}
+          <div class="box">
+            <h2>Kontext (vety so slovenským kontextom)</h2>
+            <div class="ctx" id="ctx">
+              {% for line in ctx_hl %}
+                <div class="line ctx-line" data-idx="{{ loop.index0 }}">
+                  {{ line|safe }}
+                </div>
+              {% endfor %}
+            </div>
+            <div class="small" style="margin-top:8px">Klikni na vetu – posunie ťa na miesto v texte článku.</div>
+          </div>
+        {% else %}
+          <div class="box">
+            <h2>Kontext (vety so slovenským kontextom)</h2>
+            <div class="muted">Zatiaľ nič – buď nie je extrahovaný text, alebo sa nenašli vety s kľúčovými výrazmi.</div>
+          </div>
+        {% endif %}
+
+      </div>
+
+      <div class="article-main">
+        <div class="box">
+          <h2>Obsah článku (content_text)</h2>
+          {% if r["content_text"] %}
+            <div class="content" id="content">{{ r["content_text"] }}</div>
+          {% else %}
+            <div class="muted">
+              Text ešte nie je extrahovaný (alebo extrakcia zlyhala). Skús “Fetch &amp; extract now”.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script id="ctxData" type="application/json">{{ ctx_plain|tojson }}</script>
+
+  <script>
+    // zvýraznenie Slovensko/SK termov v snippete aj texte
+    const TERMS = [
+      "Slovaquie","slovaque","Slovakia","Slovak","République slovaque",
+      "سلوفاكيا","سلوفاكي","الجمهورية السلوفاكية"
+    ];
+
+    function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+    function highlight(el){
+      if(!el) return;
+      let html = el.innerHTML;
+      TERMS.forEach(t => {
+        const re = new RegExp("(" + escapeRegExp(t) + ")", "gi");
+        html = html.replace(re, "<mark>$1</mark>");
+      });
+      el.innerHTML = html;
+    }
+
+    highlight(document.getElementById("snippet"));
+    highlight(document.getElementById("content"));
+
+    // --- vyššie highlight code (nechaj, ako máš) ---
+  </script>
+</body>
+</html>

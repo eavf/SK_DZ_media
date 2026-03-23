@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}DZ News{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+
+<body>
+  <div class="wrap">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="banner {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="topbar">
+      <div class="left">
+        <span class="pill">DZ News</span>
+      </div>
+      <div class="right">
+        <a class="pill" href="/">Dashboard</a>
+        <a class="pill" href="/browse">Browse</a>
+        <a class="pill" href="/stats">Stats</a>
+        <a class="pill" href="/process">Process</a>
+      </div>
+    </div>
+
+    {% block content %}{% endblock %}
+
+  </div>
+</body>
+</html>

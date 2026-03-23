@@ -1,0 +1,54 @@
+{
+  "search_metadata": {
+    "id": "69b46f486c4c0c209bdff06d",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/Q-Tw5yA_-0iQR6wYBy0SBg/69b46f486c4c0c209bdff06d.json",
+    "pixel_position_endpoint": "https://serpapi.com/searches/Q-Tw5yA_-0iQR6wYBy0SBg/69b46f486c4c0c209bdff06d.json_with_pixel_position",
+    "created_at": "2026-03-13 20:10:48 UTC",
+    "processed_at": "2026-03-13 20:10:48 UTC",
+    "google_url": "https://www.google.com/search?q=%28site%3Aafrik.com+OR+site%3Aalgerie360.com+OR+site%3Aaps.dz+OR+site%3Aechoroukonline.com+OR+site%3Aelbilad.net+OR+site%3Aelmoudjahid.dz+OR+site%3Aelwatan.com+OR+site%3Ahorizons.dz+OR+site%3Alalgerieaujourdhui.dz+OR+site%3Aobservationalgerie.com+OR+site%3Aradioalgerie.dz+OR+site%3Atsa-algerie.com%29+%28Slovaquie+OR+slovaque+OR+Slovakia+OR+Slovak+OR+Bratislava+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+-inurl%3Arecherche+-inurl%3Asearch+-inurl%3Atag+-inurl%3Atags+-inurl%3Apage&oq=%28site%3Aafrik.com+OR+site%3Aalgerie360.com+OR+site%3Aaps.dz+OR+site%3Aechoroukonline.com+OR+site%3Aelbilad.net+OR+site%3Aelmoudjahid.dz+OR+site%3Aelwatan.com+OR+site%3Ahorizons.dz+OR+site%3Alalgerieaujourdhui.dz+OR+site%3Aobservationalgerie.com+OR+site%3Aradioalgerie.dz+OR+site%3Atsa-algerie.com%29+%28Slovaquie+OR+slovaque+OR+Slovakia+OR+Slovak+OR+Bratislava+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+-inurl%3Arecherche+-inurl%3Asearch+-inurl%3Atag+-inurl%3Atags+-inurl%3Apage&hl=fr&gl=dz&num=10&tbm=nws&tbs=qdr:w&start=10&sourceid=chrome&ie=UTF-8",
+    "raw_html_file": "https://serpapi.com/searches/Q-Tw5yA_-0iQR6wYBy0SBg/69b46f486c4c0c209bdff06d.html",
+    "total_time_taken": 1.0
+  },
+  "search_parameters": {
+    "engine": "google",
+    "q": "(site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page",
+    "google_domain": "google.com",
+    "hl": "fr",
+    "gl": "dz",
+    "start": 10,
+    "num": "10",
+    "device": "desktop",
+    "tbm": "nws",
+    "tbs": "qdr:w"
+  },
+  "search_information": {
+    "query_displayed": "(site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page",
+    "news_results_state": "Fully empty"
+  },
+  "error": "Google hasn't returned any results for this query.",
+  "news_results": [
+    {
+      "position": 1,
+      "link": "http://news.radioalgerie.dz/ar/node/79492",
+      "title": "قرعة بطولة العالم لكرة اليد 2027: الجزائر في المستوى الرابع",
+      "source": "الإذاعة الجزائرية |",
+      "date": "Il y a 1 mois",
+      "published_at": "2026-02-11 16:12:17 UTC",
+      "snippet": "وضع المنتخب الوطني لكرة اليد (رجال) في المستوى الرابع تحسبا لقرعة بطولة العالم 2027، المقررة يوم 10 جوان المقبل بمدينة ميونيخ الألمانية، حسب ما أعلنته...",
+      "favicon": "https://serpapi.com/searches/69b46f464707f18e4e8d984f/images/UAWzGB_Vj8ikI4dCcU48X0FiaS18Q7Wq5UwfbBrOOJI.png",
+      "thumbnail": "https://serpapi.com/searches/69b46f464707f18e4e8d984f/images/amJU6Mh17PO92VyQyAjZbM_6saUOByfa02rxzEKyRvI.jpeg"
+    },
+    {
+      "position": 2,
+      "link": "https://www.algerie360.com/visa-schengen-delais-rapides-et-refus-faibles-les-pays-les-plus-accessibles-en-2026/",
+      "title": "Visa Schengen : délais rapides et refus faibles, les pays les plus accessibles en 2026",
+      "source": "Algerie360",
+      "date": "Il y a 3 jours",
+      "published_at": "2026-03-10 12:40:00 UTC",
+      "snippet": "Obtenir un visa Schengen peut relever du parcours du combattant. Pourtant, certains pays européens se distinguent par des délais de traitement plus rapides...",
+      "favicon": "https://serpapi.com/searches/69b46f464707f18e4e8d984f/images/jpE9z13saf42BCOA_AH6-wKTFLEp1m17klZ1PsYZhIY.png",
+      "thumbnail": "https://serpapi.com/searches/69b46f464707f18e4e8d984f/images/yoFd2HyJSMf_dBFr77KRoGPHiHu3x3Wf0_CzIjLxXf8.jpeg"
+    }
+  ]
+}

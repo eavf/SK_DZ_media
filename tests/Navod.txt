@@ -1,0 +1,125 @@
+● 207/207 testov prechádza. Tu je prehľad toho čo bolo vytvorené:
+
+  tests/
+  ├── conftest.py              – bootstrap fake Settings pred importom modulov
+  ├── test_config.py           – 51 testov (helper funkcie z config.py)
+  ├── test_extract_articles.py – 56 testov (URL helpers, kandidáti, dedupe)
+  ├── test_ingest.py           – 69 testov (domain, normalize, classify, dedupe)
+  └── test_search_flow.py      – 31 testov (filtrovanie, dedupe, fallback logika)
+
+  Čo je pokryté:
+  - config: _to_bool, _to_int, _csv_set, _normalize_* funkcie
+  - extract_articles: sha256_hex, domain_root, canonicalize_url, parse_dt, is_js_shell, find_topic_matches, extract_candidates_from_doc, dedupe_candidates
+  - ingest: domain_of, canonicalize_url, normalize_title, classify_published_at, _infer_query_id_from_name, _extract_news_results, news_item_to_candidate, dedupe_candidates
+  - search_flow: mentions_slovakia, looks_unwanted_news_item, clean_news_results, deduplicate_news, contains_preferred_links, should_run_preferred_fallback, domain_stats
+
+  DB operácie, SerpAPI a HTTP requesty nie sú testované (vyžadujú live závislosti).
+
+✻ Crunched for 6m 52s
+
+❯ help
+
+● Ako ti môžem pomôcť? Napríklad:
+
+  - Testy – pridať ďalšie testy, vysvetliť ako fungujú, spustiť konkrétny test
+  - Kód – opraviť bug, pridať funkciu, refaktorovať
+  - Projekt – otázky k architektúre, configu, DB schéme
+
+  Čo potrebuješ?
+
+❯ vysvetliť ako fungujú testy a ako jeden z nich spustiť, taký, čo vyžaduje live pripojenie
+
+● Ako fungujú testy
+
+  1. conftest.py – základ všetkého
+
+  Toto je prvý súbor, ktorý pytest načíta pred akýmkoľvek testom. Problém projektu je, že všetky hlavné moduly spúšťajú kód priamo pri importe:
+
+  # search_flow_news.py – spustí sa hneď pri import
+  s, paths = init_context()          # čítanie .env, JSONov
+  PREFERRED_DOMAINS = s.preferred_domains
+  api_key = s.serpapi_key
+
+  Keby sme to nenechali, testy by spadli (žiadny .env, žiadna DB). conftest.py to obíde tak, že pred importom modulov podstrčí falošný Settings objekt:
+
+  # conftest.py
+  import config.config as _cfg
+
+  _fake_settings = MagicMock()
+  _fake_settings.preferred_domains = {"aps.dz", "tsa-algerie.com"}
+  # ...
+
+  _cfg._CACHED = _fake_settings   # ← inject pred importom modulov
+
+  Keď potom get_settings() v module zavolá _CACHED, dostane náš fake – nie reálny .env.
+
+  ---
+  2. Štruktúra testov
+
+  Každý test file testuje jeden modul, len čisté (pure) funkcie:
+
+  test_config.py          → config/config.py         (helper funkcie)
+  test_extract_articles.py → extract_articles_reworked.py
+  test_ingest.py          → ingest_to_dz_news_reworked.py
+  test_search_flow.py     → search_flow_news.py
+
+  Príklad testu:
+  def test_removes_utm_params(self):
+      url = "https://example.com/article?utm_source=twitter&utm_medium=social"
+      assert "utm_source" not in canonicalize_url(url)
+      # → volá reálnu funkciu, žiadna sieť, žiadna DB
+
+  ---
+  3. Spustenie testov
+
+  # všetky testy
+  .venv/bin/python -m pytest tests/ -v
+
+  # jeden konkrétny test
+  .venv/bin/python -m pytest tests/test_ingest.py::TestNormalizeTitle::test_lowercases -v
+
+  # celá trieda
+  .venv/bin/python -m pytest tests/test_search_flow.py::TestLooksUnwantedNewsItem -v
+
+  ---
+  4. Test s live pripojením – DB
+
+  Testy s reálnou DB sa zvyčajne označujú markerom, aby ich bolo možné spustiť oddelene. Tu je príklad:
+
+  # tests/test_db_live.py
+  import pytest
+  from sqlalchemy import text
+  from config.config import get_db_engine
+
+  pytestmark = pytest.mark.live   # označenie celého súboru
+
+  def test_db_connection():
+      """Overí, že sa vieme pripojiť na dz_news a tabuľka articles existuje."""
+      engine = get_db_engine()
+      with engine.connect() as conn:
+          result = conn.execute(text("SELECT COUNT(*) FROM articles")).scalar()
+          assert isinstance(result, int)
+
+  def test_no_url_hash_duplicates():
+      """Overí, že v DB nie sú duplikáty podľa url_hash."""
+      from ingest_to_dz_news_reworked import get_url_hash_duplicates
+      engine = get_db_engine()
+      with engine.connect() as conn:
+          dupes = get_url_hash_duplicates(conn)
+          assert dupes == [], f"Nájdené duplikáty: {dupes}"
+
+  Spustenie len live testov (vyžaduje .env s DB údajmi):
+  .venv/bin/python -m pytest tests/test_db_live.py -v -m live
+
+  Alebo všetky okrem live testov (pre CI bez DB):
+  .venv/bin/python -m pytest tests/ -v -m "not live"
+
+  Na to treba zaregistrovať marker v pytest.ini:
+  [pytest]
+  testpaths = tests
+  pythonpath = .
+  markers =
+      live: testy vyžadujúce živé pripojenie (DB, API)
+
+  ---
+  Zhrnutie: Existujúce testy (207 ks) sú unit testy – rýchle, bez siete, bez DB. Live testy dáš do samostatného súboru s markerom live a spustíš ich manuálne keď máš k dispozícii reálne služby.

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Chyby</h1>
+  <div class="sub">Posledných {{ days }} dní, max 300.</div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width:90px">ID</th>
+        <th>Titulok</th>
+        <th style="width:160px">Doména</th>
+        <th style="width:170px">Publikované</th>
+        <th>Chyba</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in rows %}
+      <tr class="trow">
+        <td class="mono">{{ r.id }}</td>
+        <td><a href="/article/{{ r.id }}">{{ r.title or "(bez názvu)" }}</a></td>
+        <td><span class="pill">{{ r.domain }}</span></td>
+        <td class="small">{{ r.published or "-" }}</td>
+        <td class="small">
+          {{ r.fetch_error }}
+          {% if r.http_status %}<span class="mono"> • http={{ r.http_status }}</span>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

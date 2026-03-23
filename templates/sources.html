@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h1>Zdroje</h1>
+      <div class="sub">
+        Správa domén v tabuľke <code>sources</code> (mute/unmute, poznámky, prehľady).
+      </div>
+    </div>
+
+    <div class="badge">
+      <span class="pill">days={{ days }}</span>
+      {% if only_avoided %}
+        <span class="pill warn">filter=avoided</span>
+      {% else %}
+        <span class="pill">filter=all</span>
+      {% endif %}
+      {% if q %}
+        <span class="pill ok">q={{ q }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <!-- Filters + Add -->
+  <div class="toolbar-grid" style="margin-top:0">
+    <div class="box">
+      <h2>Filter</h2>
+      <form method="get" action="/sources" class="actions" style="margin-top:0">
+        <input type="text" name="q" value="{{ q or '' }}" placeholder="hľadať doménu (napr. msn)" class="mono">
+        <input type="text" name="days" value="{{ days }}" style="max-width:120px" placeholder="days">
+        <select name="only_avoided" title="only_avoided" style="max-width:220px">
+          <option value="0" {% if not only_avoided %}selected{% endif %}>all (aj nemute)</option>
+          <option value="1" {% if only_avoided %}selected{% endif %}>len mute (is_avoided=1)</option>
+        </select>
+        <button type="submit">Použiť</button>
+        <a class="pill" href="/sources?days={{ days }}">Reset</a>
+      </form>
+      <div class="small" style="margin-top:10px">
+        Tip: klik na doménu otvorí <code>/stats?domain=...</code>.
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Pridať doménu</h2>
+      <form method="post" action="/source/create" class="actions" style="margin-top:0"
+            onsubmit="return confirm('Pridať doménu do sources?');">
+        <input type="text" name="domain" placeholder="napr. example.com" class="mono">
+        <input type="text" name="note" placeholder="poznámka (voliteľné)">
+        <button type="submit">Pridať</button>
+      </form>
+      <div class="small" style="margin-top:10px">
+        Doména sa normalizuje (lowercase, bez <span class="mono">www.</span>, bez schémy).
+      </div>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Doména</th>
+        <th>Dôvod / poznámka</th>
+        <th style="width:110px">Mute</th>
+        <th style="width:90px">Ušetrené</th>
+        <th style="width:90px">Celkom</th>
+        <th style="width:120px">Soft-del</th>
+        <th style="width:180px">Last seen</th>
+        <th style="width:180px">Akcie</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% for s in rows %}
+      <tr class="trow">
+        <td>
+          <div style="display:flex; flex-direction:column; gap:6px">
+            <a href="/stats?days={{ days }}&domain={{ s.domain|urlencode }}" style="font-weight:700">
+              {{ s.domain }}
+            </a>
+            <div class="small">
+              id: <span class="mono">{{ s.id }}</span>
+            </div>
+          </div>
+        </td>
+
+        <td>
+          <form method="post" action="/source/note/{{ s.id }}" class="actions" style="margin-top:0">
+            <input type="text" name="note" value="{{ s.notes or '' }}"
+                   placeholder="napr. agregátor / duplicity / e-shop / clickbait">
+            <button type="submit">Uložiť</button>
+          </form>
+        </td>
+
+        <td>
+          {% if s.is_avoided %}
+            <span class="pill warn">YES</span>
+          {% else %}
+            <span class="pill ok">NO</span>
+          {% endif %}
+        </td>
+
+        <td><span class="pill ok">{{ s.saved }}</span></td>
+        <td>{{ s.total_articles }}</td>
+        <td>{{ s.soft_deleted }}</td>
+        <td class="small">{{ s.last_seen or "—" }}</td>
+
+        <td>
+          <div class="actions" style="margin-top:0">
+            {% if s.is_avoided %}
+              <form method="post" action="/source/unavoid/{{ s.id }}"
+                    onsubmit="return confirm('Unmute doménu {{ s.domain }}?');">
+                <button type="submit">Unmute</button>
+              </form>
+            {% else %}
+              <form method="post" action="/source/avoid/{{ s.id }}"
+                    onsubmit="return confirm('Mute doménu {{ s.domain }}?');">
+                <button type="submit">Mute</button>
+              </form>
+            {% endif %}
+
+            <a class="pill" href="/stats?days={{ days }}&domain={{ s.domain|urlencode }}">Stats</a>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  {% if not rows or rows|length == 0 %}
+    <div class="small" style="margin-top:12px">Žiadne zdroje podľa filtra.</div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

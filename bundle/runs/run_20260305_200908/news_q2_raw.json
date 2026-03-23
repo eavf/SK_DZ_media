@@ -1,0 +1,282 @@
+{
+  "search_metadata": {
+    "id": "69a9d4dd69819d0facb40640",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/RlIriKCFWXmXZYWOOhNVcQ/69a9d4dd69819d0facb40640.json",
+    "pixel_position_endpoint": "https://serpapi.com/searches/RlIriKCFWXmXZYWOOhNVcQ/69a9d4dd69819d0facb40640.json_with_pixel_position",
+    "created_at": "2026-03-05 19:09:17 UTC",
+    "processed_at": "2026-03-05 19:09:17 UTC",
+    "google_url": "https://www.google.com/search?q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&oq=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&hl=fr&gl=dz&num=10&tbm=nws&tbs=qdr:7d&start=10&sourceid=chrome&ie=UTF-8",
+    "raw_html_file": "https://serpapi.com/searches/RlIriKCFWXmXZYWOOhNVcQ/69a9d4dd69819d0facb40640.html",
+    "total_time_taken": 1.73
+  },
+  "search_parameters": {
+    "engine": "google",
+    "q": "(\"Slovaquie\" OR slovaque OR \"Slovakia\" OR Slovak OR سلوفاكيا OR سلوفاكي) (\"Algérie\" OR \"Algeria\" OR Alger OR \"Algiers\" OR الجزائر OR \"الجزائر العاصمة\")",
+    "google_domain": "google.com",
+    "hl": "fr",
+    "gl": "dz",
+    "start": 10,
+    "num": "10",
+    "device": "desktop",
+    "tbm": "nws",
+    "tbs": "qdr:7d"
+  },
+  "search_information": {
+    "query_displayed": "(\"Slovaquie\" OR slovaque OR \"Slovakia\" OR Slovak OR سلوفاكيا OR سلوفاكي) (\"Algérie\" OR \"Algeria\" OR Alger OR \"Algiers\" OR الجزائر OR \"الجزائر العاصمة\")",
+    "total_results": 61,
+    "page_number": 2,
+    "time_taken_displayed": 0.61,
+    "news_results_state": "Results for exact spelling"
+  },
+  "news_results": [
+    {
+      "position": 1,
+      "link": "https://www.sabqpress.dz/%D8%A8%D9%88%D8%BA%D8%A7%D9%84%D9%8A-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D9%84/",
+      "title": "بوغالي يستقبل سفير جمهورية سلوفاكيا لدى الجزائر",
+      "source": "سبق برس",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 13:23:58 UTC",
+      "snippet": "استقبل رئيس المجلس الشعبي الوطني، ابراهيم بوغالي، اليوم الاثنين، سفير جمهورية سلوفاكيا لدى الجزائر، ماريك مورين، حيث تباحث الطرفان سبل.",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/8CuYvnJmjL11uF2f-jUy7wDil4ptUeSdij5Dow_USU4.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/e82Gj17kqxsx5emlj5acl8kWWX_Hug88EKY0h9wfsOE.jpeg"
+    },
+    {
+      "position": 2,
+      "link": "https://www.aps.dz/algerie/actualite-nationale/miw53izy-%D8%B3%D9%81%D9%8A%D8%B1-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D9%8A%D9%88%D9%94%D9%83%D8%AF-%D8%B1%D8%BA%D8%A8%D8%A9-%D8%A8%D9%84%D8%A7%D8%AF%D9%87-%D9%81%D9%8A-%D8%AA%D9%88%D8%B7%D9%8A%D8%AF-%D8%B9%D9%84%D8%A7%D9%82%D8%A7%D8%AA%D9%87%D8%A7-%D9%85%D8%B9-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D9%8A%D9%94%D8%B1",
+      "title": "سفير سلوفاكيا يؤكد رغبة بلاده في توطيد علاقاتها مع الجزائر",
+      "source": "وكالة الأنباء الجزائرية",
+      "date": "7 déc. 2025",
+      "published_at": "2025-12-07 08:00:00 UTC",
+      "snippet": "الجزائر - أكد السفير الجديد لجمهورية سلوفاكيا بالجزائر, السيد مارك موران, اليوم الأحد, رغبة بلاده في توطيد العلاقات الثنائية بين البلدين...",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/lcQeII4H2pgPGDgf3sYuXcByWPe-sxHZB5sx8ovjHgg.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/zLCIceozUpD1lOfJ5CfZeJBuk5qQ-YnfPV2ihnUYavQ.jpeg"
+    },
+    {
+      "position": 3,
+      "link": "https://www.eldjazaireldjadida.dz/%D8%A8%D9%88%D8%BA%D8%A7%D9%84%D9%8A-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7/",
+      "title": "بوغالي يستقبل سفير سلوفاكيا",
+      "source": "الجزائر الجديدة",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 12:06:55 UTC",
+      "snippet": "رئيس المجلس الشعبي الوطني، إبراهيم بوغالي، اليوم الاثنين بمقر المجلس، سفير جمهورية سلوفاكيا لدى الجزائر، ماريك مورين.",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/uAuE_il2b-eqSGzL9wFfglnNF2h-n1-LUDZ8rvqCnAQ.jpeg",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/SFAJZCEiPDjlACtnV9-nzOUHyJ5HfuHy6wn5nEs3tuA.jpeg"
+    },
+    {
+      "position": 4,
+      "link": "https://www.elitihadcom.dz/%D8%A8%D9%88%D8%BA%D8%A7%D9%84%D9%8A-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D9%84/",
+      "title": "بوغالي يستقبل سفير جمهورية سلوفاكيا لدى الجزائر",
+      "source": "يومية الاتحاد الجزائرية",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 13:05:11 UTC",
+      "snippet": "استقبل رئيس المجلس الشعبي الوطني, ابراهيم بوغالي, اليوم الاثنين, سفير جمهورية سلوفاكيا لدى الجزائر, السيد ماريك مورين, حيث تباحث الطرفان سبل...",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/J7O8GscWDAFs7uQLT4gpaF3vofiLzl2O6rclLmK5Itc.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/0JBXlj_gqBf27cSyOVs_4H-JOKbQiT5b_Hn9DOxekac.jpeg"
+    },
+    {
+      "position": 5,
+      "link": "https://www.mfa.gov.dz/ar/press-and-information/news-and-press-releases/mr-attaf-receives-the-new-slovak-ambassador-to-algeria",
+      "title": "السيد عطاف يستقبل السفير السلوفاكي الجديد لدى الجزائر",
+      "source": "mfa.gov.dz",
+      "date": "8 déc. 2025",
+      "published_at": "2025-12-08 11:37:17 UTC",
+      "snippet": "السيد عطاف يستقبل السفير السلوفاكي الجديد لدى الجزائر.",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/jEQF2IpD-lLGHTGqzH4gWnFzztaX529IlP8zlo9gvrw.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/IjfQGuLaKr93Jhom7FmFqVFASd4Q-JDcZXGiAAl7s5w.jpeg"
+    },
+    {
+      "position": 6,
+      "link": "https://www.shihabpresse.dz/%D8%A8%D9%88%D8%BA%D8%A7%D9%84%D9%8A-%D9%8A%D8%A4%D9%83%D8%AF-%D8%B9%D9%85%D9%82-%D8%A7%D9%84%D8%B9%D9%84%D8%A7%D9%82%D8%A7%D8%AA-%D8%A7%D9%84%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE%D9%8A%D8%A9-%D8%A8/",
+      "title": "بوغالي يؤكد عمق العلاقات التاريخية بين الجزائر و سلوفاكيا",
+      "source": "شهاب برس",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 12:33:33 UTC",
+      "snippet": "شهاب برس-استقبل رئيس المجلس الشعبي الوطني، إبراهيم بوغالي، اليوم الإثنين، سفير جمهورية سلوفاكيا لدى الجزائر، ماريك مورين، حيث أكد على أن ا.",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/1_JVjyeXSoX1BWxI_p8MdWJPGW07GcyQzOph3mBqBI0.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/u4hvE8a1lqANLLvqSnBbcr1eXa1tK8JcPcWSDcGXXxI.jpeg"
+    },
+    {
+      "position": 7,
+      "link": "https://elmawkie.dz/%D8%A8%D9%88%D8%BA%D8%A7%D9%84%D9%8A-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D9%84%D8%AF%D9%89-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7/",
+      "title": "بوغالي يستقبل سفير سلوفاكيا لدى الجزائر",
+      "source": "elmawkie.dz",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 11:57:00 UTC",
+      "snippet": "استقبل رئيس المجلس الشعبي الوطني، السيد إبراهيم بوغالي، اليوم بمقر المجلس، سعادة سفير جمهورية سلوفاكيا لدى الجزائر، السيد ماريك مورين، حيث...",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/44gIHD7071Pf4utVg-Grd7Jh0QQ7wssluOKVYluniy4.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/pHK6nkpV5JoamJEgstFo5H6H2VejPP28nXxZ2YT6EHw.jpeg"
+    },
+    {
+      "position": 8,
+      "link": "https://elhiwar.dz/national/315110/",
+      "title": "بوغالي يؤكد عمق العلاقات التاريخية بين الجزائر وسلوفاكيا",
+      "source": "جريدة الحوار الجزائرية",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 12:21:24 UTC",
+      "snippet": "استقبل رئيس المجلس الشعبي الوطني، إبراهيم بوغالي، اليوم الاثنين، سفير جمهورية سلوفاكيا لدى الجزائر، ماريك مورين،",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/9YHyzCfcppEmzwtZeX0pi6lo_CGsSPdxxC7lbtU8PyM.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/yq0oLJ5Rdyzsvzavb3LFBHNELlE1ggMi5yiSEsNYvoQ.jpeg"
+    },
+    {
+      "position": 9,
+      "link": "https://akhbarelwatane.dz/%D8%A8%D9%88%D8%BA%D8%A7%D9%84%D9%8A-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D9%88%D9%8A%D8%A4%D9%83%D8%AF-%D8%B9%D9%84%D9%89/",
+      "title": "بوغالي يستقبل سفير سلوفاكيا ويؤكد على تعزيز التعاون الثنائي",
+      "source": "أخبار الوطن",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 12:41:00 UTC",
+      "snippet": "استقبل رئيس المجلس الشعبي الوطني، إبراهيم بوغالي، اليوم الإثنين، سفير جمهورية سلوفاكيا لدى الجزائر، ماريك مورين، حيث شدد على أن العلاقات بين...",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/nKQokRw2XAyQ4Dh1uaRSfY-40ecwvupdHYFK7CQZKyM.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/rZL24KjnOI-SrsHTkhYqFSVbxjLR_wGvD0Va5i5112U.jpeg"
+    },
+    {
+      "position": 10,
+      "link": "https://al24news.dz/%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1-%D8%AA%D9%81%D8%AA%D8%AD-%D8%B3%D9%81%D8%A7%D8%B1%D8%AA%D9%87%D8%A7-%D9%81%D9%8A-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D9%88%D8%AA%D8%A4%D9%83/",
+      "title": "الجزائر تفتح سفارتها في سلوفاكيا وتؤكد التزامها بتوطيد التعاون الثنائي",
+      "source": "AL24 News",
+      "date": "9 déc. 2025",
+      "published_at": "2025-12-09 08:00:00 UTC",
+      "snippet": "أشرف وزير الدولة، وزير الخارجية الجزائري، أحمد عطاف، اليوم الثلاثاء، على مراسم التدشين الرسمي لمقر سفارة الجزائر ببراتيسلافا، في مستهل...",
+      "favicon": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/L06g7lhlLWwh9Pp1CuVwHBUaSURBty4gqj8_07AOEe4.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4d78c8a7e78606826ab/images/DY0Jky8mwtrPgq9RuFF8WFOmNmIRSuqnYatSHLQ4AhU.jpeg"
+    },
+    {
+      "position": 1,
+      "link": "https://www.ennaharonline.com/%D8%AA%D8%AF%D8%B4%D9%8A%D9%86-%D8%B3%D9%81%D8%A7%D8%B1%D8%A9-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1-%D8%A8%D8%A8%D8%B1%D8%A7%D8%AA%D8%B3%D9%84%D8%A7%D9%81%D8%A7-%D9%81%D9%8A-%D8%B3%D9%84%D9%88/",
+      "title": "تدشين سفارة الجزائر ببراتسلافا في سلوفاكيا",
+      "source": "النهار أونلاين – أول موقع إخباري في الجزائر",
+      "date": "9 déc. 2025",
+      "published_at": "2025-12-09 08:00:00 UTC",
+      "snippet": "وزير الدولة، وزير الشؤون الخارجية والجالية الوطنية بالخارج والشؤون الإفريقية، أحمد عطاف، صباح اليوم، على مراسم التدشين الرسمي لمقر سفارة.",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/1F8EZhlp0oq4Mwy3RSdgzslri5jaLgrcN0s8Tjqwghw.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/Am64tdKu01rJP5OfYiyBgGVOW8Q7RNIojP3M7ueIA00.jpeg"
+    },
+    {
+      "position": 2,
+      "link": "https://www.internews.dz/%D8%A8%D9%88%D8%BA%D8%A7%D9%84%D9%8A-%D8%AF%D8%B9%D9%85-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D9%84%D9%84%D8%B4%D8%B1%D8%B9%D9%8A%D8%A9-%D8%A7%D9%84%D8%AF%D9%88%D9%84%D9%8A%D8%A9-%D9%85/",
+      "title": "بوغالي: دعم سلوفاكيا للشرعية الدولية محل تقدير الجزائر",
+      "source": "https://www.internews.dz/",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 12:00:43 UTC",
+      "snippet": "أنترنيوز: أكد رئيس المجلس الشعبي الوطني إبراهيم بوغالي أن العلاقات بين الجزائر وسلوفاكيا علاقات تاريخية تقوم على الاحترام المتبادل والتعاون...",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/bidxWf96zaGcP5nkWOeeWSP-Cs_NLhA-EAxXr0ETKng.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/6uCugxu5tPSfI_VYXEIrKo2DiXs24jOBT7SIulR58fw.jpeg"
+    },
+    {
+      "position": 3,
+      "link": "https://al24news.dz/%D8%B9%D8%B7%D8%A7%D9%81-%D9%8A%D9%84%D8%AA%D9%82%D9%8A-%D8%A3%D8%B9%D8%B6%D8%A7%D8%A1-%D9%85%D9%86-%D8%A7%D9%84%D8%AC%D8%A7%D9%84%D9%8A%D8%A9-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1%D9%8A%D8%A9/",
+      "title": "عطاف يلتقي أعضاء من الجالية الجزائرية في سلوفاكيا",
+      "source": "AL24 News",
+      "date": "9 déc. 2025",
+      "published_at": "2025-12-09 08:00:00 UTC",
+      "snippet": "التقى وزير الدولة وزير الخارجية الجزائري، أحمد عطاف، اليوم الثلاثاء، أعضاء من الجالية الجزائرية المقيمة في سلوفاكيا.",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/826k66bDp-LAkWwVnYeyNkYewkV1a4j_m90lbMoNous.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/oRJ_McUd8lnuTXTUIBoPE6WOyvj_ot0kmyyjjc71VLY.jpeg"
+    },
+    {
+      "position": 4,
+      "link": "https://elhiwar.dz/event/309769/",
+      "title": "تدشين سفارة الجزائر ببراتسلافا في سلوفاكيا",
+      "source": "جريدة الحوار الجزائرية",
+      "date": "9 déc. 2025",
+      "published_at": "2025-12-09 15:36:14 UTC",
+      "snippet": "أشرف وزير الدولة، وزير الشؤون الخارجية والجالية الوطنية بالخارج والشؤون الإفريقية، أحمد عطاف، صباح اليوم، على التدشين الرسمي لمقر سفارة...",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/KpVCGG60rRxsQwCJltDlqPZU_XjgLNtd6QNl-Qb_CK8.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/HdQjXb0SrAMDkPZ-IsJMFnNmBW4xA4YgoKNe5iGw5Tc.jpeg"
+    },
+    {
+      "position": 5,
+      "link": "https://al24news.dz/%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1-%D9%88%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D8%AA%D9%88%D9%82%D9%91%D8%B9%D8%A7%D9%86-%D8%A5%D8%B9%D9%84%D8%A7%D9%86%D8%A7-%D9%85%D8%B4%D8%AA/",
+      "title": "الجزائر وسلوفاكيا توقّعان إعلانا مشتركا لضبط أولويات التعاون الثنائي",
+      "source": "AL24 News",
+      "date": "9 déc. 2025",
+      "published_at": "2025-12-09 08:00:00 UTC",
+      "snippet": "وقّعت الجزائر وسلوفاكيا، اليوم الثلاثاء، إعلانا مشتركا يهدف إلى ضبط أولويات التعاون الثنائي وتحديد خارطة الطريق المشتركة على درب تعزيزه عبر...",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/uHVqPVNYSOlaDkt24C6gzc_mQvG-sr0Q_IYajwkcjm8.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/lKPAIpQeUibYPwfbjSh2EduicdJ1Uw7B-YFkN_Iaj18.jpeg"
+    },
+    {
+      "position": 6,
+      "link": "https://www.el-massa.com/dz/%D8%A7%D9%84%D8%AD%D8%AF%D8%AB/%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D8%AA%D8%B9%D8%A7%D9%88%D9%86-%D9%88%D8%B6%D8%A8%D8%B7-%D8%A7%D9%84%D8%A3%D9%88%D9%84%D9%88%D9%8A%D8%A7%D8%AA",
+      "title": "الجزائر- سلوفاكيا.. تعاون وضبط الأولويات",
+      "source": "المساء",
+      "date": "10 déc. 2025",
+      "published_at": "2025-12-10 08:00:00 UTC",
+      "snippet": "وزير الدولة، وزير الشؤون الخارجية والجالية الوطنية بالخارج والشؤون الإفريقية، السيد أحمد عطاف- وزير الشؤون الخارجية والأوروبية السلوفاكي،...",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/343ezWohbJYYhom0AoUVKtOLr9mEyQ9p1sAOeIGaMdc.jpeg",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/FKDve_av94YKFv3vGRiLqfA31_qjqAO1TF0CFEHFjlU.jpeg"
+    },
+    {
+      "position": 7,
+      "link": "https://khabarpress.dz/2026/02/23/%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1-%D9%88%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-%D8%AA%D8%A8%D8%AD%D8%AB%D8%A7%D9%86-%D8%B3%D8%A8%D9%84-%D8%AA%D9%88%D8%B3%D9%8A%D8%B9-%D8%A7%D9%84/",
+      "title": "الجزائر وسلوفاكيا تبحثان سبل توسيع الشراكة الثنائية",
+      "source": "خبر برس",
+      "date": "Il y a 1 semaine",
+      "published_at": "2026-02-23 13:48:13 UTC",
+      "snippet": "خبر برس – الجزائر : استقبل رئيس المجلس الشعبي الوطني، إبراهيم بوغالي، اليوم الإثنين، سفير جمهورية سلوفاكيا لدى الجزائر، ماريك مورين، مؤكداً...",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/XfE1rnJ5ErxZeXLrEVscIJk2kJgixserOcfwFpNG_4Y.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/Hci52XOCI2Ijj2sbk7G7xJ5EI6fCy1q1RwZZ5iJntiE.jpeg"
+    },
+    {
+      "position": 8,
+      "link": "https://www.elkhabar.com/nation/%D8%AA%D8%AF%D8%B4%D9%8A%D9%86-%D9%85%D9%82%D8%B1-%D8%B3%D9%81%D8%A7%D8%B1%D8%A9-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1-%D8%A8%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7-267080",
+      "title": "تدشين مقر سفارة الجزائر بسلوفاكيا",
+      "source": "الخبر",
+      "date": "9 déc. 2025",
+      "published_at": "2025-12-09 08:00:00 UTC",
+      "snippet": "أشرف وزير الدولة، وزير الشؤون الخارجية والجالية الوطنية بالخارج والشؤون الإفريقية، أحمد عطاف، صباح اليوم، على مراسم التدشين الرسمي لمقر...",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/NgcqGya40jQGxF0WXeH57DpB1uhXMZdyEVOkTrg6M84.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/qoMs5Tp4urAHtFdENN3j7TL1naPyTkCn9YrJFxjxgnM.jpeg"
+    },
+    {
+      "position": 9,
+      "link": "https://www.algeriedirect.dz/%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1-76/",
+      "title": "توقيع إعلان مشترك بين الجزائر وسلوفاكيا لتعزيز التعاون الثنائي",
+      "source": "الجزائر مباشر",
+      "date": "9 déc. 2025",
+      "published_at": "2025-12-09 08:00:00 UTC",
+      "snippet": "أجرى وزير الدولة، وزير الشؤون الخارجية والجالية الوطنية بالخارج والشؤون الإفريقية، أحمد عطاف، صباح اليوم بالعاصمة براتيسلافا، محادثات.",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/sYDKpNbol3wuMT10PXvBDbVs-jyveKLJnaHprlBwezk.jpeg",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/7KuccgEf2Z9i0WhYzLOlx4YnBDUvKOcazVYl1DB9Ysk.jpeg"
+    },
+    {
+      "position": 10,
+      "link": "https://www.aps.dz/algerie/actualite-nationale/miyt94ey-%D8%B9%D8%B7%D8%A7%D9%81-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D9%85%D9%86-%D8%B7%D8%B1%D9%81-%D8%B1%D9%8A%D9%94%D9%8A%D8%B3-%D8%A7%D9%84%D9%88%D8%B2%D8%B1%D8%A7%D8%A1-%D8%A7%D9%84%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A",
+      "title": "عطاف يستقبل من طرف رئيس الوزراء السلوفاكي",
+      "source": "وكالة الأنباء الجزائرية",
+      "date": "9 déc. 2025",
+      "published_at": "2025-12-09 08:00:00 UTC",
+      "snippet": "الجزائر - استقبل وزير الدولة, وزير الشؤون الخارجية والجالية الوطنية بالخارج والشؤون الإفريقية, السيد أحمد عطاف, مساء يوم الثلاثاء,...",
+      "favicon": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/gMJHBk6Dy9245MvhdrLycOxyJ015aMDUzk59DMwegGw.png",
+      "thumbnail": "https://serpapi.com/searches/69a9d4dd69819d0facb40640/images/ZZFBoEJgU9YdsWu6eq_2kyIjA_2Lt-iTHnAHsPt61S8.jpeg"
+    }
+  ],
+  "pagination": {
+    "current": 2,
+    "previous": "https://www.google.com/search?q=(%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A)+(%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22)&sca_esv=286534660d0b6d5d&gl=dz&hl=fr&tbs=qdr:7d&tbm=nws&ei=3tSpabTWCsiVwbkPxOnEiQI&start=0&sa=N&ved=2ahUKEwi0veziuomTAxXISjABHcQ0MSE4ChDx0wN6BAgGEAI",
+    "next": "https://www.google.com/search?q=(%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A)+(%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22)&sca_esv=286534660d0b6d5d&gl=dz&hl=fr&tbs=qdr:7d&tbm=nws&ei=3tSpabTWCsiVwbkPxOnEiQI&start=20&sa=N&ved=2ahUKEwi0veziuomTAxXISjABHcQ0MSE4ChDw0wN6BAgGEBE",
+    "other_pages": {
+      "1": "https://www.google.com/search?q=(%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A)+(%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22)&sca_esv=286534660d0b6d5d&gl=dz&hl=fr&tbs=qdr:7d&tbm=nws&ei=3tSpabTWCsiVwbkPxOnEiQI&start=0&sa=N&ved=2ahUKEwi0veziuomTAxXISjABHcQ0MSE4ChDy0wN6BAgGEAQ",
+      "3": "https://www.google.com/search?q=(%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A)+(%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22)&sca_esv=286534660d0b6d5d&gl=dz&hl=fr&tbs=qdr:7d&tbm=nws&ei=3tSpabTWCsiVwbkPxOnEiQI&start=20&sa=N&ved=2ahUKEwi0veziuomTAxXISjABHcQ0MSE4ChDy0wN6BAgGEAc",
+      "4": "https://www.google.com/search?q=(%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A)+(%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22)&sca_esv=286534660d0b6d5d&gl=dz&hl=fr&tbs=qdr:7d&tbm=nws&ei=3tSpabTWCsiVwbkPxOnEiQI&start=30&sa=N&ved=2ahUKEwi0veziuomTAxXISjABHcQ0MSE4ChDy0wN6BAgGEAk",
+      "5": "https://www.google.com/search?q=(%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A)+(%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22)&sca_esv=286534660d0b6d5d&gl=dz&hl=fr&tbs=qdr:7d&tbm=nws&ei=3tSpabTWCsiVwbkPxOnEiQI&start=40&sa=N&ved=2ahUKEwi0veziuomTAxXISjABHcQ0MSE4ChDy0wN6BAgGEAs",
+      "6": "https://www.google.com/search?q=(%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A)+(%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22)&sca_esv=286534660d0b6d5d&gl=dz&hl=fr&tbs=qdr:7d&tbm=nws&ei=3tSpabTWCsiVwbkPxOnEiQI&start=50&sa=N&ved=2ahUKEwi0veziuomTAxXISjABHcQ0MSE4ChDy0wN6BAgGEA0",
+      "7": "https://www.google.com/search?q=(%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A)+(%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22)&sca_esv=286534660d0b6d5d&gl=dz&hl=fr&tbs=qdr:7d&tbm=nws&ei=3tSpabTWCsiVwbkPxOnEiQI&start=60&sa=N&ved=2ahUKEwi0veziuomTAxXISjABHcQ0MSE4ChDy0wN6BAgGEA8"
+    }
+  },
+  "serpapi_pagination": {
+    "current": 2,
+    "previous_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=0&tbm=nws&tbs=qdr%3A7d",
+    "previous": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=0&tbm=nws&tbs=qdr%3A7d",
+    "next_link": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=20&tbm=nws&tbs=qdr%3A7d",
+    "next": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=20&tbm=nws&tbs=qdr%3A7d",
+    "other_pages": {
+      "1": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=0&tbm=nws&tbs=qdr%3A7d",
+      "3": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=20&tbm=nws&tbs=qdr%3A7d",
+      "4": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=30&tbm=nws&tbs=qdr%3A7d",
+      "5": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=40&tbm=nws&tbs=qdr%3A7d",
+      "6": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=50&tbm=nws&tbs=qdr%3A7d",
+      "7": "https://serpapi.com/search.json?device=desktop&engine=google&gl=dz&google_domain=google.com&hl=fr&num=10&q=%28%22Slovaquie%22+OR+slovaque+OR+%22Slovakia%22+OR+Slovak+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7+OR+%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%29+%28%22Alg%C3%A9rie%22+OR+%22Algeria%22+OR+Alger+OR+%22Algiers%22+OR+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+OR+%22%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1+%D8%A7%D9%84%D8%B9%D8%A7%D8%B5%D9%85%D8%A9%22%29&start=60&tbm=nws&tbs=qdr%3A7d"
+    }
+  }
+}

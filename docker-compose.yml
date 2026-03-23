@@ -1,0 +1,49 @@
+services:
+  dz-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dz-app
+    restart: unless-stopped
+
+    ports:
+      - "5088:5088"
+
+    # Pridané: Host network pre priamy prístup k Synology MySQL
+    network_mode: "host"
+
+    environment:
+      TZ: "${TZ:-Africa/Algiers}"
+
+      # Zmena: Použite localhost keď je network_mode: host
+      DB_HOST: "${DB_HOST:-127.0.0.1}"
+      DB_PORT: "${DB_PORT:-3306}"
+      DB_NAME: "${DB_NAME}"
+      DB_USER: "${DB_USER}"
+      DB_PASS: "${DB_PASS}"
+
+      APP_ENV: "${APP_ENV:-prod}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+
+
+      # Pridané: SQLAlchemy pool settings
+      SQLALCHEMY_POOL_RECYCLE: "280"
+      SQLALCHEMY_POOL_PRE_PING: "true"
+
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./templates:/app/templates
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import socket,os; s=socket.socket(); s.settimeout(3); s.connect((os.getenv('DB_HOST'), int(os.getenv('DB_PORT','3306')))); s.close()"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+

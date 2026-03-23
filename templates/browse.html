@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DZ News – Browse</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <style>
+    /* malé doplnky špecifické pre browse */
+    .ctx { margin-top: 8px; display:flex; flex-direction:column; gap:6px; }
+    .ctx .line{
+      padding:8px 10px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .toolbar-grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top: 14px;
+    }
+    @media(min-width: 980px){
+      .toolbar-grid{ grid-template-columns: 2fr 3fr; }
+    }
+    .counter{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+    /* fetch-error badges */
+    .pill.gray { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); color: rgba(255,255,255,.9); }
+    .pill.info { background: rgba(64,160,255,.12); border-color: rgba(64,160,255,.35); color: rgba(180,220,255,1); }
+    .pill.purple { background: rgba(185,110,255,.12); border-color: rgba(185,110,255,.35); color: rgba(225,205,255,1); }
+    .pill.orange { background: rgba(255,170,64,.12); border-color: rgba(255,170,64,.35); color: rgba(255,220,180,1); }
+    .pill.red { background: rgba(255,80,80,.12); border-color: rgba(255,80,80,.35); color: rgba(255,190,190,1); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="banner {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="topbar">
+      <div class="left">
+        <span class="pill">DZ News</span>
+        <span class="pill">port: {{ port }}</span>
+
+        <span class="pill">days={{ days }}</span>
+        {% if only_ok %}<span class="pill ok">ok=1</span>{% else %}<span class="pill">ok=0</span>{% endif %}
+        {% if only_slovak %}<span class="pill ok">sk=1</span>{% else %}<span class="pill">sk=0</span>{% endif %}
+        <span class="pill">rel={{ relevance }}</span>
+
+        {% if include_deleted %}<span class="pill warn">del=1</span>{% else %}<span class="pill">del=0</span>{% endif %}
+        {% if include_avoided %}<span class="pill warn">av=1</span>{% else %}<span class="pill">av=0</span>{% endif %}
+      </div>
+
+      <div class="right">
+        <a class="pill" href="/">Dashboard</a>
+        <a class="pill ok" href="/browse">Browse</a>
+        <a class="pill" href="/stats">Stats</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h1>Výsledky vyhľadávaní</h1>
+      <div class="sub">
+        Zobrazené: <strong>{{ total }}</strong> (limit 300). Klikni na titulok pre detail.
+      </div>
+
+      <div class="toolbar-grid">
+        <!-- Filters -->
+        <div class="box">
+          <h2>Filtre</h2>
+
+          <!-- ZMENA: action=/browse -->
+          <form method="get" action="/browse" class="actions" style="margin-top: 0">
+            <input type="text" name="days" value="{{ days }}" style="max-width:120px" title="days">
+            <select name="ok" title="ok">
+              <option value="1" {% if only_ok %}selected{% endif %}>ok=1 (len extrahované)</option>
+              <option value="0" {% if not only_ok %}selected{% endif %}>ok=0/1 (všetko)</option>
+            </select>
+
+            <select name="sk" title="sk">
+              <option value="0" {% if not only_slovak %}selected{% endif %}>sk=0 (všetko)</option>
+              <option value="1" {% if only_slovak %}selected{% endif %}>sk=1 (SK kontext)</option>
+            </select>
+
+            <select name="rel" title="rel">
+              <option value="all" {% if relevance == "all" %}selected{% endif %}>rel=all</option>
+              <option value="1" {% if relevance == "1" %}selected{% endif %}>rel=1 (relevantné)</option>
+              <option value="0" {% if relevance == "0" %}selected{% endif %}>rel=0 (nerelevantné)</option>
+              <option value="null" {% if relevance == "null" %}selected{% endif %}>rel=null (neoznačené)</option>
+            </select>
+
+            <select name="del" title="del">
+              <option value="0" {% if not include_deleted %}selected{% endif %}>del=0 (bez deleted)</option>
+              <option value="1" {% if include_deleted %}selected{% endif %}>del=1 (aj deleted)</option>
+            </select>
+
+            <select name="av" title="av">
+              <option value="0" {% if not include_avoided %}selected{% endif %}>av=0 (bez avoided)</option>
+              <option value="1" {% if include_avoided %}selected{% endif %}>av=1 (aj avoided)</option>
+            </select>
+
+            <button type="submit">Použiť</button>
+            <!-- ZMENA: Reset na /browse -->
+            <a class="pill" href="/browse">Reset</a>
+          </form>
+        </div>
+
+        <!-- Bulk actions -->
+        <div class="box">
+          <h2>Bulk akcie</h2>
+          <div class="actions" style="margin-top:0">
+            <form method="post" action="/bulk_delete" onsubmit="return confirm('Soft-delete označených článkov?');">
+              <button type="submit">Bulk delete</button>
+            </form>
+
+            <form method="post" action="/bulk/restore" onsubmit="return confirm('Undo soft delete označených článkov?');">
+              <button type="submit">Undo soft delete</button>
+            </form>
+
+            <form method="post" action="/bulk_exclude_domains" onsubmit="return confirm('Umlčať (exclude) domény z označených článkov?');">
+              <input type="text" name="note" placeholder="dôvod umlčania (voliteľné)">
+              <button type="submit">Bulk exclude domain</button>
+            </form>
+
+            <form method="post" action="/export/csv">
+              <button type="submit">Export CSV</button>
+            </form>
+
+            <form method="post" action="/export/word">
+              <button type="submit">Export Word</button>
+            </form>
+          </div>
+
+          <div class="small" style="margin-top:10px">
+            Tip: exclude domain nastaví <code>sources.is_avoided=1</code> pre domény vybraných článkov.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <!-- Jeden spoločný FORM pre checkboxy, aby bulk endpointy dostali ids[] -->
+    <form id="bulkForm" method="post">
+      <input type="hidden" name="days" value="{{ days }}">
+      <input type="hidden" name="ok" value="{{ 1 if only_ok else 0 }}">
+      <input type="hidden" name="sk" value="{{ 1 if only_slovak else 0 }}">
+      <input type="hidden" name="rel" value="{{ relevance }}">
+      <input type="hidden" name="del" value="{{ 1 if include_deleted else 0 }}">
+      <input type="hidden" name="av" value="{{ 1 if include_avoided else 0 }}">
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:46px"></th>
+            <th>Titulok</th>
+            <th style="width:190px">Zdroj</th>
+            <th style="width:170px">Publikované</th>
+            <th style="width:260px">Stav</th>
+          </tr>
+        </thead>
+
+        <tbody>
+        {% for r, ctx_hl in rows %}
+          <tr class="trow">
+            <td>
+              <input class="checkbox" type="checkbox" name="ids" value="{{ r.id }}">
+            </td>
+
+            <td>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <a href="/article/{{ r.id }}" style="font-weight:600">
+                  {{ r.title or "(bez názvu)" }}
+                </a>
+
+                <div class="small">
+                  {% if r.url %}
+                    <a href="{{ r.url }}" target="_blank" rel="noopener">online ↗</a>
+                  {% endif %}
+                  {% if r.relevance_note %}
+                    • pozn.: {{ r.relevance_note }}
+                  {% endif %}
+                </div>
+
+                {% if ctx_hl and ctx_hl|length > 0 %}
+                  <div class="ctx">
+                    {% for line in ctx_hl %}
+                      <div class="line">{{ line|safe }}</div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </td>
+
+            <td>
+              <div class="badge">
+                <span class="pill">{{ r.domain }}</span>
+                {% if r.is_avoided %}
+                  <span class="pill warn">excluded</span>
+                {% endif %}
+              </div>
+              {% if r.source_notes %}
+                <div class="small">{{ r.source_notes }}</div>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="small">{{ r.published or "-" }}</div>
+            </td>
+
+            <td>
+              <div class="badge">
+                {% if r.extraction_ok == 1 %}
+                  <span class="pill ok">extraction OK</span>
+                {% else %}
+                  <span class="pill bad">no text</span>
+                {% endif %}
+
+                {% if r.relevance == 1 %}
+                  <span class="pill ok">relevant</span>
+                {% elif r.relevance == 0 %}
+                  <span class="pill warn">irrelevant</span>
+                {% endif %}
+
+                {% if r.deleted_at %}
+                  <span class="pill warn">deleted</span>
+                {% endif %}
+
+                {% set fe = (r.fetch_error or "") %}
+                {% if fe == "AGGREGATOR" or fe == "SKIPPED_AGGREGATOR" %}
+                  <span class="pill purple" title="Agregátor – neextrahujeme">aggregator</span>
+                {% elif fe == "JS_RENDER_REQUIRED" %}
+                  <span class="pill info" title="Text sa renderuje cez JS – neextrahované">js-render</span>
+                {% elif fe == "EXTRACTION_EMPTY" %}
+                  <span class="pill orange" title="HTML stiahnuté, ale extraktor nič nenašiel">empty</span>
+                {% elif fe.startswith("HTTPError:") %}
+                  <span class="pill red" title="{{ fe }}">http-error</span>
+                {% elif fe %}
+                  <span class="pill gray" title="{{ fe }}">err</span>
+                {% endif %}
+              </div>
+
+              {% if r.fetch_error %}
+                <div class="small">err: {{ r.fetch_error }}</div>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </form>
+
+  </div>
+
+  <script>
+    (function(){
+      const bulkForm = document.getElementById("bulkForm");
+      const buttons = document.querySelectorAll("form[action^='/bulk/'] button");
+
+      buttons.forEach(btn => {
+        const form = btn.closest("form");
+        if(!form) return;
+
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          const action = form.getAttribute("action");
+          bulkForm.setAttribute("action", action);
+          bulkForm.setAttribute("method", "post");
+
+          const noteInput = form.querySelector("input[name='note']");
+          bulkForm.querySelectorAll("input[name='note'][type='hidden']").forEach(n => n.remove());
+          if(noteInput && noteInput.value.trim()){
+            const h = document.createElement("input");
+            h.type = "hidden";
+            h.name = "note";
+            h.value = noteInput.value.trim();
+            bulkForm.appendChild(h);
+          }
+
+          const onsubmit = form.getAttribute("onsubmit");
+          if(onsubmit){
+            try{
+              const m = onsubmit.match(/confirm\('([^']+)'\)/);
+              if(m && m[1]){
+                if(!confirm(m[1])) return;
+              }
+            }catch(_){}
+          }
+
+          bulkForm.submit();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

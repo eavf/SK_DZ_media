@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Spracovať</h1>
+  <div class="sub">Ingest posledného bundle do DB (ingest_to_dz_news.py).</div>
+
+  <div class="actions">
+    <form method="post" action="/process/ingest_latest" onsubmit="return confirm('Ingest latest bundle do DB?');">
+      <button type="submit">Ingest latest</button>
+    </form>
+
+    {% if latest_bundle %}
+      <span class="pill ok">latest: {{ latest_bundle }}</span>
+    {% else %}
+      <span class="pill warn">latest: —</span>
+    {% endif %}
+  </div>
+
+  {% if last_log is defined %}
+    <div class="hr"></div>
+    <div class="small">return code: <b>{{ last_rc }}</b></div>
+    <pre class="mono" style="white-space:pre-wrap; margin-top:10px">{{ last_log }}</pre>
+  {% endif %}
+</div>
+{% endblock %}

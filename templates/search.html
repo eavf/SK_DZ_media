@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DZ News – Search</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    pre.log { white-space: pre-wrap; border:1px solid var(--line); border-radius:14px; padding:10px; background: rgba(255,255,255,.02); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="banner {{ category }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="topbar">
+    <div class="left">
+      <span class="pill">DZ News</span>
+      <span class="pill ok">Search</span>
+    </div>
+    <div class="right">
+      <a class="pill" href="/">Dashboard</a>
+      <a class="pill" href="/browse">Browse</a>
+      <a class="pill" href="/stats">Stats</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h1>Search (SerpAPI)</h1>
+    <div class="sub">Vyplň parametre priamo pre SerpAPI: hl / gl / num / when:Xd.</div>
+
+    <div class="actions" style="margin-top:12px">
+      <form method="post" action="/search/run" class="actions" style="margin-top:0">
+        <input class="mono" type="text" name="hl" value="{{ hl }}" placeholder="hl (fr)" style="max-width:90px">
+        <input class="mono" type="text" name="gl" value="{{ gl }}" placeholder="gl (dz)" style="max-width:90px">
+        <input class="mono" type="text" name="num" value="{{ num }}" placeholder="num" style="max-width:90px">
+        <input class="mono" type="text" name="when" value="{{ when }}" placeholder="when (7d)" style="max-width:120px">
+        <button type="submit">Spustiť search</button>
+      </form>
+    </div>
+
+    {% if last_bundle %}
+      <div class="hr"></div>
+      <div class="box">
+        <h2>Posledný bundle</h2>
+        <div class="small mono">{{ last_bundle }}</div>
+        <div class="small" style="margin-top:8px">
+          (Je uložený v <code>bundle/runs/...</code>.)
+        </div>
+      </div>
+    {% endif %}
+
+    {% if run_log %}
+      <div class="hr"></div>
+      <div class="box">
+        <h2>Log</h2>
+        <pre class="log mono">{{ run_log }}</pre>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+</body>
+</html>

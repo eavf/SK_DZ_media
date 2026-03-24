@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import io
 import csv
 from datetime import datetime, timedelta
@@ -14,19 +15,17 @@ from dotenv import load_dotenv
 from sqlalchemy import text, bindparam
 from docx import Document
 
-from Archive.extract_articles import extract_one
 
-from config.config import get_db_engine, get_settings, require, configure_root_logging
+from config.config import get_db_engine, require, init_context
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 
-# Načítanie všetkých premenných
-settings = get_settings()
-logger = configure_root_logging(settings, name="app")
+settings, paths = init_context()
+logger = logging.getLogger("app")
 
 def configure_logging(app, settings):
-    log_path = settings.log_dir / settings.log_file
+    log_path = settings.paths.log_dir / settings.log_file
 
     handler = RotatingFileHandler(
         log_path,
@@ -69,11 +68,11 @@ TERM_RE = re.compile(r"(" + "|".join(re.escape(t) for t in SLOVAK_TERMS) + r")",
 
 
 BUNDLE_GLOB = "news_bundle_*.json"   # presne ako vytvára search_flow_news.py
-PYTHON_BIN = "python3"              # alebo sys.executable
+PYTHON_BIN = sys.executable
 
 
 def latest_bundle_path() -> str | None:
-    p = max(Path("./bundle").glob(BUNDLE_GLOB), default=None, key=lambda x: x.stat().st_mtime)
+    p = max(paths.bundle_dir.glob(BUNDLE_GLOB), default=None, key=lambda x: x.stat().st_mtime)
     return str(p) if p else None
 
 
@@ -146,9 +145,6 @@ def build_filters(days: int, only_ok: bool, only_slovak: bool, relevance: str, i
             params[key] = f"%{term.lower()}%"
             like_terms.append(f"LOWER(COALESCE(a.content_text, a.title, a.snippet, '')) LIKE :{key}")
         where.append("(" + " OR ".join(like_terms) + ")")
-    elif only_slovak:
-        # no slovak terms → cannot satisfy filter → return empty result set
-        where.append("0=1")  # alebo nič, podľa toho čo chceš
 
     return " AND ".join(where), params
 
@@ -330,32 +326,13 @@ def browse():
     )
 
 
-@app.post("/source/avoid/<int:source_id>")
-def avoid_source(source_id: int):
-    engine = get_db_engine()
-    with engine.begin() as conn:
-        conn.execute(text("""
-            UPDATE sources SET is_avoided = 1 WHERE id = :id
-        """), {"id": source_id})
-    return redirect(url_for("browse", **browse_q_from_request()))
-
-
-@app.post("/source/unavoid/<int:source_id>")
-def unavoid_source(source_id: int):
-    engine = get_db_engine()
-    with engine.begin() as conn:
-        conn.execute(text("""
-            UPDATE sources SET is_avoided = 0 WHERE id = :id
-        """), {"id": source_id})
-    return redirect(url_for("browse", **browse_q_from_request()))
-
-
 @app.post("/bulk_delete")
 def bulk_delete():
     mode = request.form.get("mode", "soft")  # soft|hard
     ids_int = get_selected_article_ids()
 
     if not ids_int:
+        logger.warning("bulk_delete called with no articles selected")
         return redirect(url_for("browse", **browse_q_from_request()))
 
     engine = get_db_engine()
@@ -376,6 +353,7 @@ def bulk_delete():
                 WHERE id IN :ids
             """), {"ids": tuple(ids_int)})
 
+    logger.info("bulk_delete (%s): %d articles %s", mode, len(ids_int), ids_int)
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
@@ -390,6 +368,7 @@ def undelete(article_id: int):
             WHERE id = :id
         """), {"id": article_id})
 
+    logger.info("Article restored from soft delete: id=%s", article_id)
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
@@ -414,6 +393,7 @@ def bulk_exclude_domains():
         source_ids = [row[0] for row in source_rows if row[0] is not None]
 
         if not source_ids:
+            logger.warning("bulk_exclude_domains: no source_ids found for articles %s", ids_int)
             return redirect(url_for("browse", **request.args))
 
         # 2) umlčať domény (EXPANDING!)
@@ -437,22 +417,10 @@ def bulk_exclude_domains():
 
             conn.execute(u2, {"note": note, "sids": source_ids})
 
+    logger.info("bulk_exclude_domains: %d sources muted from %d articles", len(source_ids), len(ids_int))
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
-@app.post("/source/note/<int:source_id>")
-def set_source_note(source_id: int):
-    """Uloží/aktualizuje dôvod (sources.notes)."""
-    note = (request.form.get("note") or "").strip()[:255]
-    engine = get_db_engine()
-    with engine.begin() as conn:
-        conn.execute(text("""
-            UPDATE sources
-            SET notes = :note
-            WHERE id = :id
-        """), {"note": note if note else None, "id": source_id})
-
-    return redirect(url_for("stats", **request.args))
 
 
 @app.get("/stats")
@@ -602,6 +570,7 @@ def label(article_id: int):
                 WHERE id=:id
             """), {"id": article_id, "rel": int(rel), "note": note})
 
+    logger.info("Article labeled: id=%s, relevance=%s, note=%r", article_id, rel, note)
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
@@ -618,6 +587,7 @@ def delete(article_id: int):
         else:
             conn.execute(text("UPDATE articles SET deleted_at=NOW() WHERE id=:id"), {"id": article_id})
 
+    logger.info("Article deleted (%s): id=%s", mode, article_id)
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
@@ -666,6 +636,7 @@ def export_csv():
                 r.relevance_note or ""
             ])
 
+    logger.info("CSV export: %d rows, %dd filter", len(rows), days)
     mem = io.BytesIO(out.getvalue().encode("utf-8-sig"))  # BOM helps Excel
     filename = f"dz_news_{days}d.csv"
     return send_file(mem, as_attachment=True, download_name=filename, mimetype="text/csv")
@@ -732,6 +703,7 @@ def export_word():
                 for s in ctx:
                     doc.add_paragraph(f"- {s}")
 
+    logger.info("Word export: %d rows, %dd filter", len(rows), days)
     mem = io.BytesIO()
     doc.save(mem)
     mem.seek(0)
@@ -851,6 +823,7 @@ def article_label(article_id: int):
             WHERE id = :id
         """), {"relevance": relevance, "note": note if note else None, "id": article_id})
 
+    logger.info("Article labeled: id=%s, relevance=%s, note=%r", article_id, relevance_raw, note)
     return redirect(url_for("article_detail", article_id=article_id))
 
 
@@ -883,6 +856,7 @@ def article_exclude_domain(article_id: int):
                 WHERE id = :sid AND (notes IS NULL OR TRIM(notes) = '')
             """), {"note": note, "sid": r})
 
+    logger.info("Source muted from article: article_id=%s, source_id=%s", article_id, r)
     return redirect(url_for("article_detail", article_id=article_id))
 
 
@@ -900,22 +874,19 @@ def article_unexclude_domain(article_id: int):
             UPDATE sources SET is_avoided = 0 WHERE id = :sid
         """), {"sid": sid})
 
+    logger.info("Source unmuted from article: article_id=%s, source_id=%s", article_id, sid)
     return redirect(url_for("article_detail", article_id=article_id))
 
 
 @app.post("/article/<int:article_id>/fetch")
 def fetch_extract_article(article_id: int):
-    engine = get_db_engine()
-    res = extract_one(article_id, engine=engine)
-
-    # ak používaš flash správy:
-
-    if res.get("ok"):
-        chars = res.get("extracted_chars", 0)
-        flash(f"Fetch & extract OK — {chars} znakov uložených.", "success")
+    code, out = run_script([PYTHON_BIN, "refetch_article.py", "--article-id", str(article_id)])
+    if code == 0:
+        logger.info("Article fetch OK: id=%s", article_id)
+        flash("Fetch & extract OK.", "success")
     else:
-        err = res.get("fetch_error") or res.get("error") or "UNKNOWN"
-        flash(f"Fetch & extract FAIL — {err}.", "error")
+        logger.error("Article fetch failed: id=%s\n%s", article_id, out)
+        flash("Fetch & extract FAIL — pozri log.", "error")
 
     return redirect(url_for("article_detail", article_id=article_id))
 
@@ -924,6 +895,7 @@ def fetch_extract_article(article_id: int):
 def bulk_restore():
     ids_int = get_selected_article_ids()
     if not ids_int:
+        logger.warning("bulk_restore called with no articles selected")
         return redirect(url_for("browse", **browse_q_from_request()))
 
     engine = get_db_engine()
@@ -931,6 +903,7 @@ def bulk_restore():
         q = text("UPDATE articles SET deleted_at = NULL WHERE id IN :ids")
         conn.execute(q, {"ids": tuple(ids_int)})
 
+    logger.info("bulk_restore: %d articles restored", len(ids_int))
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
@@ -944,8 +917,10 @@ def search_run():
     code, out = run_script([PYTHON_BIN, "search_flow_news.py"])
     if code == 0:
         lb = latest_bundle_path()
+        logger.info("search_run OK: exit_code=%s, bundle=%s", code, lb)
         flash(f"OK: vyhľadávanie dokončené. Latest bundle: {lb}", "ok")
     else:
+        logger.error("search_run FAILED: exit_code=%s\n%s", code, out)
         flash("CHYBA: vyhľadávanie zlyhalo (pozri log na /search).", "bad")
     return render_template("search.html", latest_bundle=latest_bundle_path(), last_log=out, last_rc=code)
 
@@ -959,16 +934,20 @@ def process_page():
 def process_ingest_latest():
     lb = latest_bundle_path()
     if not lb:
+        logger.warning("process_ingest_latest: no bundle file found")
         flash("Nenašiel som žiadny news_bundle_*.json.", "bad")
         return redirect(url_for("process_page"))
 
     env = os.environ.copy()
     env["BUNDLE_PATH"] = lb
 
-    code, out = run_script([PYTHON_BIN, "ingest_to_dz_news.py"], env=env)
+    logger.info("process_ingest_latest started: bundle=%s", lb)
+    code, out = run_script([PYTHON_BIN, "ingest_to_dz_news_reworked.py"], env=env)
     if code == 0:
+        logger.info("process_ingest_latest OK: exit_code=%s, bundle=%s", code, lb)
         flash(f"OK: ingest hotový ({lb})", "ok")
     else:
+        logger.error("process_ingest_latest FAILED: exit_code=%s\n%s", code, out)
         flash("CHYBA: ingest zlyhal (pozri log na /process).", "bad")
 
     return render_template("process.html", latest_bundle=lb, last_log=out, last_rc=code)
@@ -1085,6 +1064,7 @@ def source_create():
                     text("UPDATE sources SET notes = :n WHERE id = :id"),
                     {"n": note, "id": existing}
                 )
+            logger.warning("source_create: domain already exists: %s", domain)
             flash(f"Doména už existuje: {domain}", "warn")
         else:
             conn.execute(
@@ -1094,6 +1074,7 @@ def source_create():
                 """),
                 {"d": domain, "n": note}
             )
+            logger.info("source_create: new source added: %s", domain)
             flash(f"Pridané: {domain}", "ok")
 
     return redirect("/sources")
@@ -1107,9 +1088,10 @@ def source_note(source_id: int):
     with engine.begin() as conn:
         conn.execute(
             text("UPDATE sources SET notes = :n WHERE id = :id"),
-            {"n": note, "id": source_id}
+            {"n": note if note else None, "id": source_id}
         )
 
+    logger.info("Source note updated: id=%s, note=%r", source_id, note)
     flash("Poznámka uložená.", "ok")
     # vráť sa tam, kde bol user (ak posielal zo /sources alebo /stats)
     return redirect(request.referrer or "/sources")
@@ -1123,6 +1105,7 @@ def source_avoid(source_id: int):
             text("UPDATE sources SET is_avoided = 1 WHERE id = :id"),
             {"id": source_id}
         )
+    logger.info("Source muted: id=%s", source_id)
     flash("Doména umlčaná (mute).", "ok")
     return redirect(request.referrer or "/sources")
 
@@ -1135,10 +1118,11 @@ def source_unavoid(source_id: int):
             text("UPDATE sources SET is_avoided = 0 WHERE id = :id"),
             {"id": source_id}
         )
+    logger.info("Source unmuted: id=%s", source_id)
     flash("Doména od-umlčaná (unmute).", "ok")
     return redirect(request.referrer or "/sources")
 
 
 if __name__ == "__main__":
-    port = int(require(str(settings.flask_port), "5088"))
+    port = settings.flask_port
     app.run(host="127.0.0.1", port=port, debug=True)

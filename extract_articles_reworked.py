@@ -18,7 +18,7 @@ from config.config import get_settings, configure_root_logging
 s = get_settings()
 log = configure_root_logging(s, name="extract_articles")
 
-DEBUG_HTML_DIR = s.bundle_dir / "debug_html"
+DEBUG_HTML_DIR = s.paths.bundle_dir / "debug_html"
 DEBUG_HTML_DIR.mkdir(parents=True, exist_ok=True)
 
 DROP_QUERY_KEYS = {
@@ -395,7 +395,7 @@ def default_output_for(inputs: list[Path]) -> Path:
     if len(inputs) == 1:
         return inputs[0].with_name(inputs[0].stem + "_articles.json")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return s.bundle_dir / f"extracted_articles_{stamp}.json"
+    return s.paths.bundle_dir / f"extracted_articles_{stamp}.json"
 
 
 def resolve_input_paths(cli_inputs: list[str]) -> list[Path]:
@@ -403,13 +403,13 @@ def resolve_input_paths(cli_inputs: list[str]) -> list[Path]:
         paths = [Path(p).expanduser().resolve() for p in cli_inputs]
     else:
         preferred = [
-            s.bundle_dir / "news_bundle.json",
-            s.bundle_dir / "news_combined.json",
+            s.paths.bundle_dir / "news_bundle.json",
+            s.paths.bundle_dir / "news_combined.json",
         ]
         existing = [p for p in preferred if p.exists()]
         if existing:
             return existing
-        paths = sorted(s.runs_dir.glob("*.json"))
+        paths = sorted(s.paths.runs_dir.glob("*.json"))
 
     resolved: list[Path] = []
     for path in paths:

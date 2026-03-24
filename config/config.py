@@ -237,6 +237,8 @@ def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = Non
         return _CACHED
 
     load_dotenv(dotenv_path=dotenv_path)
+    # .env.local prepíše hodnoty z .env (lokálny dev override)
+    load_dotenv(dotenv_path=PROJECT_ROOT / ".env.local", override=True)
 
     def _resolve_path_from_env(env_name: str, default_path: Path) -> Path:
         raw = os.getenv(env_name)
@@ -305,7 +307,7 @@ def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = Non
 
     s = Settings(
         # Flask
-        flask_port=_to_int(os.getenv("FLASK_PORT"), 5080),
+        flask_port=_to_int(os.getenv("FLASK_PORT"), 5088),
         flask_secret_key=os.getenv("FLASK_SECRET_KEY", "").strip(),
 
         # DB
@@ -385,8 +387,8 @@ def get_db_engine(*, force_new: bool = False) -> Engine:
 
     s = get_settings()
 
-    if not s.db_user or not s.db_pass:
-        raise SystemExit("Missing DB_USER / DB_PASS in .env / environment.")
+    if not s.db_user:
+        raise SystemExit("Missing DB_USER in .env / environment.")
 
     url = (
         f"mysql+pymysql://{s.db_user}:{s.db_pass}"

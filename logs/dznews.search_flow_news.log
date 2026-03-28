@@ -1091,3 +1091,30 @@ Saved bundle: news_bundle_1773434403.json in /home/vovo/PycharmProjects/SK_DZ_me
 2026-03-27 16:24:22,417 [INFO] search_flow_news: Q3 clean news_results: 1, preferred=0, domains=1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:560
 2026-03-27 16:24:22,417 [INFO] search_flow_news: Saved bundle: /home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260327_162409/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:593
 2026-03-27 16:24:22,418 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:594
+2026-03-28 16:11:15,206 [INFO] search_flow_news: Config loaded: 12 preferred domains, 7 ranked sources, 3 topic groups in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:468
+2026-03-28 16:11:15,206 [INFO] search_flow_news: [1/2] Q1 (PREFERRED): (site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي OR الجمهورية السلوفاكية) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:489
+2026-03-28 16:11:18,454 [INFO] search_flow_news: [2/2] Q2 (CONTEXT): site:.dz (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي OR الجمهورية السلوفاكية) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:508
+2026-03-28 16:11:22,582 [INFO] search_flow_news: 
+--- STATS (RAW) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:537
+2026-03-28 16:11:22,582 [INFO] search_flow_news: Q1 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:538
+2026-03-28 16:11:22,582 [INFO] search_flow_news: Q2 raw news_results: 0 (need >= 20 for 'full') in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:539
+2026-03-28 16:11:22,582 [INFO] search_flow_news: 
+--- STATS (CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:541
+2026-03-28 16:11:22,582 [INFO] search_flow_news: Q1 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:542
+2026-03-28 16:11:22,582 [INFO] search_flow_news: Q2 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:548
+2026-03-28 16:11:22,582 [INFO] search_flow_news: Preferred present in Q1+Q2 (clean): False in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:559
+2026-03-28 16:11:22,583 [INFO] search_flow_news: 
+--- STATS (Deduplicated) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:560
+2026-03-28 16:11:22,583 [INFO] search_flow_news: Unique articles after dedup: 0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:561
+2026-03-28 16:11:22,583 [INFO] search_flow_news: 
+--- DOMAIN STATS --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:562
+2026-03-28 16:11:22,583 [INFO] search_flow_news: 
+--- TOP ARTICLES --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:567
+2026-03-28 16:11:22,583 [INFO] search_flow_news: Fallback check: yes: too_few_unique 0<14, too_few_preferred 0<1 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:575
+2026-03-28 16:11:23,583 [INFO] search_flow_news: 
+[+fallback] Q3 (DZ BROAD): (Slovaquie OR slovaque OR Slovakia OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي OR الجمهورية السلوفاكية) (Algérie OR Algeria OR Alger OR Algiers OR الجزائر OR "الجزائر العاصمة") in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:580
+2026-03-28 16:11:26,845 [INFO] search_flow_news: 
+--- STATS (FALLBACK CLEAN) --- in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:598
+2026-03-28 16:11:26,845 [INFO] search_flow_news: Q3 clean news_results: 0, preferred=0, domains=0 in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:599
+2026-03-28 16:11:26,846 [INFO] search_flow_news: Saved bundle: /home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260328_161115/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:637
+2026-03-28 16:11:26,846 [INFO] search_flow_news: Done. in /home/vovo/PycharmProjects/SK_DZ_media/search_flow_news.py:638

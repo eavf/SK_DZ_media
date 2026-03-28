@@ -7,6 +7,5 @@ logs/
 bundle/
 data/
 debug_html/
-Archive/
 *.md
 tests/

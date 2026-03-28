@@ -27,7 +27,7 @@ case "${1:-}" in
     echo "Použitie: ./deploy.sh [MOŽNOSŤ]"
     echo ""
     echo "  (bez možnosti)   Full deploy: build image → push Docker Hub → scp konfig → pull + restart na Synology"
-    echo "  --no-rebuild     Skopíruje templates/config/static na Synology a reštartuje (bez buildu)"
+    echo "  --no-rebuild     Skopíruje config/static na Synology a reštartuje (bez buildu)"
     echo "  --tpl-only       Len šablóny (templates/) na Synology, bez reštartu — zmeny sú hneď aktívne"
     echo "  --restart        Len reštartuje kontajnery na Synology"
     echo "  --rebuild        Len build + push na Docker Hub (bez nasadenia na Synology)"
@@ -44,9 +44,9 @@ if [[ $MODE == "tpl" ]]; then
 fi
 
 if [[ $MODE == "no-rebuild" ]]; then
-  echo "--> Kopírujem templates, config, static (bez rebuildu)..."
-  ${SCP} -r "${LOCAL_DIR}/templates" "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
-  ${SCP} -r "${LOCAL_DIR}/config"    "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
+  echo "--> Kopírujem config a static (bez rebuildu)..."
+  tar -czf - --exclude='__pycache__' --exclude='*.pyc' -C "${LOCAL_DIR}" config | \
+    ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR}"
   ${SCP} -r "${LOCAL_DIR}/static"    "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
   echo "--> Rešartujem kontajner..."
   ${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose restart"
@@ -56,7 +56,7 @@ fi
 
 if [[ $MODE == "restart" ]]; then
   echo "--> Rešartujem kontajner na Synology..."
-  ${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose restart"
+  ${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose up --force-recreate -d"
   echo "==> Hotovo."
   exit 0
 fi
@@ -86,7 +86,8 @@ ${SCP} \
   "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
 
 ${SCP} -r "${LOCAL_DIR}/templates" "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
-${SCP} -r "${LOCAL_DIR}/config"    "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
+tar -czf - --exclude='__pycache__' --exclude='*.pyc' -C "${LOCAL_DIR}" config | \
+  ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR}"
 ${SCP} -r "${LOCAL_DIR}/static"    "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
 
 # ── 4. Nastav práva na zapisovateľné adresáre ─────────────────────────────────
@@ -95,11 +96,12 @@ ${SSH} "sudo /bin/mkdir -p ${REMOTE_DIR}/logs ${REMOTE_DIR}/data ${REMOTE_DIR}/b
   sudo /bin/chmod 777 \
   ${REMOTE_DIR}/logs \
   ${REMOTE_DIR}/data \
+  ${REMOTE_DIR}/bundle \
   ${REMOTE_DIR}/templates \
   ${REMOTE_DIR}/config \
   ${REMOTE_DIR}/static"
 
 # ── 5. Pull nový image a reštartuj ────────────────────────────────────────────
 echo "--> Pullnem nový image a reštartujem na Synology..."
-${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up -d"
+${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up --force-recreate -d && ${DOCKER} image prune -f"
 echo "==> Deploy hotový."

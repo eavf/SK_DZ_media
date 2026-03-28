@@ -3,6 +3,12 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/bundle/debug_html" />
+      <excludeFolder url="file://$MODULE_DIR$/bundle/runs/run_20260324_205244" />
+      <excludeFolder url="file://$MODULE_DIR$/bundle/runs/run_20260324_215739" />
+      <excludeFolder url="file://$MODULE_DIR$/bundle/runs/run_20260324_215740" />
+      <excludeFolder url="file://$MODULE_DIR$/bundle/runs/run_20260324_230207" />
+      <excludeFolder url="file://$MODULE_DIR$/bundle/runs/run_20260325_222738" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.14 (SK_DZ_media)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

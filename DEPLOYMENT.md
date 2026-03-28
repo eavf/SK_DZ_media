@@ -98,6 +98,29 @@ sudo docker compose pull
 sudo docker compose up -d
 ```
 
+## Prvé spustenie – vytvorenie databázy
+
+```bash
+# Uprav heslo pre dz_app (nahraď CHANGE_ME)
+# Potom spusti ako root / admin user:
+mariadb -u root -p < Archive/setup_db.sql
+```
+
+Skript vytvorí:
+- databázu `dz_news` (utf8mb4)
+- tabuľky `articles`, `sources`, `runs`, `run_articles` s indexmi a FK
+- usera `dz_app` s privilégiami `SELECT/INSERT/UPDATE/DELETE` + `RELOAD` (pre `FLUSH HOSTS`)
+
+> Skript je idempotentný (`CREATE IF NOT EXISTS`) — dá sa spustiť opakovane bez poškodenia dát.
+
+Potom nastav prihlasovacie údaje v `.env` na Synology:
+```
+DB_USER=dz_app
+DB_PASS=<heslo ktoré si nastavil>
+```
+
+---
+
 ## DB migrácie
 
 Spúšťajú sa manuálne cez Container Manager → Terminal:

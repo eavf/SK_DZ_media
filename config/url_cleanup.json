@@ -12,5 +12,31 @@
     "mc_eid",
     "ref",
     "ref_src"
+  ],
+  "blocklist_domains": [
+    "mobilis.dz",
+    "stepmode.dz",
+    "translate.google.dz",
+    "ems.dz",
+    "elhanaa.cnas.dz"
+  ],
+  "ecom_path_markers": [
+    "/produit/", "/product/", "/shop/", "/cart/", "/panier/",
+    "/offers", "/offre", "/pass", "/promo"
+  ],
+  "bad_path_markers": [
+    "/recherche",
+    "/search",
+    "/tag/",
+    "/tags/",
+    "/page/",
+    "/opac/",
+    "/company-location/",
+    "/embassys-locations-list",
+    "/?m="
+  ],
+  "title_bad_words": [
+    "promo", "promotion", "prix", "offre", "pass", "roaming",
+    "سعر", "عرض", "تخفيضات", "شراء"
   ]
 }

@@ -15,6 +15,7 @@ from sqlalchemy import text
 import logging
 
 from config.config import get_db_engine, init_context, init_cli
+from translate import translate_ar_fr
 
 
 # ---------------------------------------------------------------------------
@@ -29,6 +30,9 @@ logger = logging.getLogger("ingest_to_dz_news")
 PREFERRED_DOMAINS = s.preferred_domains
 SOURCE_RANK = s.source_rank
 DROP_QUERY_KEYS = set(s.drop_query_keys or set())
+BLOCKLIST_DOMAINS = s.blocklist_domains or set()
+BAD_PATH_MARKERS = s.bad_path_markers or set()
+TITLE_BAD_WORDS = s.title_bad_words or set()
 
 logger.info(
     f"Config loaded: {len(PREFERRED_DOMAINS)} preferred domains, "
@@ -183,9 +187,11 @@ class ArticleCandidate:
 
     published_at_raw: Optional[str]
     published_at_confidence: str
+    published_at_iso: Optional[str]
 
     source_label: Optional[str]
     language: Optional[str]
+    auto_irrelevant: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -295,12 +301,21 @@ def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, pr
     if not dom:
         return None
 
-    published_raw = item.get("date") or item.get("published_at")
+    published_raw = item.get("date")
+    published_iso = item.get("published_at")  # ISO date added by search_flow_news enrichment
     conf = classify_published_at(str(published_raw) if published_raw is not None else None)
 
     title = item.get("title")
     normalized_title = normalize_title(title)
     title_hash = sha256_hex(normalized_title) if normalized_title else ""
+
+    low_url = canon.lower()
+    text_for_filter = f"{title or ''} {item.get('snippet') or ''}".lower()
+    auto_irrelevant = (
+        dom in BLOCKLIST_DOMAINS
+        or any(m in low_url for m in BAD_PATH_MARKERS)
+        or any(w.lower() in text_for_filter for w in TITLE_BAD_WORDS)
+    )
 
     return ArticleCandidate(
         query_id=query_id,
@@ -317,8 +332,10 @@ def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, pr
         snippet=item.get("snippet"),
         published_at_raw=published_raw,
         published_at_confidence=conf,
+        published_at_iso=published_iso,
         source_label=item.get("source"),
         language=item.get("language"),
+        auto_irrelevant=auto_irrelevant,
     )
 
 
@@ -486,14 +503,18 @@ def upsert_article(conn, c: ArticleCandidate, source_id: int) -> None:
     conn.execute(text("""
         INSERT INTO articles (
             source_id, url, url_canonical, url_hash,
-            title, normalized_title, title_hash, published_at_text, snippet, language,
+            title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
+            snippet, language,
             ingestion_engine, ingestion_query_id, ingestion_rank,
+            relevance,
             first_seen_at, last_seen_at
         )
         VALUES (
             :source_id, :url, :url_canonical, :url_hash,
-            :title, :normalized_title, :title_hash, :published_at_text, :snippet, :language,
+            :title, :normalized_title, :title_hash, :published_at_text, :published_at_real, :published_conf,
+            :snippet, :language,
             :ingestion_engine, :ingestion_query_id, :ingestion_rank,
+            :relevance,
             NOW(), NOW()
         )
         ON DUPLICATE KEY UPDATE
@@ -502,6 +523,8 @@ def upsert_article(conn, c: ArticleCandidate, source_id: int) -> None:
             normalized_title = COALESCE(VALUES(normalized_title), normalized_title),
             title_hash = COALESCE(VALUES(title_hash), title_hash),
             published_at_text = COALESCE(VALUES(published_at_text), published_at_text),
+            published_at_real = COALESCE(published_at_real, VALUES(published_at_real)),
+            published_conf = COALESCE(published_conf, VALUES(published_conf)),
             snippet = COALESCE(VALUES(snippet), snippet),
             language = COALESCE(VALUES(language), language),
             ingestion_engine = COALESCE(VALUES(ingestion_engine), ingestion_engine),
@@ -520,11 +543,14 @@ def upsert_article(conn, c: ArticleCandidate, source_id: int) -> None:
         "normalized_title": c.normalized_title,
         "title_hash": c.title_hash,
         "published_at_text": c.published_at_raw,
+        "published_at_real": c.published_at_iso,
+        "published_conf": "search" if c.published_at_iso else None,
         "snippet": c.snippet,
         "language": c.language,
         "ingestion_engine": c.engine,
         "ingestion_query_id": c.query_id,
         "ingestion_rank": c.rank,
+        "relevance": 0 if c.auto_irrelevant else None,
     })
 
 
@@ -634,7 +660,58 @@ def process_file(bundle_path: Path, *, use_clean: bool = True) -> tuple[int, int
         bundle_path.name, len(cands), len(deduped), linked, run_id
     )
 
+    _translate_pending_titles(article_id_map.values())
+
     return len(cands), len(deduped), run_id
+
+
+def _translate_pending_titles(article_ids) -> None:
+    """Preloží title + snippet pre arabské články bez title_fr."""
+    api_key = s.deepl_api_key
+    if not api_key:
+        return
+
+    ids = list(article_ids)
+    if not ids:
+        return
+
+    engine = get_db_engine()
+    placeholders = ", ".join(f":id{i}" for i in range(len(ids)))
+    params = {f"id{i}": v for i, v in enumerate(ids)}
+
+    with engine.begin() as conn:
+        rows = conn.execute(text(f"""
+            SELECT id, title, snippet
+            FROM articles
+            WHERE id IN ({placeholders})
+              AND language = 'ar'
+              AND title_fr IS NULL
+              AND deleted_at IS NULL
+        """), params).mappings().fetchall()
+
+    if not rows:
+        return
+
+    logger.info("Prekladám title+snippet pre %s arabských článkov", len(rows))
+
+    for row in rows:
+        texts, keys = [], []
+        if row["title"]:
+            texts.append(row["title"]); keys.append("title_fr")
+        if row["snippet"]:
+            texts.append(row["snippet"]); keys.append("snippet_fr")
+        if not texts:
+            continue
+        try:
+            translated = translate_ar_fr(api_key, texts)
+            updates = dict(zip(keys, translated))
+            updates["id"] = row["id"]
+            set_clause = ", ".join(f"{k} = :{k}" for k in keys)
+            with engine.begin() as conn:
+                conn.execute(text(f"UPDATE articles SET {set_clause} WHERE id = :id"), updates)
+            logger.info("Preložené title/snippet: id=%s", row["id"])
+        except Exception as e:
+            logger.warning("DeepL zlyhal pre id=%s: %s", row["id"], e)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:

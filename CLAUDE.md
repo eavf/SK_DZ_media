@@ -76,6 +76,7 @@ All config comes from `.env` (loaded via python-dotenv). Key variables:
 - `DB_HOST/PORT/NAME/USER/PASS` — MySQL connection
 - `PREFERRED_DOMAINS` — CSV of prioritized Algerian news domains
 - `FLASK_PORT`, `FLASK_SECRET_KEY`
+- There is .env.local file, where are put variables for development PC and server 
 
 Static config files in `config/`:
 - `sources.json` — Preferred domain list
@@ -89,7 +90,48 @@ Static config files in `config/`:
 
 ### Database
 
-MySQL with utf8mb4. Schema inferred from code — no migration files. Main tables: `articles`, `sources`, `run_articles`. The app uses soft-delete (`deleted_at` timestamp) and domain muting (`sources.is_avoided`).
+MySQL with utf8mb4 (MariaDB 11.4). Main tables: `articles`, `sources`, `run_articles`. The app uses soft-delete (`deleted_at` timestamp) and domain muting (`sources.is_avoided`).
+
+#### Table: `articles`
+
+```sql
+CREATE TABLE `articles` (
+  `id`                   bigint(20) NOT NULL AUTO_INCREMENT,
+  `source_id`            int(11) NOT NULL,                          -- FK → sources.id
+  `url`                  text NOT NULL,
+  `final_url`            text DEFAULT NULL,
+  `final_url_canonical`  varchar(1024) DEFAULT NULL,
+  `final_url_hash`       char(64) DEFAULT NULL,
+  `url_canonical`        varchar(1024) NOT NULL,
+  `url_hash`             char(64) NOT NULL,                         -- UNIQUE, dedup key
+  `title`                text DEFAULT NULL,
+  `normalized_title`     text DEFAULT NULL,
+  `title_hash`           char(64) DEFAULT NULL,
+  `published_at_text`    varchar(64) DEFAULT NULL,
+  `published_at_real`    datetime DEFAULT NULL,
+  `published_conf`       varchar(12) DEFAULT NULL,
+  `snippet`              text DEFAULT NULL,
+  `language`             varchar(10) DEFAULT NULL,
+  `lang_detected`        varchar(10) DEFAULT NULL,
+  `extraction_ok`        tinyint(1) NOT NULL DEFAULT 0,
+  `source_label`         varchar(255) DEFAULT NULL,
+  `first_seen_at`        datetime NOT NULL DEFAULT current_timestamp(),
+  `last_seen_at`         datetime NOT NULL DEFAULT current_timestamp(),
+  `fetched_at`           datetime DEFAULT NULL,
+  `http_status`          int(11) DEFAULT NULL,
+  `fetch_error`          text DEFAULT NULL,
+  `content_text`         mediumtext DEFAULT NULL,
+  `content_hash`         char(64) DEFAULT NULL,
+  `ingestion_engine`     varchar(30) DEFAULT NULL,
+  `ingestion_query_id`   varchar(10) DEFAULT NULL,
+  `ingestion_rank`       int(11) DEFAULT NULL,
+  `relevance`            tinyint(4) DEFAULT NULL,                   -- labeling: NULL/0/1/2
+  `relevance_note`       varchar(255) DEFAULT NULL,
+  `deleted_at`           datetime DEFAULT NULL,                     -- soft delete
+  `content_text_fr`      longtext DEFAULT NULL,
+  `snippet_fr`           text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
 
 ### Docker
 

@@ -1,4 +1,5 @@
 import json
+import re
 import time
 from urllib.parse import urlparse
 
@@ -21,64 +22,33 @@ logger = logging.getLogger("search_flow_news")
 PREFERRED_DOMAINS = s.preferred_domains
 SOURCE_RANK = s.source_rank
 TOPIC_KEYWORDS = s.topic_keywords
+SLOVAKIA_TERMS = s.search_terms.get("slovakia", [])
+ALGERIA_TERMS = s.search_terms.get("algeria", [])
+BLOCKLIST_DOMAINS = s.blocklist_domains
+ECOM_PATH_MARKERS = s.ecom_path_markers
+BAD_PATH_MARKERS = s.bad_path_markers
+TITLE_BAD_WORDS = s.title_bad_words
 api_key = s.serpapi_key
 
 logger.info(
     f"Config loaded: {len(PREFERRED_DOMAINS)} preferred domains, "
     f"{len(SOURCE_RANK)} ranked sources, "
-    f"{len(TOPIC_KEYWORDS)} topic groups"
+    f"{len(TOPIC_KEYWORDS)} topic groups, "
+    f"{len(SLOVAKIA_TERMS)} slovakia terms, {len(ALGERIA_TERMS)} algeria terms, "
+    f"{len(BLOCKLIST_DOMAINS)} blocklist domains"
 )
 
-SLOVAKIA_TERMS = (
-    "Slovaquie",
-    "slovaque",
-    "Slovakia",
-    "Slovak",
-    "Bratislava",
-    "سلوفاكيا",
-    "سلوفاكي",
-)
-
-# Domény, ktoré často vracajú "ne-news" výsledky
-BLOCKLIST_DOMAINS = {
-    "mobilis.dz",
-    "stepmode.dz",
-    "translate.google.dz",
-    "ems.dz",
-    "elhanaa.cnas.dz",
-}
-
-# URL path markery typické pre e-commerce/ponuky
-ECOM_PATH_MARKERS = (
-    "/produit/", "/product/", "/shop/", "/cart/", "/panier/",
-    "/offers", "/offre", "/pass", "/promo",
-)
-
-# URL path markery typické pre search/tag/archive/pagination stránky
-BAD_PATH_MARKERS = (
-    "/recherche",
-    "/search",
-    "/tag/",
-    "/tags/",
-    "/page/",
-    "/opac/",
-    "/company-location/",
-    "/embassys-locations-list",
-    "/?m=",
-)
-
-# Slová v titulkoch, ktoré často signalizujú "obchodné" výsledky
-TITLE_BAD_WORDS = (
-    "promo", "promotion", "prix", "offre", "pass", "roaming",
-    "سعر", "عرض", "تخفيضات", "شراء",
-)
-
-WHEN_MAP = {
-    "1d": "d",
-    "7d": "w",
-    "30d": "m"
-}
-
+def parse_when(when: str) -> str:
+    """Prevedie 'Nd'/'Nh'/'Nw'/'Nm' na SerpAPI qdr hodnotu (napr. '70d' → 'd70').
+    Fallback na 'w' (týždeň) pri neplatnom vstupe."""
+    import re
+    m = re.fullmatch(r"(\d+)([dhwm])", when.strip().lower())
+    if m:
+        n, unit = m.group(1), m.group(2)
+        if unit == "w":
+            return f"w" if n == "1" else f"d{int(n) * 7}"
+        return f"{unit}{n}" if int(n) != 1 else unit
+    return "w"
 
 
 # ----------------------------
@@ -93,7 +63,7 @@ def mentions_slovakia(item: dict) -> bool:
     return any(term.lower() in text for term in SLOVAKIA_TERMS)
 
 def algeria_terms() -> str:
-    return '("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة")'
+    return "(" + " OR ".join(f'"{t}"' if " " in t else t for t in ALGERIA_TERMS) + ")"
 
 def unwanted_url_filters() -> str:
     return "-inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page"
@@ -103,39 +73,32 @@ def build_site_or(domains: set[str]) -> str:
         raise ValueError("PREFERRED_DOMAINS is empty")
     return "(" + " OR ".join(f"site:{d}" for d in sorted(domains)) + ")"
 
-def build_query_dz() -> str:
-    """
-    Q1 = preferred/media whitelist query.
-    """
-    sites = build_site_or(PREFERRED_DOMAINS)
+def build_query(domains: set[str] | None = None) -> str:
+    """Postaví SerpAPI query. S domains = preferred whitelist, bez = broad site:.dz."""
+    sites = build_site_or(domains) if domains else "site:.dz"
     return f"{sites} {slovakia_terms()} {unwanted_url_filters()}"
 
-def build_query_non_dz() -> str:
-    """
-    Q2 = broad Algerian web scan.
-    """
-    return f"site:.dz {slovakia_terms()} {unwanted_url_filters()}"
+def build_query_global() -> str:
+    """Q3 fallback: globálne hľadanie článkov spomínajúcich oba štáty (bez site: obmedzenia)."""
+    return f"{slovakia_terms()} {algeria_terms()}"
 
-def build_query_preferred_fallback() -> str:
-    preferred = build_site_or(PREFERRED_DOMAINS)
-    return f"{preferred} {slovakia_terms()} {unwanted_url_filters()}"
-
-def build_query_dz_broad_fallback() -> str:
-    """
-    Q3 = broad .dz fallback query.
-    """
-    return f"site:.dz {slovakia_terms()} {unwanted_url_filters()}"
-
-def compute_window_7d() -> tuple[str, str]:
-    """
-    Calendar-based 7-day window:
-    - end: today 23:59:59 local time (or choose UTC)
-    - start: 6 days ago 00:00:00
-    Returns ISO strings.
-    """
-    now = datetime.now()  # local time; OK if you run always in same TZ
+def compute_window(when: str) -> tuple[str, str]:
+    """Vypočíta časové okno podľa when (napr. '7d', '70d', '2h').
+    Returns ISO strings (start, end)."""
+    import re
+    now = datetime.now()
     end = now.replace(hour=23, minute=59, second=59, microsecond=0)
-    start = (end - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
+    m = re.fullmatch(r"(\d+)([dhm])", when.strip().lower())
+    if m:
+        n, unit = int(m.group(1)), m.group(2)
+        if unit == "h":
+            start = now - timedelta(hours=n)
+        elif unit == "m":
+            start = (end - timedelta(days=n * 30)).replace(hour=0, minute=0, second=0, microsecond=0)
+        else:  # d
+            start = (end - timedelta(days=n - 1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    else:
+        start = (end - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
     return start.isoformat(), end.isoformat()
 
 
@@ -147,14 +110,14 @@ def compute_window_7d() -> tuple[str, str]:
 def serpapi_google_news_search(query: str, api_key: str, num: int, hl: str, gl: str, when: str) -> dict:
     all_results = []
     start = 0
-    qdr = WHEN_MAP.get(when, "w")
+    qdr = parse_when(when)
     data = {}
 
     while len(all_results) < num:
         page_size = min(10, max(1, num - len(all_results)))
 
         params = {
-            "engine": "google",
+            "engine": s.serp_engine,
             "tbm": "nws",
             "q": query,
             "api_key": api_key,
@@ -199,6 +162,68 @@ def save_json(data: dict, path: Path) -> None:
 
 def extract_news_items(results: dict) -> list[dict]:
     return results.get("news_results") or []
+
+
+_FR_REL = re.compile(
+    r"il\s+y\s+a\s+(\d+)\s+(minute|minutes|heure|heures|jour|jours|semaine|semaines|mois)",
+    re.IGNORECASE,
+)
+_EN_REL = re.compile(
+    r"(\d+)\s+(minute|minutes|hour|hours|day|days|week|weeks)\s+ago",
+    re.IGNORECASE,
+)
+
+
+def _parse_serp_date(date_str: str | None, fetched_at: datetime) -> str | None:
+    """Convert SerpAPI date string to ISO date (YYYY-MM-DD). Returns None if unparseable."""
+    if not date_str:
+        return None
+    s = date_str.strip()
+
+    if re.match(r"\d{4}-\d{2}-\d{2}", s):
+        return s[:10]
+
+    m = _FR_REL.match(s)
+    if m:
+        n, unit = int(m.group(1)), m.group(2).lower()
+        if unit.startswith("minute"):
+            delta = timedelta(minutes=n)
+        elif unit.startswith("heure"):
+            delta = timedelta(hours=n)
+        elif unit.startswith("jour"):
+            delta = timedelta(days=n)
+        elif unit.startswith("semaine"):
+            delta = timedelta(weeks=n)
+        else:  # mois
+            delta = timedelta(days=n * 30)
+        return (fetched_at - delta).date().isoformat()
+
+    m = _EN_REL.match(s)
+    if m:
+        n, unit = int(m.group(1)), m.group(2).lower()
+        if unit.startswith("minute"):
+            delta = timedelta(minutes=n)
+        elif unit.startswith("hour"):
+            delta = timedelta(hours=n)
+        elif unit.startswith("day"):
+            delta = timedelta(days=n)
+        else:  # week
+            delta = timedelta(weeks=n)
+        return (fetched_at - delta).date().isoformat()
+
+    if re.match(r"(yesterday|hier)$", s, re.IGNORECASE):
+        return (fetched_at - timedelta(days=1)).date().isoformat()
+
+    return None
+
+
+def _enrich_dates(items: list[dict], fetched_at: datetime) -> None:
+    """Add published_at ISO field to items that don't already have one."""
+    for item in items:
+        if "published_at" not in item:
+            iso = _parse_serp_date(item.get("date"), fetched_at)
+            if iso:
+                item["published_at"] = iso
 
 
 def domain_of(url: str) -> str:
@@ -427,6 +452,10 @@ def fallback_reason(
 # ----------------------------
 
 def main() -> None:
+    """
+
+    :return:
+    """
     global s, paths, logger, PREFERRED_DOMAINS, SOURCE_RANK, TOPIC_KEYWORDS, api_key
 
     s, paths, logger = init_cli("search_flow_news")
@@ -456,7 +485,7 @@ def main() -> None:
     ts = int(time.time())
 
     # Q1: preferred media whitelist
-    q1 = build_query_dz()
+    q1 = build_query(PREFERRED_DOMAINS)
     logger.info("[1/2] Q1 (PREFERRED): %s", q1)
     try:
         q1_raw = serpapi_google_news_search(
@@ -475,7 +504,7 @@ def main() -> None:
     time.sleep(1.0)
 
     # Q2: broad Algerian web/context query
-    q2 = build_query_non_dz()
+    q2 = build_query()
     logger.info("[2/2] Q2 (CONTEXT): %s", q2)
     try:
         q2_raw = serpapi_google_news_search(
@@ -547,7 +576,7 @@ def main() -> None:
 
     if should_run_preferred_fallback(q1_raw, q2_raw, combined, num=num):
         time.sleep(1.0)
-        q3 = build_query_dz_broad_fallback()
+        q3 = build_query_global()
         logger.info("\n[+fallback] Q3 (DZ BROAD): %s", q3)
         try:
             q3_raw = serpapi_google_news_search(
@@ -576,12 +605,17 @@ def main() -> None:
     else:
         logger.info("\n[no fallback] Conditions not met.")
 
-    window_start, window_end = compute_window_7d()
+    window_start, window_end = compute_window(args.when)
+
+    fetched_at = datetime.fromtimestamp(ts)
+    for results in [q1_clean, q2_clean, q3_clean]:
+        if results:
+            _enrich_dates(results.get("news_results") or [], fetched_at)
 
     bundle = {
         "run": {
             "timestamp": ts,
-            "engine": "google_news",
+            "engine": s.serp_engine,
             "time_filter_query": time_filter_query,
             "window_start": window_start,
             "window_end": window_end,

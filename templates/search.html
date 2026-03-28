@@ -27,6 +27,7 @@
       <span class="pill ok">Search</span>
     </div>
     <div class="right">
+      <a class="pill" href="/" id="backBtn">← späť</a>
       <a class="pill" href="/">Dashboard</a>
       <a class="pill" href="/browse">Browse</a>
       <a class="pill" href="/stats">Stats</a>
@@ -39,34 +40,87 @@
 
     <div class="actions" style="margin-top:12px">
       <form method="post" action="/search/run" class="actions" style="margin-top:0">
-        <input class="mono" type="text" name="hl" value="{{ hl }}" placeholder="hl (fr)" style="max-width:90px">
-        <input class="mono" type="text" name="gl" value="{{ gl }}" placeholder="gl (dz)" style="max-width:90px">
-        <input class="mono" type="text" name="num" value="{{ num }}" placeholder="num" style="max-width:90px">
-        <input class="mono" type="text" name="when" value="{{ when }}" placeholder="when (7d)" style="max-width:120px">
+        <input class="mono" type="text" name="hl" value="{{ hl | default('') }}" placeholder="hl (fr)" style="max-width:90px" title="Jazyk výsledkov (napr. fr, ar, en)">
+        <input class="mono" type="text" name="gl" value="{{ gl | default('') }}" placeholder="gl (dz)" style="max-width:90px" title="Krajina vyhľadávania (napr. dz, fr, sk)">
+        <input class="mono" type="text" name="num" value="{{ num | default('') }}" placeholder="num" style="max-width:90px" title="Počet výsledkov (napr. 20, 50)">
+        <input class="mono" type="text" name="when" value="{{ when | default('') }}" placeholder="when (7d)" style="max-width:120px" title="Časové okno: 1d, 7d, 30d, 70d, 2h… (d=dni, h=hodiny, m=mesiac)">
         <button type="submit">Spustiť search</button>
       </form>
     </div>
 
-    {% if last_bundle %}
+    {% if latest_bundle %}
       <div class="hr"></div>
       <div class="box">
         <h2>Posledný bundle</h2>
-        <div class="small mono">{{ last_bundle }}</div>
+        <div class="small mono">{{ latest_bundle }}</div>
         <div class="small" style="margin-top:8px">
           (Je uložený v <code>bundle/runs/...</code>.)
         </div>
       </div>
     {% endif %}
 
-    {% if run_log %}
+    {% if last_log %}
       <div class="hr"></div>
-      <div class="box">
-        <h2>Log</h2>
-        <pre class="log mono">{{ run_log }}</pre>
-      </div>
+      <details class="box">
+        <summary style="cursor:pointer;font-weight:600;user-select:none">
+          Log skriptu {% if last_rc == 0 %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">CHYBA (rc={{ last_rc }})</span>{% endif %}
+        </summary>
+        <pre class="log mono" style="margin-top:10px">{{ last_log }}</pre>
+      </details>
+    {% endif %}
+
+    {% if bundle_articles %}
+      <div class="hr"></div>
+      <details class="box" open>
+        <summary style="cursor:pointer;font-weight:600;user-select:none">
+          Nájdené články ({{ bundle_articles|length }})
+        </summary>
+        <table class="table" style="margin-top:8px">
+          <thead>
+            <tr>
+              <th>Titulok</th>
+              <th style="width:170px">Zdroj</th>
+              <th style="width:140px">Dátum</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in bundle_articles %}
+              <tr class="trow">
+                <td>
+                  <a href="{{ a.link }}" target="_blank" rel="noopener" style="font-weight:600">
+                    {{ a.title or "(bez názvu)" }}
+                  </a>
+                  {% if a.snippet %}
+                    <div class="small" style="margin-top:4px">{{ a.snippet }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="pill">{{ a.source or "-" }}</span>
+                </td>
+                <td>
+                  <div class="small">{{ a.date or "-" }}</div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </details>
     {% endif %}
 
   </div>
 </div>
+<script>
+  (function(){
+    const btn = document.getElementById("backBtn");
+    if(document.referrer){
+      try {
+        const ref = new URL(document.referrer);
+        if(ref.origin === window.location.origin && ref.pathname !== window.location.pathname){
+          btn.href = document.referrer;
+        }
+      } catch(_){}
+    }
+  })();
+</script>
 </body>
 </html>

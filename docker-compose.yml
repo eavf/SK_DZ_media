@@ -1,13 +1,18 @@
 services:
   dz-app:
+    image: eavfeavf/dz-news:latest
     build:
       context: .
       dockerfile: Dockerfile
     container_name: dz-app
     restart: unless-stopped
 
-    ports:
-      - "5088:5088"
+    env_file:
+      - .env
+
+    # Nepotrebujeme lebo zdieľame hosts network.....
+    #ports:
+    #  - "5088:5088"
 
     # Pridané: Host network pre priamy prístup k Synology MySQL
     network_mode: "host"
@@ -34,6 +39,9 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./templates:/app/templates
+      - ./config:/app/config
+      - ./static:/app/static
+      - ./bundle:/app/bundle
 
     healthcheck:
       test:
@@ -46,4 +54,23 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  dz-scheduler:
+    image: eavfeavf/dz-news:latest
+    container_name: dz-scheduler
+    restart: unless-stopped
+    network_mode: "host"
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: "${TZ:-Africa/Algiers}"
+
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config
+      - ./bundle:/app/bundle
+
+    command: ["python", "scheduler.py"]
 

@@ -6,6 +6,12 @@
   <title>DZ News – detail článku</title>
 
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <style>
+    .ctx-line { cursor: pointer; }
+    .ctx-line:hover { opacity: .8; }
+    .ctx-anchor { border-radius: 4px; transition: background .3s; }
+    .ctx-anchor.active { background: rgba(255,220,80,.25); outline: 2px solid rgba(255,220,80,.6); }
+  </style>
 </head>
 
 <body>
@@ -21,7 +27,7 @@
 
     <div class="topbar">
       <div class="left">
-        <a href="/" class="pill">← späť</a>
+        <a href="/browse" class="pill" id="backBtn">← späť</a>
 
         {% if r["deleted_at"] %}
           <span class="pill warn">soft-deleted</span>
@@ -44,8 +50,9 @@
         {% endif %}
 
         {% if r["published_conf"] %}
-          <span class="pill">published_conf: {{ r["published_conf"] }}</span>
+          <span class="pill">pub: {{ r["published_conf"] }}</span>
         {% endif %}
+
       </div>
 
       <div class="right">
@@ -55,8 +62,11 @@
 
     <div class="card">
       <h1>{{ r["title"] or "(bez názvu)" }}</h1>
+      {% if r["title_fr"] %}
+        <div style="margin-top:6px;margin-bottom:10px;font-size:15px;opacity:.75;font-style:italic">{{ r["title_fr"] }}</div>
+      {% endif %}
 
-      <div class="sub">
+      <div class="sub" style="border-top:1px solid var(--line);padding-top:8px;margin-top:4px">
         Zdroj: <strong>{{ r["domain"] }}</strong>
         {% if published_display %} • Publikované: <strong>{{ published_display }}</strong>{% endif %}
         {% if r["language"] %} • language: <strong>{{ r["language"] }}</strong>{% endif %}
@@ -66,15 +76,8 @@
       <div class="meta">
         <div class="row"><div class="k">Article ID</div><div class="v">{{ r["id"] }}</div></div>
         <div class="row"><div class="k">Source ID</div><div class="v">{{ r["source_id"] }}</div></div>
-
         <div class="row"><div class="k">First seen</div><div class="v">{{ r["first_seen_at"] or "-" }}</div></div>
-        <div class="row"><div class="k">Last seen</div><div class="v">{{ r["last_seen_at"] or "-" }}</div></div>
-
-        <div class="row"><div class="k">Fetched at</div><div class="v">{{ r["fetched_at"] or "-" }}</div></div>
         <div class="row"><div class="k">HTTP status</div><div class="v">{{ r["http_status"] or "-" }}</div></div>
-
-        <div class="row"><div class="k">Fetch error</div><div class="v">{{ r["fetch_error"] or "-" }}</div></div>
-        <div class="row"><div class="k">Extraction OK</div><div class="v">{{ "1" if r["extraction_ok"] else "0" }}</div></div>
 
         <div class="row"><div class="k">Relevancia</div>
           <div class="v">
@@ -93,8 +96,27 @@
           </div>
         </div>
 
-        <div class="row"><div class="k">URL hash</div><div class="v"><code>{{ r["url_hash"] }}</code></div></div>
-        <div class="row"><div class="k">Content hash</div><div class="v">{% if r["content_hash"] %}<code>{{ r["content_hash"] }}</code>{% else %}-{% endif %}</div></div>
+        <div class="row"><div class="k">Publikované</div>
+          <div class="v">
+            {% if r["published_at_real"] %}
+              {{ r["published_at_real"].strftime("%Y-%m-%d") }}
+            {% elif r["published_at_text"] %}
+              {{ r["published_at_text"] }}
+              <span class="pill">text</span>
+            {% else %}
+              -
+            {% endif %}
+          </div>
+        </div>
+
+        <details style="margin-top:4px">
+          <summary style="cursor:pointer;opacity:.6;font-size:12px;user-select:none;padding:4px 0">technické polia ▾</summary>
+          <div class="row"><div class="k">Last seen</div><div class="v">{{ r["last_seen_at"] or "-" }}</div></div>
+          <div class="row"><div class="k">Fetched at</div><div class="v">{{ r["fetched_at"] or "-" }}</div></div>
+          <div class="row"><div class="k">Fetch error</div><div class="v">{{ r["fetch_error"] or "-" }}</div></div>
+          <div class="row"><div class="k">URL hash</div><div class="v"><code>{{ r["url_hash"] }}</code></div></div>
+          <div class="row"><div class="k">Content hash</div><div class="v">{% if r["content_hash"] %}<code>{{ r["content_hash"] }}</code>{% else %}-{% endif %}</div></div>
+        </details>
       </div>
 
       <div class="actions">
@@ -106,13 +128,34 @@
           </button>
         </form>
 
+        <!-- Manuálne vložiť obsah -->
+        <form method="post" action="/article/{{ r['id'] }}/set_content" style="width:100%">
+          <details style="width:100%">
+            <summary style="cursor:pointer;font-weight:600;user-select:none">Vložiť obsah manuálne</summary>
+            <textarea name="content_text" rows="10"
+              style="width:100%;margin-top:8px;font-family:inherit;font-size:13px;padding:8px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit;resize:vertical"
+              placeholder="Skopíruj a vlož text článku z prehliadača...">{{ r['content_text'] or '' }}</textarea>
+            <button type="submit" style="margin-top:6px">Uložiť obsah</button>
+          </details>
+        </form>
+
+        <!-- Preložiť AR → FR cez DeepL -->
+        <form method="post" action="/article/{{ r['id'] }}/translate">
+          <button type="submit" onclick="return confirm('Preložiť obsah AR→FR cez DeepL? Spotrebuje kredity.');">
+            {{ 'Preložiť znova (AR-FR)' if r['content_text_fr'] else 'Preložiť (AR-FR)' }}
+          </button>
+        </form>
+
         <!-- Mark relevant / irrelevant -->
         <form method="post" action="/article/{{ r['id'] }}/label">
-          <select name="relevance" title="Relevancia">
-            <option value="null" {% if r["relevance"] is none %}selected{% endif %}>neoznačené</option>
-            <option value="1" {% if r["relevance"] == 1 %}selected{% endif %}>relevantné</option>
-            <option value="0" {% if r["relevance"] == 0 %}selected{% endif %}>nerelevantné</option>
+          <select name="relevance" id="relevanceSelect" title="Relevancia">
+            <option value="null">neoznačené</option>
+            <option value="1">relevantné</option>
+            <option value="0">nerelevantné</option>
           </select>
+          <script>
+            document.getElementById('relevanceSelect').value = "{{ 'null' if r['relevance'] is none else r['relevance'] }}";
+          </script>
           <input type="text" name="note" placeholder="poznámka (voliteľné)" value="{{ r['relevance_note'] or '' }}">
           <button type="submit">Uložiť</button>
         </form>
@@ -159,9 +202,13 @@
         <div class="box">
           <h2>Snippet (z vyhľadávania)</h2>
           {% if r["snippet"] %}
-            <div class="snippet" id="snippet">{{ r["snippet"] }}</div>
+            <div class="snippet" id="snippet">{{ snippet_hl|safe }}</div>
           {% else %}
             <div class="muted">Snippet nie je dostupný (Google News často nevracia snippet).</div>
+          {% endif %}
+          {% if r["snippet_fr"] %}
+            <div class="small" style="margin-top:8px;opacity:.7">FR:</div>
+            <div class="snippet" style="margin-top:4px">{{ r["snippet_fr"] }}</div>
           {% endif %}
         </div>
 
@@ -184,28 +231,50 @@
           </div>
         {% endif %}
 
+        {% if ctx_hl_fr and ctx_hl_fr|length > 0 %}
+          <div class="box">
+            <h2>Kontext FR (preložené vety)</h2>
+            <div class="ctx" id="ctx-fr">
+              {% for line in ctx_hl_fr %}
+                <div class="line ctx-line-fr" data-idx="{{ loop.index0 }}">
+                  {{ line|safe }}
+                </div>
+              {% endfor %}
+            </div>
+            <div class="small" style="margin-top:8px">Klikni na vetu – posunie ťa na miesto v preloženom texte.</div>
+          </div>
+        {% endif %}
+
       </div>
 
       <div class="article-main">
         <div class="box">
-          <h2>Obsah článku (content_text)</h2>
-          {% if r["content_text"] %}
-            <div class="content" id="content">{{ r["content_text"] }}</div>
+          <h2>Obsah článku (originál)</h2>
+          {% if r['content_text'] %}
+            <div class="content" id="content">{{ content_text_hl|safe }}</div>
           {% else %}
             <div class="muted">
-              Text ešte nie je extrahovaný (alebo extrakcia zlyhala). Skús “Fetch &amp; extract now”.
+              Text ešte nie je extrahovaný (alebo extrakcia zlyhala). Skús "Fetch &amp; extract now".
             </div>
           {% endif %}
         </div>
+
+        {% if r['content_text_fr'] %}
+          <div class="box" style="margin-top:12px">
+            <h2>Preklad (FR)</h2>
+            <div class="content" id="content-fr">{{ r['content_text_fr'] }}</div>
+          </div>
+        {% endif %}
       </div>
 
     </div>
 
   </div>
 
-  <script id="ctxData" type="application/json">{{ ctx_plain|tojson }}</script>
-
   <script>
+    const ctxData = {{ ctx_plain|tojson }};
+    const ctxDataFr = {{ ctx_plain_fr|tojson }};
+
     // zvýraznenie Slovensko/SK termov v snippete aj texte
     const TERMS = [
       "Slovaquie","slovaque","Slovakia","Slovak","République slovaque",
@@ -214,20 +283,57 @@
 
     function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
-    function highlight(el){
-      if(!el) return;
-      let html = el.innerHTML;
-      TERMS.forEach(t => {
-        const re = new RegExp("(" + escapeRegExp(t) + ")", "gi");
-        html = html.replace(re, "<mark>$1</mark>");
+    // Zabalí každú ctx vetu v #content do pomenovaného <span> pre scroll
+    function wrapCtxAnchors(contentId, data, prefix){
+      const contentEl = document.getElementById(contentId);
+      if(!contentEl || !data.length) return;
+      let html = contentEl.innerHTML;
+      data.forEach((sentence, idx) => {
+        if(!sentence) return;
+        const snip = sentence.substring(0, 50);
+        const re = new RegExp("(" + escapeRegExp(snip) + ")", "i");
+        html = html.replace(re, `<span id="${prefix}-${idx}" class="ctx-anchor">$1</span>`);
       });
-      el.innerHTML = html;
+      contentEl.innerHTML = html;
     }
+    wrapCtxAnchors("content", ctxData, "ctx-anchor");
+    wrapCtxAnchors("content-fr", ctxDataFr, "ctx-anchor-fr");
 
-    highlight(document.getElementById("snippet"));
-    highlight(document.getElementById("content"));
 
-    // --- vyššie highlight code (nechaj, ako máš) ---
+    // Tlačidlo späť → history.back() s fallback na /browse
+    (function(){
+      const btn = document.getElementById("backBtn");
+      btn.addEventListener("click", function(e){
+        if(history.length > 1){
+          e.preventDefault();
+          history.back();
+        }
+      });
+    })();
+
+    // Klik na ctx vetu → scroll na miesto v texte
+    document.querySelectorAll(".ctx-line").forEach(line => {
+      line.addEventListener("click", () => {
+        const idx = parseInt(line.dataset.idx);
+        const anchor = document.getElementById("ctx-anchor-" + idx);
+        if(!anchor) return;
+        anchor.scrollIntoView({ behavior: "smooth", block: "center" });
+        document.querySelectorAll(".ctx-anchor.active").forEach(el => el.classList.remove("active"));
+        anchor.classList.add("active");
+      });
+    });
+
+    // Klik na FR ctx vetu → scroll na miesto v preloženom texte
+    document.querySelectorAll(".ctx-line-fr").forEach(line => {
+      line.addEventListener("click", () => {
+        const idx = parseInt(line.dataset.idx);
+        const anchor = document.getElementById("ctx-anchor-fr-" + idx);
+        if(!anchor) return;
+        anchor.scrollIntoView({ behavior: "smooth", block: "center" });
+        document.querySelectorAll(".ctx-anchor.active").forEach(el => el.classList.remove("active"));
+        anchor.classList.add("active");
+      });
+    });
   </script>
 </body>
 </html>

@@ -191,12 +191,16 @@ class Settings:
     db_user: str
     db_pass: str
 
+    # --- DeepL ---
+    deepl_api_key: str
+
     # --- SerpAPI / search ---
     serpapi_key: str
     serp_hl: str
     serp_gl: str
     serp_num: int
     serp_when: str
+    serp_engine: str
 
     # --- Paths ---
     paths: ProjectPaths
@@ -214,12 +218,24 @@ class Settings:
     # --- JSON configs ---
     source_rank: dict[str, int]
     topic_keywords: dict[str, list[str]]
+    search_terms: dict[str, list[str]]
+    blocklist_domains: set[str]
+    ecom_path_markers: set[str]
+    bad_path_markers: set[str]
+    title_bad_words: set[str]
 
     # --- Logging ---
     log_file: str
     log_level: str
     log_max_bytes: int
     log_backup_count: int
+
+    # --- SMTP notifikácie ---
+    smtp_host: str
+    smtp_port: int
+    smtp_user: str
+    smtp_pass: str
+    notify_to: str
 
 
 _CACHED: Optional[Settings] = None
@@ -290,17 +306,23 @@ def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = Non
     ranking_path = CONFIG_DIR / "ranking.json"
     topics_path = CONFIG_DIR / "topics.json"
     url_cleanup_path = CONFIG_DIR / "url_cleanup.json"
+    search_terms_path = CONFIG_DIR / "search_terms.json"
 
     sources_cfg = load_json(sources_path, {})
     ranking_cfg = load_json(ranking_path, {})
     topics_cfg = load_json(topics_path, {})
     url_cleanup_cfg = load_json(url_cleanup_path, {})
+    search_terms_cfg = load_json(search_terms_path, {})
 
     preferred_from_json = _normalize_domain_list((sources_cfg or {}).get("preferred"))
     preferred_from_env = _csv_set(os.getenv("PREFERRED_DOMAINS"))
     preferred_domains = preferred_from_json or preferred_from_env
 
     drop_query_keys = _normalize_string_list((url_cleanup_cfg or {}).get("drop_query_keys"))
+    blocklist_domains = set(_normalize_string_list((url_cleanup_cfg or {}).get("blocklist_domains")))
+    ecom_path_markers = _normalize_string_list((url_cleanup_cfg or {}).get("ecom_path_markers"))
+    bad_path_markers = _normalize_string_list((url_cleanup_cfg or {}).get("bad_path_markers"))
+    title_bad_words = _normalize_string_list((url_cleanup_cfg or {}).get("title_bad_words"))
 
     source_rank = _normalize_rank_map(ranking_cfg)
     topic_keywords = _normalize_topics(topics_cfg)
@@ -317,12 +339,16 @@ def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = Non
         db_user=os.getenv("DB_USER", "").strip(),
         db_pass=os.getenv("DB_PASS", "").strip(),
 
+        # DeepL
+        deepl_api_key=os.getenv("DEEPL_API_KEY", "").strip(),
+
         # SerpAPI
         serpapi_key=os.getenv("SERPAPI_KEY", "").strip(),
         serp_hl=os.getenv("SERP_HL", "fr"),
         serp_gl=os.getenv("SERP_GL", "dz"),
         serp_num=_to_int(os.getenv("SERP_NUM"), 10),
         serp_when=os.getenv("SERP_WHEN", "7d").strip() or "7d",
+        serp_engine=os.getenv("SERP_ENGINE", "").strip(),
 
         # Paths
         paths=paths,
@@ -340,12 +366,24 @@ def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = Non
         # JSON configs
         source_rank=source_rank,
         topic_keywords=topic_keywords,
+        search_terms=_normalize_topics(search_terms_cfg),
+        blocklist_domains=blocklist_domains,
+        ecom_path_markers=ecom_path_markers,
+        bad_path_markers=bad_path_markers,
+        title_bad_words=title_bad_words,
 
         # Logging
         log_file=os.getenv("LOG_FILE", "app.log").strip() or "app.log",
         log_level=os.getenv("LOG_LEVEL", "INFO").strip() or "INFO",
         log_max_bytes=_to_int(os.getenv("LOG_MAX_BYTES"), 5 * 1024 * 1024),
         log_backup_count=_to_int(os.getenv("LOG_BACKUP_COUNT"), 5),
+
+        # SMTP
+        smtp_host=os.getenv("SMTP_HOST", "").strip(),
+        smtp_port=_to_int(os.getenv("SMTP_PORT"), 587),
+        smtp_user=os.getenv("SMTP_USER", "").strip(),
+        smtp_pass=os.getenv("SMTP_PASS", "").strip(),
+        notify_to=os.getenv("NOTIFY_TO", "").strip(),
     )
 
     _CACHED = s

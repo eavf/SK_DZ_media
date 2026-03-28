@@ -1,25 +1,152 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="card">
-  <h1>Spracovať</h1>
-  <div class="sub">Ingest posledného bundle do DB (ingest_to_dz_news.py).</div>
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DZ News – Process</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    pre.log { white-space: pre-wrap; border:1px solid var(--line); border-radius:14px; padding:10px; background: rgba(255,255,255,.02); }
+    .run-table td { vertical-align: middle; }
+    .run-table input[type=radio] { cursor: pointer; }
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg, #111);
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
 
-  <div class="actions">
-    <form method="post" action="/process/ingest_latest" onsubmit="return confirm('Ingest latest bundle do DB?');">
-      <button type="submit">Ingest latest</button>
-    </form>
-
-    {% if latest_bundle %}
-      <span class="pill ok">latest: {{ latest_bundle }}</span>
-    {% else %}
-      <span class="pill warn">latest: —</span>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="banner {{ category }}">{{ msg }}</div>
+      {% endfor %}
     {% endif %}
+  {% endwith %}
+
+  <div class="topbar">
+    <div class="left">
+      <a class="pill" href="/" id="backBtn">← späť</a>
+      <span class="pill ok">Process</span>
+    </div>
+    <div class="right">
+      <a class="pill" href="/">Dashboard</a>
+      <a class="pill" href="/browse">Browse</a>
+      <a class="pill" href="/stats">Stats</a>
+    </div>
   </div>
 
-  {% if last_log is defined %}
+  <div class="card">
+    <h1>Spracovať</h1>
+
+    <div class="box">
+      <h2>Hromadná extrakcia</h2>
+      <div class="sub">Stiahne a extrahuje text pre všetky články bez content_text. Články bez slovenského kontextu budú soft-deleted.</div>
+      <form method="post" action="/process/extract_bulk" class="actions" style="margin-top:10px"
+            onsubmit="return confirm('Spustiť hromadnú extrakciu?');">
+        <input class="mono" type="number" name="limit" value="50" min="1" max="500" style="max-width:90px" title="Max počet článkov">
+        <button type="submit">Spustiť extrakciu</button>
+      </form>
+    </div>
+
     <div class="hr"></div>
-    <div class="small">return code: <b>{{ last_rc }}</b></div>
-    <pre class="mono" style="white-space:pre-wrap; margin-top:10px">{{ last_log }}</pre>
-  {% endif %}
+
+    <div class="box">
+      <h2>Spracovanie surových dát</h2>
+      <div class="sub">Vyber run a spusti ingest do DB (ingest_to_dz_news_reworked.py).</div>
+      <div class="sub">Prečíta vybraný run a spracuje údaje o nájdených článkov do databázy (ingest_to_dz_news_reworked.py).</div>
+
+      {% if runs %}
+        <form method="post" action="/process/ingest_latest" onsubmit="return confirm('Ingest vybraného runu do DB?');">
+          <div class="sticky-bar actions">
+            <button type="submit">Ingest vybraný run</button>
+            <span class="small" id="selectedLabel"></span>
+          </div>
+          <table class="table run-table" style="margin-top:0">
+            <thead>
+              <tr>
+                <th style="width:40px"></th>
+                <th>Run</th>
+                <th style="width:120px">Čas</th>
+                <th style="width:80px">hl / gl</th>
+                <th style="width:80px">Články</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in runs %}
+                <tr class="trow {% if r.bundle_path == ingested_bundle|default('') %}ok{% endif %}">
+                  <td>
+                    <input type="radio" name="bundle_path" value="{{ r.bundle_path }}"
+                      {% if loop.first %}checked{% endif %}>
+                  </td>
+                  <td>
+                    <span class="mono small">{{ r.run_id }}</span>
+                    {% if loop.first %}<span class="pill ok">latest</span>{% endif %}
+                    {% if r.bundle_path == ingested_bundle|default('') %}<span class="pill ok">práve ingested</span>{% endif %}
+                  </td>
+                  <td><div class="small">{{ r.timestamp|string|truncate(16, killwords=true, end='') if r.timestamp else "-" }}</div></td>
+                  <td><div class="small">{{ r.hl or "-" }} / {{ r.gl or "-" }}</div></td>
+                  <td><span class="pill">{{ r.articles }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+        </form>
+      {% else %}
+        <div class="muted" style="margin-top:12px">Žiadne runy nenájdené v bundle/runs/.</div>
+      {% endif %}
+
+      {% if last_log is defined %}
+        <div class="hr"></div>
+        <details class="box">
+          <summary style="cursor:pointer;font-weight:600;user-select:none">
+            Log skriptu {% if last_rc == 0 %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">CHYBA (rc={{ last_rc }})</span>{% endif %}
+          </summary>
+          <pre class="log mono" style="margin-top:10px">{{ last_log }}</pre>
+        </details>
+      {% endif %}
+    </div>
+
+  </div>
 </div>
-{% endblock %}
+
+<script>
+  // Zobraz meno vybraného runu v sticky bare
+  (function(){
+    const label = document.getElementById("selectedLabel");
+    if(!label) return;
+    function updateLabel(){
+      const checked = document.querySelector('input[name="bundle_path"]:checked');
+      if(checked){
+        const row = checked.closest("tr");
+        const runName = row ? row.querySelector(".mono")?.textContent?.trim() : "";
+        label.textContent = runName ? "← " + runName : "";
+      }
+    }
+    document.querySelectorAll('input[name="bundle_path"]').forEach(r => r.addEventListener("change", updateLabel));
+    updateLabel();
+  })();
+
+  (function(){
+    const btn = document.getElementById("backBtn");
+    if(document.referrer){
+      try {
+        const ref = new URL(document.referrer);
+        if(ref.origin === window.location.origin && ref.pathname !== window.location.pathname){
+          btn.href = document.referrer;
+        }
+      } catch(_){}
+    }
+  })();
+</script>
+</body>
+</html>

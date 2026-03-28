@@ -54,25 +54,21 @@ def configure_logging(app, settings):
 
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = require(settings.flask_secret_key, "kduhfhg liughaliug aeliug heliugh seligrus gehlriuaegl iearugfh lskdjhfgsldoughsgôoriughoserghero")
+app.config["SECRET_KEY"] = require(settings.flask_secret_key, "FLASK_SECRET_KEY")
 # za reverse proxy (Synology) – aby Flask vedel o pôvodnom HTTPS/hoste
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 configure_logging(app, settings)
 
-SLOVAK_TERMS = [
-    "slovaquie", "slovaque", "slovakia", "slovak",
-    "république slovaque",
-    "سلوفاكيا", "سلوفاكي", "الجمهورية السلوفاكية"
-]
+SLOVAK_TERMS = settings.search_terms.get("slovakia", [])
 TERM_RE = re.compile(r"(" + "|".join(re.escape(t) for t in SLOVAK_TERMS) + r")", re.IGNORECASE)
 
 
-BUNDLE_GLOB = "news_bundle_*.json"   # presne ako vytvára search_flow_news.py
+BUNDLE_GLOB = "news_bundle*.json"   # news_bundle.json (v run podadresároch)
 PYTHON_BIN = sys.executable
 
 
 def latest_bundle_path() -> str | None:
-    p = max(paths.bundle_dir.glob(BUNDLE_GLOB), default=None, key=lambda x: x.stat().st_mtime)
+    p = max(paths.bundle_dir.rglob(BUNDLE_GLOB), default=None, key=lambda x: x.stat().st_mtime)
     return str(p) if p else None
 
 
@@ -92,7 +88,7 @@ def run_script(args: list[str], env: dict | None = None) -> tuple[int, str]:
 
 def split_sentences(text_: str):
     # Simple splitter good enough for FR/EN/AR news text
-    return re.split(r'(?<=[\.\!\?؟])\s+', text_)
+    return re.split(r'(?<=[.!?؟])\s+', text_)
 
 
 def extract_context_sentences(text_: str, max_sentences: int = 3):
@@ -114,11 +110,15 @@ def highlight_terms_html(s: str) -> str:
     return TERM_RE.sub(r"<mark>\1</mark>", s)
 
 
-def build_filters(days: int, only_ok: bool, only_slovak: bool, relevance: str, include_deleted: bool, include_avoided: bool):
-    cutoff = datetime.now() - timedelta(days=days)
+def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str, include_deleted: bool, include_avoided: bool):
+    """extraction: 'ok' | 'unextracted' | 'all'"""
+    where = []
+    params = {}
 
-    where = ["a.last_seen_at >= :cutoff"]
-    params = {"cutoff": cutoff}
+    if days > 0:
+        cutoff = datetime.now() - timedelta(days=days)
+        where.append("a.last_seen_at >= :cutoff")
+        params["cutoff"] = cutoff
 
     if not include_deleted:
         where.append("a.deleted_at IS NULL")
@@ -126,7 +126,9 @@ def build_filters(days: int, only_ok: bool, only_slovak: bool, relevance: str, i
     if not include_avoided:
         where.append("s.is_avoided = 0")
 
-    if only_ok:
+    if extraction == "unextracted":
+        where.append("a.content_text IS NULL")
+    elif extraction == "ok":
         where.append("a.extraction_ok = 1")
 
     if relevance in ("1", "0"):
@@ -146,7 +148,7 @@ def build_filters(days: int, only_ok: bool, only_slovak: bool, relevance: str, i
             like_terms.append(f"LOWER(COALESCE(a.content_text, a.title, a.snippet, '')) LIKE :{key}")
         where.append("(" + " OR ".join(like_terms) + ")")
 
-    return " AND ".join(where), params
+    return (" AND ".join(where) if where else "1=1"), params
 
 
 def browse_q_from_request():
@@ -265,25 +267,27 @@ def dashboard():
 
 @app.get("/browse")
 def browse():
-    days = int(request.args.get("days", 7))
-    only_ok = request.args.get("ok", "1") == "1"
+    days = int(request.args.get("days", 0))
+    extraction = request.args.get("extraction", "ok")  # ok | unextracted | all
     only_slovak = request.args.get("sk", "0") == "1"
     relevance = request.args.get("rel", "all")  # all | 1 | 0 | null
     include_deleted = request.args.get("del", "0") == "1"
     include_avoided = request.args.get("av", "0") == "1"
 
-    where_sql, params = build_filters(days, only_ok, only_slovak, relevance, include_deleted, include_avoided)
+    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided)
 
+    limit = 300 if days > 0 or extraction == "all" else 100
     sql = f"""
         SELECT
             a.id,
-            a.title,
+            COALESCE(a.title_fr, a.title) AS title,
             s.domain,
             COALESCE(DATE_FORMAT(a.published_at_real, '%Y-%m-%d %H:%i:%s'), a.published_at_text) AS published,
             COALESCE(a.final_url, a.url) AS url,
-            COALESCE(a.extraction_ok, 0) = 1,
+            COALESCE(a.extraction_ok, 0) = 1 AS extraction_ok,
             a.fetch_error,
             LEFT(a.content_text, 1200) AS preview,
+            LEFT(a.content_text_fr, 1200) AS preview_fr,
             a.relevance,
             a.relevance_note,
             a.deleted_at,
@@ -294,39 +298,47 @@ def browse():
         JOIN sources s ON s.id = a.source_id
         WHERE {where_sql}
         ORDER BY a.last_seen_at DESC
-        LIMIT 300
+        LIMIT {limit}
     """
 
     engine = get_db_engine()
     with engine.begin() as conn:
         rows = conn.execute(text(sql), params).fetchall()
 
-    # Precompute context sentences + highlighted snippets
     enriched = []
     for r in rows:
-        ctx = extract_context_sentences(r.preview or "", max_sentences=3)
+        preview = r.preview_fr or r.preview or ""
+        ctx = extract_context_sentences(preview, max_sentences=3)
         ctx_hl = [highlight_terms_html(c) for c in ctx]
         enriched.append((r, ctx_hl))
 
-    # Debug filtrovania : Vytlačí do konzoly podmienky
-    #print("WHERE:", where_sql)
-    #print("PARAMS:", params)
+    # Kompozícia výsledkov
+    stats = {
+        "extracted": sum(1 for r, _ in enriched if r.extraction_ok),
+        "unextracted": sum(1 for r, _ in enriched if not r.extraction_ok),
+        "rel_1": sum(1 for r, _ in enriched if r.relevance == 1),
+        "rel_0": sum(1 for r, _ in enriched if r.relevance == 0),
+        "rel_null": sum(1 for r, _ in enriched if r.relevance is None),
+        "deleted": sum(1 for r, _ in enriched if r.deleted_at),
+    }
 
     return render_template(
         "browse.html",
         rows=enriched,
         days=days,
-        only_ok=only_ok,
+        extraction=extraction,
         only_slovak=only_slovak,
         relevance=relevance,
         include_deleted=include_deleted,
         include_avoided=include_avoided,
         total=len(rows),
+        limit=limit,
+        stats=stats,
         port=settings.flask_port,
     )
 
 
-@app.post("/bulk_delete")
+@app.post("/bulk/delete")
 def bulk_delete():
     mode = request.form.get("mode", "soft")  # soft|hard
     ids_int = get_selected_article_ids()
@@ -372,7 +384,7 @@ def undelete(article_id: int):
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
-@app.post("/bulk_exclude_domains")
+@app.post("/bulk/exclude_domains")
 def bulk_exclude_domains():
     note = (request.form.get("note") or "").strip()[:255]
     ids_int = get_selected_article_ids()
@@ -421,8 +433,6 @@ def bulk_exclude_domains():
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
-
-
 @app.get("/stats")
 def stats():
     """
@@ -435,8 +445,8 @@ def stats():
     + (optional) články pre vybranú doménu
     """
     domain = (request.args.get("domain") or "").strip().lower()
-    days = int(request.args.get("days", 30))
-    cutoff = datetime.now() - timedelta(days=days)
+    days = int(request.args.get("days", 0))
+    cutoff = datetime(2000, 1, 1) if days == 0 else datetime.now() - timedelta(days=days)
 
     engine = get_db_engine()
 
@@ -594,12 +604,12 @@ def delete(article_id: int):
 @app.get("/export/csv")
 def export_csv():
     days = int(request.args.get("days", 7))
-    only_ok = request.args.get("ok", "1") == "1"
+    extraction = request.args.get("extraction", "ok")
     only_slovak = request.args.get("sk", "0") == "1"
     relevance = request.args.get("rel", "all")
     include_deleted = request.args.get("del", "0") == "1"
     include_avoided = request.args.get("av", "0") == "1"
-    where_sql, params = build_filters(days, only_ok, only_slovak, relevance, include_deleted, include_avoided)
+    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided)
 
     sql = f"""
         SELECT
@@ -645,13 +655,13 @@ def export_csv():
 @app.get("/export/word")
 def export_word():
     days = int(request.args.get("days", 7))
-    only_ok = request.args.get("ok", "1") == "1"
+    extraction = request.args.get("extraction", "ok")
     only_slovak = request.args.get("sk", "0") == "1"
     relevance = request.args.get("rel", "all")
     include_deleted = request.args.get("del", "0") == "1"
     include_avoided = request.args.get("av", "0") == "1"
 
-    where_sql, params = build_filters(days, only_ok, only_slovak, relevance, include_deleted, include_avoided)
+    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided)
 
     sql = f"""
         SELECT
@@ -753,6 +763,9 @@ def article_detail(article_id: int):
                 a.fetch_error,
 
                 a.content_text,
+                a.content_text_fr,
+                a.title_fr,
+                a.snippet_fr,
                 a.content_hash,
 
                 a.ingestion_engine,
@@ -773,15 +786,14 @@ def article_detail(article_id: int):
     # Preferuj final_url (ak existuje), inak url
     online_url = r["final_url"] or r["url"]
 
-    published_display = ""
-    if r["published_at_real"]:
-        published_display = r["published_at_real"].strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        published_display = r["published_at_text"] or ""
+    published_display = (
+        r["published_at_real"].strftime("%Y-%m-%d %H:%M:%S")
+        if r["published_at_real"]
+        else r["published_at_text"] or ""
+    )
 
-    # Kontextové vety (ak už máš helpery; ak nie, nechaj prázdne)
-    ctx_plain = []
-    ctx_hl = []
+    ctx_plain_fr = []
+    ctx_hl_fr = []
 
     try:
         ctx_plain = extract_context_sentences(
@@ -793,13 +805,33 @@ def article_detail(article_id: int):
         ctx_plain = []
         ctx_hl = []
 
+    if r.get("content_text_fr"):
+        try:
+            ctx_plain_fr = extract_context_sentences(
+                r.get("content_text_fr") or "",
+                max_sentences=6
+            )
+            ctx_hl_fr = [highlight_terms_html(s) for s in ctx_plain_fr]
+        except Exception:
+            ctx_plain_fr = []
+            ctx_hl_fr = []
+
+    content_text_hl = highlight_terms_html(r.get("content_text") or "")
+    snippet_hl = highlight_terms_html(r.get("snippet") or "")
+
     return render_template(
         "article.html",
         r=r,
         online_url=online_url,
         ctx_plain=ctx_plain,
         ctx_hl=ctx_hl,
-        published_display=published_display)
+        ctx_plain_fr=ctx_plain_fr,
+        ctx_hl_fr=ctx_hl_fr,
+        published_display=published_display,
+        sk_context_found=len(ctx_hl) > 0,
+        content_text_hl=content_text_hl,
+        snippet_hl=snippet_hl,
+    )
 
 
 @app.post("/article/<int:article_id>/label")
@@ -891,6 +923,79 @@ def fetch_extract_article(article_id: int):
     return redirect(url_for("article_detail", article_id=article_id))
 
 
+@app.post("/article/<int:article_id>/translate")
+def article_translate(article_id: int):
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        row = conn.execute(
+            text("SELECT content_text, snippet, title, content_text_fr, snippet_fr, title_fr FROM articles WHERE id = :id"),
+            {"id": article_id}
+        ).fetchone()
+
+    if not row or not row[0]:
+        flash("Článok nemá extrahovaný text — preklad nie je možný.", "warn")
+        return redirect(url_for("article_detail", article_id=article_id))
+
+    api_key = settings.deepl_api_key
+    if not api_key:
+        flash("DEEPL_API_KEY nie je nastavený v .env.", "bad")
+        return redirect(url_for("article_detail", article_id=article_id))
+
+    texts, keys = [], []
+    if not row[3]:  # content_text_fr
+        texts.append(row[0]); keys.append("content_text_fr")
+    if not row[4] and row[1]:  # snippet_fr
+        texts.append(row[1]); keys.append("snippet_fr")
+    if not row[5] and row[2]:  # title_fr
+        texts.append(row[2]); keys.append("title_fr")
+
+    if not texts:
+        flash("Všetky polia sú už preložené.", "ok")
+        return redirect(url_for("article_detail", article_id=article_id))
+
+    try:
+        from translate import translate_ar_fr
+        translated = translate_ar_fr(api_key, texts)
+        updates = dict(zip(keys, translated))
+        updates["id"] = article_id
+    except Exception as e:
+        logger.error("DeepL translation failed: id=%s, error=%s", article_id, e)
+        flash(f"Preklad zlyhal: {e}", "bad")
+        return redirect(url_for("article_detail", article_id=article_id))
+
+    set_clause = ", ".join(f"{k} = :{k}" for k in keys)
+    with engine.begin() as conn:
+        conn.execute(text(f"UPDATE articles SET {set_clause} WHERE id = :id"), updates)
+
+    logger.info("Article translated AR→FR: id=%s", article_id)
+    flash("Preklad AR→FR uložený.", "ok")
+    return redirect(url_for("article_detail", article_id=article_id))
+
+
+@app.post("/article/<int:article_id>/set_content")
+def article_set_content(article_id: int):
+    content = (request.form.get("content_text") or "").strip()
+    if not content:
+        flash("Obsah je prázdny — nič neuložené.", "warn")
+        return redirect(url_for("article_detail", article_id=article_id))
+
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        conn.execute(text("""
+            UPDATE articles
+            SET content_text   = :content,
+                content_hash   = MD5(:content),
+                extraction_ok  = 1,
+                fetch_error    = NULL,
+                fetched_at     = NOW()
+            WHERE id = :id
+        """), {"content": content, "id": article_id})
+
+    logger.info("Article content set manually: id=%s, chars=%s", article_id, len(content))
+    flash("Obsah uložený.", "ok")
+    return redirect(url_for("article_detail", article_id=article_id))
+
+
 @app.post("/bulk/restore")
 def bulk_restore():
     ids_int = get_selected_article_ids()
@@ -912,64 +1017,137 @@ def search_page():
     lb = latest_bundle_path()
     return render_template("search.html", latest_bundle=lb)
 
+def _bundle_articles(bundle_path: str | None) -> list[dict]:
+    """Extrahuje všetky news_results z bundle JSON."""
+    if not bundle_path:
+        return []
+    try:
+        import json as _json
+        data = _json.loads(Path(bundle_path).read_text(encoding="utf-8"))
+        arts = []
+        for resp in (data.get("responses_clean") or {}).values():
+            if resp:
+                arts.extend(resp.get("news_results") or [])
+        return arts
+    except Exception as e:
+        logger.warning("_bundle_articles error: %s", e)
+        return []
+
+
 @app.post("/search/run")
 def search_run():
-    code, out = run_script([PYTHON_BIN, "search_flow_news.py"])
+    cmd = [PYTHON_BIN, "search_flow_news.py"]
+    hl = request.form.get("hl", "").strip()
+    gl = request.form.get("gl", "").strip()
+    num = request.form.get("num", "").strip()
+    when = request.form.get("when", "").strip()
+    if hl:
+        cmd += ["--hl", hl]
+    if gl:
+        cmd += ["--gl", gl]
+    if num:
+        cmd += ["--num", num]
+    if when:
+        cmd += ["--when", when]
+    code, out = run_script(cmd)
+    lb = latest_bundle_path()
     if code == 0:
-        lb = latest_bundle_path()
         logger.info("search_run OK: exit_code=%s, bundle=%s", code, lb)
-        flash(f"OK: vyhľadávanie dokončené. Latest bundle: {lb}", "ok")
+        arts = _bundle_articles(lb)
+        flash(f"OK: vyhľadávanie dokončené. Nájdených článkov: {len(arts)}", "ok")
     else:
         logger.error("search_run FAILED: exit_code=%s\n%s", code, out)
-        flash("CHYBA: vyhľadávanie zlyhalo (pozri log na /search).", "bad")
-    return render_template("search.html", latest_bundle=latest_bundle_path(), last_log=out, last_rc=code)
+        arts = []
+        flash("CHYBA: vyhľadávanie zlyhalo (pozri log).", "bad")
+    return render_template("search.html", latest_bundle=lb, last_log=out, last_rc=code, bundle_articles=arts)
+
+
+def _list_runs() -> list[dict]:
+    """Vráti zoznam runov zoradených od najnovšieho."""
+    import json as _json
+    runs = []
+    for run_dir in sorted(paths.runs_dir.iterdir(), reverse=True):
+        bundle = run_dir / "news_bundle.json"
+        if not bundle.exists():
+            continue
+        entry = {"run_id": run_dir.name, "bundle_path": str(bundle), "articles": 0, "timestamp": "", "hl": "", "gl": ""}
+        try:
+            data = _json.loads(bundle.read_text(encoding="utf-8"))
+            rc = data.get("responses_clean") or {}
+            entry["articles"] = sum(len((v or {}).get("news_results") or []) for v in rc.values())
+            run_meta = data.get("run") or {}
+            entry["timestamp"] = run_meta.get("timestamp", "")
+            entry["hl"] = run_meta.get("hl", "")
+            entry["gl"] = run_meta.get("gl", "")
+        except Exception:
+            pass
+        runs.append(entry)
+    return runs
 
 
 @app.get("/process")
 def process_page():
-    lb = latest_bundle_path()
-    return render_template("process.html", latest_bundle=lb)
+    return render_template("process.html", runs=_list_runs(), latest_bundle=latest_bundle_path())
+
 
 @app.post("/process/ingest_latest")
 def process_ingest_latest():
-    lb = latest_bundle_path()
+    lb = request.form.get("bundle_path") or latest_bundle_path()
     if not lb:
         logger.warning("process_ingest_latest: no bundle file found")
-        flash("Nenašiel som žiadny news_bundle_*.json.", "bad")
+        flash("Nenašiel som žiadny bundle.", "bad")
         return redirect(url_for("process_page"))
 
-    env = os.environ.copy()
-    env["BUNDLE_PATH"] = lb
-
     logger.info("process_ingest_latest started: bundle=%s", lb)
-    code, out = run_script([PYTHON_BIN, "ingest_to_dz_news_reworked.py"], env=env)
+    code, out = run_script([PYTHON_BIN, "ingest_to_dz_news_reworked.py", lb])
     if code == 0:
         logger.info("process_ingest_latest OK: exit_code=%s, bundle=%s", code, lb)
-        flash(f"OK: ingest hotový ({lb})", "ok")
+        flash("OK: ingest hotový.", "ok")
     else:
         logger.error("process_ingest_latest FAILED: exit_code=%s\n%s", code, out)
-        flash("CHYBA: ingest zlyhal (pozri log na /process).", "bad")
+        flash("CHYBA: ingest zlyhal (pozri log).", "bad")
 
-    return render_template("process.html", latest_bundle=lb, last_log=out, last_rc=code)
+    return render_template("process.html", runs=_list_runs(), latest_bundle=latest_bundle_path(),
+                           last_log=out, last_rc=code, ingested_bundle=lb)
+
+
+@app.post("/process/extract_bulk")
+def process_extract_bulk():
+    limit = request.form.get("limit", "50").strip() or "50"
+    logger.info("process_extract_bulk started: limit=%s", limit)
+    code, out = run_script([PYTHON_BIN, "extract_bulk.py", "--limit", limit])
+    if code == 0:
+        logger.info("process_extract_bulk OK")
+        flash("OK: hromadná extrakcia hotová.", "ok")
+    else:
+        logger.error("process_extract_bulk FAILED: exit_code=%s\n%s", code, out)
+        flash("CHYBA: extrakcia zlyhala (pozri log).", "bad")
+    return render_template("process.html", runs=_list_runs(), latest_bundle=latest_bundle_path(),
+                           last_log=out, last_rc=code)
 
 
 @app.get("/errors")
 def errors_page():
-    days = int(request.args.get("days", 30))
+    days = int(request.args.get("days", 0))
     engine = get_db_engine()
+
+    date_filter = "AND a.last_seen_at >= (NOW() - INTERVAL :days DAY)" if days > 0 else ""
+    limit = 15 if days == 0 else 300
+    params = {"days": days} if days > 0 else {}
+
     with engine.begin() as conn:
-        rows = conn.execute(text("""
+        rows = conn.execute(text(f"""
             SELECT a.id, a.title, s.domain,
                    COALESCE(DATE_FORMAT(a.published_at_real, '%%Y-%%m-%%d %%H:%%i'), a.published_at_text) AS published,
                    a.fetch_error, a.http_status, a.last_seen_at
             FROM articles a
             JOIN sources s ON s.id = a.source_id
             WHERE a.deleted_at IS NULL
-              AND a.last_seen_at >= (NOW() - INTERVAL :days DAY)
+              {date_filter}
               AND (a.fetch_error IS NOT NULL AND TRIM(a.fetch_error) <> '')
             ORDER BY a.last_seen_at DESC
-            LIMIT 300
-        """), {"days": days}).mappings().all()
+            LIMIT {limit}
+        """), params).mappings().all()
 
     return render_template("errors.html", rows=rows, days=days)
 

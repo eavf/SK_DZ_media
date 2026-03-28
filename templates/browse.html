@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sk">
+<html lang="sk" xmlns="http://www.w3.org/1999/html">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -53,7 +53,7 @@
         <span class="pill">port: {{ port }}</span>
 
         <span class="pill">days={{ days }}</span>
-        {% if only_ok %}<span class="pill ok">ok=1</span>{% else %}<span class="pill">ok=0</span>{% endif %}
+        <span class="pill {% if extraction == 'ok' %}ok{% elif extraction == 'unextracted' %}warn{% endif %}">{{ extraction }}</span>
         {% if only_slovak %}<span class="pill ok">sk=1</span>{% else %}<span class="pill">sk=0</span>{% endif %}
         <span class="pill">rel={{ relevance }}</span>
 
@@ -71,7 +71,7 @@
     <div class="card">
       <h1>Výsledky vyhľadávaní</h1>
       <div class="sub">
-        Zobrazené: <strong>{{ total }}</strong> (limit 300). Klikni na titulok pre detail.
+        Zobrazené: <strong>{{ total }}</strong> (limit {{ limit }}). Klikni na titulok pre detail.
       </div>
 
       <div class="toolbar-grid">
@@ -81,10 +81,12 @@
 
           <!-- ZMENA: action=/browse -->
           <form method="get" action="/browse" class="actions" style="margin-top: 0">
-            <input type="text" name="days" value="{{ days }}" style="max-width:120px" title="days">
-            <select name="ok" title="ok">
-              <option value="1" {% if only_ok %}selected{% endif %}>ok=1 (len extrahované)</option>
-              <option value="0" {% if not only_ok %}selected{% endif %}>ok=0/1 (všetko)</option>
+            <input type="text" name="days" value="{{ days }}" style="max-width:90px" title="Počet dní (0 = všetky)">
+
+            <select name="extraction" title="Stav extrakcie">
+              <option value="ok" {% if extraction == "ok" %}selected{% endif %}>len extrahované</option>
+              <option value="all" {% if extraction == "all" %}selected{% endif %}>všetky</option>
+              <option value="unextracted" {% if extraction == "unextracted" %}selected{% endif %}>bez textu</option>
             </select>
 
             <select name="sk" title="sk">
@@ -108,18 +110,32 @@
               <option value="0" {% if not include_avoided %}selected{% endif %}>av=0 (bez avoided)</option>
               <option value="1" {% if include_avoided %}selected{% endif %}>av=1 (aj avoided)</option>
             </select>
+            </br>
 
+            <div class="hr" style="width:100%;flex-basis:100%"></div>
             <button type="submit">Použiť</button>
-            <!-- ZMENA: Reset na /browse -->
             <a class="pill" href="/browse">Reset</a>
+            <a class="pill" href="/browse?extraction=all&days=0&rel=all&del=0&av=0&sk=0">Všetky v DB</a>
           </form>
+
+          <div class="hr" style="width:100%;flex-basis:100%"></div>
+
+          <div class="small" style="margin-top:10px;line-height:1.8">
+            <strong>Vrátených:</strong> {{ total }} (limit {{ limit }}) &nbsp;|&nbsp;
+            extrahované: <strong>{{ stats.extracted }}</strong> &nbsp;
+            bez textu: <strong>{{ stats.unextracted }}</strong> &nbsp;|&nbsp;
+            rel: <strong>{{ stats.rel_1 }}</strong> &nbsp;
+            irel: <strong>{{ stats.rel_0 }}</strong> &nbsp;
+            bez relev.: <strong>{{ stats.rel_null }}</strong>
+            {% if include_deleted and stats.deleted %}&nbsp;| deleted: <strong>{{ stats.deleted }}</strong>{% endif %}
+          </div>
         </div>
 
         <!-- Bulk actions -->
         <div class="box">
           <h2>Bulk akcie</h2>
           <div class="actions" style="margin-top:0">
-            <form method="post" action="/bulk_delete" onsubmit="return confirm('Soft-delete označených článkov?');">
+            <form method="post" action="/bulk/delete" onsubmit="return confirm('Soft-delete označených článkov?');">
               <button type="submit">Bulk delete</button>
             </form>
 
@@ -127,7 +143,7 @@
               <button type="submit">Undo soft delete</button>
             </form>
 
-            <form method="post" action="/bulk_exclude_domains" onsubmit="return confirm('Umlčať (exclude) domény z označených článkov?');">
+            <form method="post" action="/bulk/exclude_domains" onsubmit="return confirm('Umlčať (exclude) domény z označených článkov?');">
               <input type="text" name="note" placeholder="dôvod umlčania (voliteľné)">
               <button type="submit">Bulk exclude domain</button>
             </form>
@@ -153,7 +169,7 @@
     <!-- Jeden spoločný FORM pre checkboxy, aby bulk endpointy dostali ids[] -->
     <form id="bulkForm" method="post">
       <input type="hidden" name="days" value="{{ days }}">
-      <input type="hidden" name="ok" value="{{ 1 if only_ok else 0 }}">
+      <input type="hidden" name="extraction" value="{{ extraction }}">
       <input type="hidden" name="sk" value="{{ 1 if only_slovak else 0 }}">
       <input type="hidden" name="rel" value="{{ relevance }}">
       <input type="hidden" name="del" value="{{ 1 if include_deleted else 0 }}">
@@ -163,10 +179,8 @@
         <thead>
           <tr>
             <th style="width:46px"></th>
-            <th>Titulok</th>
-            <th style="width:190px">Zdroj</th>
-            <th style="width:170px">Publikované</th>
-            <th style="width:260px">Stav</th>
+            <th>Titulok / kontext</th>
+            <th style="width:220px">Meta</th>
           </tr>
         </thead>
 
@@ -203,56 +217,49 @@
             </td>
 
             <td>
-              <div class="badge">
-                <span class="pill">{{ r.domain }}</span>
-                {% if r.is_avoided %}
-                  <span class="pill warn">excluded</span>
-                {% endif %}
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;align-items:start">
+
+                <!-- Stĺpec 1: zdroj + publikované -->
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <span class="pill">{{ r.domain }}</span>
+                  {% if r.is_avoided %}<span class="pill warn">excluded</span>{% endif %}
+                  {% if r.source_notes %}<div class="small">{{ r.source_notes }}</div>{% endif %}
+                  <div class="small" style="opacity:.7">{{ r.published or "-" }}</div>
+                </div>
+
+                <!-- Stĺpec 2: stavy/vlastnosti -->
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  {% if r.extraction_ok == 1 %}
+                    <span class="pill ok">extraction OK</span>
+                  {% else %}
+                    <span class="pill bad">no text</span>
+                  {% endif %}
+
+                  {% if r.relevance == 1 %}
+                    <span class="pill ok">relevant</span>
+                  {% elif r.relevance == 0 %}
+                    <span class="pill warn">irrelevant</span>
+                  {% endif %}
+
+                  {% if r.deleted_at %}
+                    <span class="pill warn">deleted</span>
+                  {% endif %}
+
+                  {% set fe = (r.fetch_error or "") %}
+                  {% if fe == "AGGREGATOR" or fe == "SKIPPED_AGGREGATOR" %}
+                    <span class="pill purple" title="{{ fe }}">aggregator</span>
+                  {% elif fe == "JS_RENDER_REQUIRED" %}
+                    <span class="pill info" title="{{ fe }}">js-render</span>
+                  {% elif fe == "EXTRACTION_EMPTY" %}
+                    <span class="pill orange" title="{{ fe }}">empty</span>
+                  {% elif fe.startswith("HTTPError:") %}
+                    <span class="pill red" title="{{ fe }}">http-err</span>
+                  {% elif fe %}
+                    <span class="pill gray" title="{{ fe }}">err</span>
+                  {% endif %}
+                </div>
+
               </div>
-              {% if r.source_notes %}
-                <div class="small">{{ r.source_notes }}</div>
-              {% endif %}
-            </td>
-
-            <td>
-              <div class="small">{{ r.published or "-" }}</div>
-            </td>
-
-            <td>
-              <div class="badge">
-                {% if r.extraction_ok == 1 %}
-                  <span class="pill ok">extraction OK</span>
-                {% else %}
-                  <span class="pill bad">no text</span>
-                {% endif %}
-
-                {% if r.relevance == 1 %}
-                  <span class="pill ok">relevant</span>
-                {% elif r.relevance == 0 %}
-                  <span class="pill warn">irrelevant</span>
-                {% endif %}
-
-                {% if r.deleted_at %}
-                  <span class="pill warn">deleted</span>
-                {% endif %}
-
-                {% set fe = (r.fetch_error or "") %}
-                {% if fe == "AGGREGATOR" or fe == "SKIPPED_AGGREGATOR" %}
-                  <span class="pill purple" title="Agregátor – neextrahujeme">aggregator</span>
-                {% elif fe == "JS_RENDER_REQUIRED" %}
-                  <span class="pill info" title="Text sa renderuje cez JS – neextrahované">js-render</span>
-                {% elif fe == "EXTRACTION_EMPTY" %}
-                  <span class="pill orange" title="HTML stiahnuté, ale extraktor nič nenašiel">empty</span>
-                {% elif fe.startswith("HTTPError:") %}
-                  <span class="pill red" title="{{ fe }}">http-error</span>
-                {% elif fe %}
-                  <span class="pill gray" title="{{ fe }}">err</span>
-                {% endif %}
-              </div>
-
-              {% if r.fetch_error %}
-                <div class="small">err: {{ r.fetch_error }}</div>
-              {% endif %}
             </td>
           </tr>
         {% endfor %}

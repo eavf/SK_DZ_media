@@ -87,6 +87,8 @@ class ExtractionResult:
     matched_topics: list[str] | None = None
     matched_keywords: dict[str, list[str]] | None = None
     raw_search_result: dict[str, Any] | None = None
+    is_commercial: bool = False
+    no_slovak_context: bool = False
 
 
 def load_json(path: Path) -> Any:
@@ -345,6 +347,15 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
             "\n".join(filter(None, [item.title or "", item.snippet or "", text_out])),
             s.topic_keywords,
         )
+
+        title_bad_words = s.title_bad_words or set()
+        combined_text = "\n".join(filter(None, [item.title or "", item.snippet or "", text_out])).lower()
+        if any(w.lower() in combined_text for w in title_bad_words):
+            result.is_commercial = True
+
+        slovakia_terms = s.search_terms.get("slovakia", [])
+        if not any(t.lower() in text_out.lower() for t in slovakia_terms):
+            result.no_slovak_context = True
 
         result.extraction_ok = True
         result.content_text = text_out

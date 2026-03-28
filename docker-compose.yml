@@ -73,4 +73,5 @@ services:
       - ./bundle:/app/bundle
 
     command: ["python", "scheduler.py"]
+    entrypoint: ["/app/entrypoint.sh"]
 

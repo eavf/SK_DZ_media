@@ -1,5 +1,5 @@
 #!/bin/sh
-# Počká kým MariaDB prijíma spojenia, potom spustí hlavný príkaz.
+# Počká kým MariaDB prijíma autentifikáciu, potom spustí hlavný príkaz.
 set -e
 
 DB_HOST="${DB_HOST:-127.0.0.1}"
@@ -10,13 +10,18 @@ WAIT=3
 echo "Waiting for MariaDB at ${DB_HOST}:${DB_PORT}..."
 i=0
 until python -c "
-import socket, sys
-s = socket.socket()
-s.settimeout(2)
+import pymysql, os, sys
 try:
-    s.connect(('${DB_HOST}', ${DB_PORT}))
-    s.close()
-except Exception as e:
+    conn = pymysql.connect(
+        host=os.getenv('DB_HOST', '127.0.0.1'),
+        port=int(os.getenv('DB_PORT', 3306)),
+        user=os.getenv('DB_USER', ''),
+        password=os.getenv('DB_PASS', ''),
+        db=os.getenv('DB_NAME', 'dz_news'),
+        connect_timeout=2,
+    )
+    conn.close()
+except Exception:
     sys.exit(1)
 " 2>/dev/null; do
     i=$((i+1))

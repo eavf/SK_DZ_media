@@ -1,8 +1,11 @@
+import json
 import os
 import re
 import sys
 import io
 import csv
+import threading
+import uuid
 from datetime import datetime, timedelta
 import subprocess
 from pathlib import Path
@@ -84,6 +87,47 @@ def run_script(args: list[str], env: dict | None = None) -> tuple[int, str]:
     )
     out = (cp.stdout or "") + ("\n" + cp.stderr if cp.stderr else "")
     return cp.returncode, out
+
+
+def _job_path(job_id: str) -> Path:
+    return paths.bundle_dir / "jobs" / f"{job_id}.json"
+
+
+def _run_bg(job_id: str, args: list[str]) -> None:
+    rc, out = run_script(args)
+    result = {"status": "done" if rc == 0 else "error", "rc": rc, "out": out}
+    p = _job_path(job_id)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(result), encoding="utf-8")
+
+
+def _job_status(job_id: str) -> dict:
+    p = _job_path(job_id)
+    if not p.exists():
+        return {"status": "running", "rc": None, "out": ""}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {"status": "error", "rc": -1, "out": "Chyba čítania job súboru."}
+
+
+def _parse_ingest_summary(out: str) -> dict | None:
+    m = re.search(r'candidates=(\d+), deduped=(\d+), inserted=(\d+), updated=(\d+)', out)
+    if m:
+        return {"candidates": int(m.group(1)), "deduped": int(m.group(2)),
+                "inserted": int(m.group(3)), "updated": int(m.group(4))}
+    m = re.search(r'candidates=(\d+), deduped=(\d+)', out)
+    if m:
+        return {"candidates": int(m.group(1)), "deduped": int(m.group(2))}
+    return None
+
+
+def _parse_extract_summary(out: str) -> dict | None:
+    m = re.search(r'ok=(\d+), soft_deleted=(\d+), commercial=(\d+), failed=(\d+)', out)
+    if m:
+        return {"ok": int(m.group(1)), "soft_deleted": int(m.group(2)),
+                "commercial": int(m.group(3)), "failed": int(m.group(4))}
+    return None
 
 
 def split_sentences(text_: str):
@@ -286,8 +330,8 @@ def browse():
             COALESCE(a.final_url, a.url) AS url,
             COALESCE(a.extraction_ok, 0) = 1 AS extraction_ok,
             a.fetch_error,
-            LEFT(a.content_text, 1200) AS preview,
-            LEFT(a.content_text_fr, 1200) AS preview_fr,
+            LEFT(a.content_text, 4000) AS preview,
+            LEFT(a.content_text_fr, 4000) AS preview_fr,
             a.relevance,
             a.relevance_note,
             a.deleted_at,
@@ -598,6 +642,8 @@ def delete(article_id: int):
             conn.execute(text("UPDATE articles SET deleted_at=NOW() WHERE id=:id"), {"id": article_id})
 
     logger.info("Article deleted (%s): id=%s", mode, article_id)
+    if mode == "soft":
+        return redirect(url_for("article_detail", article_id=article_id))
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
@@ -1100,6 +1146,7 @@ def process_ingest_latest():
 
     logger.info("process_ingest_latest started: bundle=%s", lb)
     code, out = run_script([PYTHON_BIN, "ingest_to_dz_news_reworked.py", lb])
+    summary = _parse_ingest_summary(out)
     if code == 0:
         logger.info("process_ingest_latest OK: exit_code=%s, bundle=%s", code, lb)
         flash("OK: ingest hotový.", "ok")
@@ -1108,22 +1155,32 @@ def process_ingest_latest():
         flash("CHYBA: ingest zlyhal (pozri log).", "bad")
 
     return render_template("process.html", runs=_list_runs(), latest_bundle=latest_bundle_path(),
-                           last_log=out, last_rc=code, ingested_bundle=lb)
+                           last_log=out, last_rc=code, ingested_bundle=lb,
+                           last_summary=summary, last_op="ingest")
 
 
 @app.post("/process/extract_bulk")
 def process_extract_bulk():
     limit = request.form.get("limit", "50").strip() or "50"
-    logger.info("process_extract_bulk started: limit=%s", limit)
-    code, out = run_script([PYTHON_BIN, "extract_bulk.py", "--limit", limit])
-    if code == 0:
-        logger.info("process_extract_bulk OK")
-        flash("OK: hromadná extrakcia hotová.", "ok")
-    else:
-        logger.error("process_extract_bulk FAILED: exit_code=%s\n%s", code, out)
-        flash("CHYBA: extrakcia zlyhala (pozri log).", "bad")
+    job_id = uuid.uuid4().hex[:12]
+    logger.info("process_extract_bulk started: limit=%s, job=%s", limit, job_id)
+    t = threading.Thread(
+        target=_run_bg,
+        args=(job_id, [PYTHON_BIN, "extract_bulk.py", "--limit", limit]),
+        daemon=True,
+    )
+    t.start()
     return render_template("process.html", runs=_list_runs(), latest_bundle=latest_bundle_path(),
-                           last_log=out, last_rc=code)
+                           last_op="extract", extract_job_id=job_id)
+
+
+@app.get("/process/job/<job_id>")
+def job_status(job_id: str):
+    from flask import jsonify
+    job = _job_status(job_id)
+    if job["status"] == "done":
+        job["summary"] = _parse_extract_summary(job.get("out", ""))
+    return jsonify(job)
 
 
 @app.get("/errors")

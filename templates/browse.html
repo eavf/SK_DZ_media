@@ -116,6 +116,7 @@
             <button type="submit">Použiť</button>
             <a class="pill" href="/browse">Reset</a>
             <a class="pill" href="/browse?extraction=all&days=0&rel=all&del=0&av=0&sk=0">Všetky v DB</a>
+            <a class="pill warn" href="/browse?extraction=all&days=0&rel=all&del=0&av=1&sk=0">Skryté (avoided)</a>
           </form>
 
           <div class="hr" style="width:100%;flex-basis:100%"></div>
@@ -270,6 +271,35 @@
   </div>
 
   <script>
+    // Po návrate z article detail (history back / bfcache) obnov zoznam a obnov scroll
+    (function(){
+      const SCROLL_KEY = "browseScrollY";
+
+      // Ulož scroll pred odchodom na detail článku
+      document.querySelectorAll("a[href^='/article/']").forEach(function(a){
+        a.addEventListener("click", function(){
+          sessionStorage.setItem(SCROLL_KEY, window.scrollY);
+        });
+      });
+
+      // pageshow s persisted=true → stránka prišla z bfcache → reload (aby mali aktuálne dáta)
+      window.addEventListener("pageshow", function(e){
+        if(e.persisted){
+          // scroll bude obnovený po reloade nižšie
+          window.location.reload();
+        }
+      });
+
+      // Po reloade obnov scroll
+      window.addEventListener("DOMContentLoaded", function(){
+        const y = sessionStorage.getItem(SCROLL_KEY);
+        if(y !== null){
+          sessionStorage.removeItem(SCROLL_KEY);
+          window.scrollTo(0, parseInt(y, 10));
+        }
+      });
+    })();
+
     (function(){
       const bulkForm = document.getElementById("bulkForm");
       const buttons = document.querySelectorAll("form[action^='/bulk/'] button");

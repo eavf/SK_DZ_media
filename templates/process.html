@@ -19,6 +19,7 @@
       border-bottom: 1px solid var(--line);
       margin-bottom: 10px;
     }
+    .result-summary { margin-top: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -50,11 +51,66 @@
     <div class="box">
       <h2>Hromadná extrakcia</h2>
       <div class="sub">Stiahne a extrahuje text pre všetky články bez content_text. Články bez slovenského kontextu budú soft-deleted.</div>
-      <form method="post" action="/process/extract_bulk" class="actions" style="margin-top:10px"
-            onsubmit="return confirm('Spustiť hromadnú extrakciu?');">
-        <input class="mono" type="number" name="limit" value="50" min="1" max="500" style="max-width:90px" title="Max počet článkov">
-        <button type="submit">Spustiť extrakciu</button>
+      <form method="post" action="/process/extract_bulk" style="margin-top:10px"
+            onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').textContent='Spúšťam…';">
+        <div class="actions">
+          <input class="mono" type="number" name="limit" value="50" min="1" max="500" style="max-width:90px" title="Max počet článkov">
+          <button type="submit">Spustiť extrakciu</button>
+        </div>
       </form>
+
+      {% if last_op == "extract" and extract_job_id %}
+        <div id="extract-status" style="margin-top:12px">
+          <span class="pill" id="extract-pill">⏳ Prebieha…</span>
+        </div>
+        <div id="extract-result" style="margin-top:8px"></div>
+        <details id="extract-log-wrap" style="margin-top:10px;display:none">
+          <summary style="cursor:pointer;font-weight:600;user-select:none">Log</summary>
+          <pre class="log mono" style="margin-top:8px" id="extract-log"></pre>
+        </details>
+        <script>
+          (function(){
+            const jobId = {{ extract_job_id | tojson }};
+            const pill = document.getElementById("extract-pill");
+            const result = document.getElementById("extract-result");
+            const logWrap = document.getElementById("extract-log-wrap");
+            const logEl = document.getElementById("extract-log");
+
+            function poll(){
+              fetch("/process/job/" + jobId)
+                .then(r => r.json())
+                .then(data => {
+                  if(data.status === "running"){
+                    setTimeout(poll, 2000);
+                    return;
+                  }
+                  if(data.status === "done"){
+                    pill.textContent = "✓ Hotovo";
+                    pill.className = "pill ok";
+                  } else {
+                    pill.textContent = "✗ Chyba";
+                    pill.className = "pill bad";
+                  }
+                  if(data.summary){
+                    const s = data.summary;
+                    result.innerHTML =
+                      `<span class="pill ok">${s.ok} OK</span> ` +
+                      `<span class="pill bad">${s.failed} failed</span>` +
+                      (s.soft_deleted ? ` <span class="pill">${s.soft_deleted} soft-deleted</span>` : "") +
+                      (s.commercial   ? ` <span class="pill">${s.commercial} commercial</span>` : "");
+                  }
+                  if(data.out){
+                    logEl.textContent = data.out;
+                    logWrap.style.display = "";
+                    logWrap.open = true;
+                  }
+                })
+                .catch(() => setTimeout(poll, 3000));
+            }
+            setTimeout(poll, 2000);
+          })();
+        </script>
+      {% endif %}
     </div>
 
     <div class="hr"></div>
@@ -62,15 +118,33 @@
     <div class="box">
       <h2>Spracovanie surových dát</h2>
       <div class="sub">Vyber run a spusti ingest do DB (ingest_to_dz_news_reworked.py).</div>
-      <div class="sub">Prečíta vybraný run a spracuje údaje o nájdených článkov do databázy (ingest_to_dz_news_reworked.py).</div>
 
       {% if runs %}
-        <form method="post" action="/process/ingest_latest" onsubmit="return confirm('Ingest vybraného runu do DB?');">
+        <form method="post" action="/process/ingest_latest" id="ingestForm">
           <div class="sticky-bar actions">
             <button type="submit">Ingest vybraný run</button>
             <span class="small" id="selectedLabel"></span>
           </div>
-          <table class="table run-table" style="margin-top:0">
+          {% if last_op == "ingest" and last_log is defined %}
+            {% if last_summary %}
+              <div class="result-summary">
+                <strong>Výsledok:</strong>
+                <span class="pill">{{ last_summary.candidates }} kandidátov</span>
+                <span class="pill">{{ last_summary.deduped }} deduplikovaných</span>
+                {% if last_summary.inserted is defined %}
+                  <span class="pill ok">{{ last_summary.inserted }} nových</span>
+                  <span class="pill">{{ last_summary.updated }} aktualizovaných</span>
+                {% endif %}
+              </div>
+            {% endif %}
+            <details style="margin-top:10px" open>
+              <summary style="cursor:pointer;font-weight:600;user-select:none">
+                Log {% if last_rc == 0 %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">CHYBA (rc={{ last_rc }})</span>{% endif %}
+              </summary>
+              <pre class="log mono" style="margin-top:8px">{{ last_log }}</pre>
+            </details>
+          {% endif %}
+          <table class="table run-table" style="margin-top:10px">
             <thead>
               <tr>
                 <th style="width:40px"></th>
@@ -99,21 +173,11 @@
               {% endfor %}
             </tbody>
           </table>
-
         </form>
       {% else %}
         <div class="muted" style="margin-top:12px">Žiadne runy nenájdené v bundle/runs/.</div>
       {% endif %}
 
-      {% if last_log is defined %}
-        <div class="hr"></div>
-        <details class="box">
-          <summary style="cursor:pointer;font-weight:600;user-select:none">
-            Log skriptu {% if last_rc == 0 %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">CHYBA (rc={{ last_rc }})</span>{% endif %}
-          </summary>
-          <pre class="log mono" style="margin-top:10px">{{ last_log }}</pre>
-        </details>
-      {% endif %}
     </div>
 
   </div>
@@ -134,6 +198,17 @@
     }
     document.querySelectorAll('input[name="bundle_path"]').forEach(r => r.addEventListener("change", updateLabel));
     updateLabel();
+  })();
+
+  // Ingest form: confirm + spinner
+  (function(){
+    const form = document.getElementById("ingestForm");
+    if(!form) return;
+    form.addEventListener("submit", function(e) {
+      if(!confirm("Ingest vybraného runu do DB?")) { e.preventDefault(); return; }
+      const btn = form.querySelector("button[type=submit]");
+      if(btn) { btn.disabled = true; btn.textContent = "Prebieha…"; }
+    });
   })();
 
   (function(){

@@ -176,22 +176,38 @@
           </form>
         {% endif %}
 
+        <!-- Delete / Undelete -->
+        {% if r["deleted_at"] %}
+          <form method="post" action="/undelete/{{ r['id'] }}">
+            <button type="submit">Obnoviť článok</button>
+          </form>
+        {% else %}
+          <form method="post" action="/delete/{{ r['id'] }}">
+            <button type="submit" class="bad" onclick="return confirm('Vymazať článok?');">
+              Vymazať článok
+            </button>
+          </form>
+        {% endif %}
+
       </div>
 
       <div class="hr"></div>
 
-      <div class="sub">
-        URL (raw): <a href="{{ r['url'] }}" target="_blank" rel="noopener">{{ r["url"] }}</a><br>
-        {% if r["final_url"] %}
-          URL (final): <a href="{{ r['final_url'] }}" target="_blank" rel="noopener">{{ r["final_url"] }}</a><br>
-        {% endif %}
-        {% if r["url_canonical"] %}
-          canonical (raw): <a href="{{ r['url_canonical'] }}" target="_blank" rel="noopener">{{ r["url_canonical"] }}</a><br>
-        {% endif %}
-        {% if r["final_url_canonical"] %}
-          canonical (final): <a href="{{ r['final_url_canonical'] }}" target="_blank" rel="noopener">{{ r["final_url_canonical"] }}</a>
-        {% endif %}
-      </div>
+      <details class="sub">
+        <summary style="cursor:pointer;user-select:none;list-style:none">URL / canonical ▾</summary>
+        <div style="margin-top:6px">
+          URL (raw): <a href="{{ r['url'] }}" target="_blank" rel="noopener">{{ r["url"] }}</a><br>
+          {% if r["final_url"] %}
+            URL (final): <a href="{{ r['final_url'] }}" target="_blank" rel="noopener">{{ r["final_url"] }}</a><br>
+          {% endif %}
+          {% if r["url_canonical"] %}
+            canonical (raw): <a href="{{ r['url_canonical'] }}" target="_blank" rel="noopener">{{ r["url_canonical"] }}</a><br>
+          {% endif %}
+          {% if r["final_url_canonical"] %}
+            canonical (final): <a href="{{ r['final_url_canonical'] }}" target="_blank" rel="noopener">{{ r["final_url_canonical"] }}</a>
+          {% endif %}
+        </div>
+      </details>
     </div>
 
     <!-- NEW LAYOUT: left column (snippet + ctx) / right column (content) -->

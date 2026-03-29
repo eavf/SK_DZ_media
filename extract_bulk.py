@@ -17,6 +17,7 @@ import logging
 import sys
 import time
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from sqlalchemy import text
 
@@ -40,12 +41,14 @@ def _to_mysql_dt(iso: str | None) -> str | None:
 
 def fetch_pending(conn, limit: int) -> list[dict]:
     rows = conn.execute(text("""
-        SELECT id, COALESCE(final_url, url) AS fetch_url, title, snippet,
-               title_fr, snippet_fr
-        FROM articles
-        WHERE content_text IS NULL
-          AND deleted_at IS NULL
-        ORDER BY id
+        SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
+               a.title_fr, a.snippet_fr
+        FROM articles a
+        JOIN sources s ON s.id = a.source_id
+        WHERE a.content_text IS NULL
+          AND a.deleted_at IS NULL
+          AND s.is_avoided = 0
+        ORDER BY a.id
         LIMIT :limit
     """), {"limit": limit}).mappings().fetchall()
     return [dict(r) for r in rows]
@@ -181,6 +184,8 @@ def main() -> int:
     logger.info("Pending: %s článkov (limit=%s)", len(pending), args.limit)
 
     counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0}
+    last_domain_fetch: dict[str, float] = {}
+    DOMAIN_DELAY = 1.5  # min. sekúnd medzi requestmi na rovnakú doménu
 
     for row in pending:
         article_id = row["id"]
@@ -189,6 +194,11 @@ def main() -> int:
             logger.warning("id=%s: žiadna URL, preskakujem", article_id)
             continue
 
+        domain = urlparse(url).netloc
+        since_last = time.time() - last_domain_fetch.get(domain, 0.0)
+        if since_last < DOMAIN_DELAY:
+            time.sleep(DOMAIN_DELAY - since_last)
+
         logger.info("Fetching id=%s: %s", article_id, url)
         candidate = CandidateArticle(
             url=url,
@@ -196,6 +206,7 @@ def main() -> int:
             snippet=row.get("snippet"),
         )
         result = extract_candidate(candidate)
+        last_domain_fetch[domain] = time.time()
 
         if args.dry_run:
             status = "ok" if result.extraction_ok else "failed"

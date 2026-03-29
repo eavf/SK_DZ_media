@@ -2138,3 +2138,1217 @@
 2026-03-28 16:11:26,883 [INFO] app: search_run OK: exit_code=0, bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260328_161115/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1055
 2026-03-28 16:11:26,884 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 16:11:26] "POST /search/run HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
 2026-03-28 16:11:26,955 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 16:11:26] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:06:17,529 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:06:17,601 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:06:17,800 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:06:17,802 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:06:49,883 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:06:49,948 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:06:50,156 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:06:50,158 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:07:12,217 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:07:12,280 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:07:12,432 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:07:12,434 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:07:29,479 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:07:29,538 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:07:29,689 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:07:29,691 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:16,124 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:16,175 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:16,332 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:16,333 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:34,379 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:34,446 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:34,608 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:34,609 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:59,674 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/app.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:10:59,809 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:11:00,015 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:11:00,017 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:11:23,078 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/app.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:11:23,140 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:11:23,297 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:11:23,299 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:13,926 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:13] "GET /search HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:13,977 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:13] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:15,835 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:15] "[31m[1mGET /search/run HTTP/1.1[0m" 405 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:19,192 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:19] "GET / HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:19,222 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:19] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:23,217 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:23] "GET /process HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:23,249 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:23] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:36,667 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260328_161115/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:12:36,667 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260328_161115/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:12:36,884 [INFO] app: process_ingest_latest OK: exit_code=0, bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260328_161115/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1124
+2026-03-28 21:12:36,884 [INFO] app: process_ingest_latest OK: exit_code=0, bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260328_161115/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1124
+2026-03-28 21:12:36,891 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:36] "POST /process/ingest_latest HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:12:36,923 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:12:36] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:14:53,495 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:14:53,495 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:14:53,709 [ERROR] app: process_ingest_latest FAILED: exit_code=1
+
+2026-03-28 21:14:53,643 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1292, "Incorrect datetime value: '2026-03-18 16:27:02 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 846, in <module>
+    main()
+    ~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 834, in main
+    cand_count, dedup_count, run_id, ins, upd = process_file(path)
+                                                ~~~~~~~~~~~~^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 640, in process_file
+    rc = upsert_article(conn, c, source_id)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 504, in upsert_article
+    result = conn.execute(text("""
+        INSERT INTO articles (
+    ...<48 lines>...
+        "relevance": 0 if c.auto_irrelevant else None,
+    })
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1292, "Incorrect datetime value: '2026-03-18 16:27:02 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+[SQL: 
+        INSERT INTO articles (
+            source_id, url, url_canonical, url_hash,
+            title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
+            snippet, language,
+            ingestion_engine, ingestion_query_id, ingestion_rank,
+            relevance,
+            first_seen_at, last_seen_at
+        )
+        VALUES (
+            %(source_id)s, %(url)s, %(url_canonical)s, %(url_hash)s,
+            %(title)s, %(normalized_title)s, %(title_hash)s, %(published_at_text)s, %(published_at_real)s, %(published_conf)s,
+            %(snippet)s, %(language)s,
+            %(ingestion_engine)s, %(ingestion_query_id)s, %(ingestion_rank)s,
+            %(relevance)s,
+            NOW(), NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            last_seen_at = NOW(),
+            title = COALESCE(VALUES(title), title),
+            normalized_title = COALESCE(VALUES(normalized_title), normalized_title),
+            title_hash = COALESCE(VALUES(title_hash), title_hash),
+            published_at_text = COALESCE(VALUES(published_at_text), published_at_text),
+            published_at_real = COALESCE(published_at_real, VALUES(published_at_real)),
+            published_conf = COALESCE(published_conf, VALUES(published_conf)),
+            snippet = COALESCE(VALUES(snippet), snippet),
+            language = COALESCE(VALUES(language), language),
+            ingestion_engine = COALESCE(VALUES(ingestion_engine), ingestion_engine),
+            ingestion_query_id = COALESCE(VALUES(ingestion_query_id), ingestion_query_id),
+            ingestion_rank = CASE
+                WHEN ingestion_rank IS NULL THEN VALUES(ingestion_rank)
+                WHEN VALUES(ingestion_rank) IS NULL THEN ingestion_rank
+                ELSE LEAST(VALUES(ingestion_rank), ingestion_rank)
+            END
+    ]
+[parameters: {'source_id': 33, 'url': 'https://www.horizons.dz/language/ar/2026/03/%D9%85%D9%82%D8%B1%D9%85%D8%A7%D9%86-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7/', 'url_canonical': 'https://horizons.dz/language/ar/2026/03/%D9%85%D9%82%D8%B1%D9%85%D8%A7%D9%86-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7', 'url_hash': 'fcbc3beaf593806c7efa3210bbda899cf5f38bf910ff85f6de8d65caeacefabf', 'title': 'مقرمان يستقبل سفير جمهورية سلوفاكيا', 'normalized_title': 'مقرمان يستقبل سفير جمهورية سلوفاكيا', 'title_hash': '9b23c74d1541687993123c0e4934e06295e80db5c1c1188adcdd9a4c2d5e1122', 'published_at_text': 'Il y a 6 jours', 'published_at_real': '2026-03-18 16:27:02 UTC', 'published_conf': 'search', 'snippet': 'واستنادا لبيان الوزارة "يندرج هذا اللقاء في إطار الديناميكية الملحوظة التي تشهدها علاقات الصداقة والتعاون بين الجزائر وسلوفاكيا، إذ تباحث الطرفان السبل.', 'language': None, 'ingestion_engine': 'google_news', 'ingestion_query_id': 'q1', 'ingestion_rank': 1, 'relevance': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+ in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1127
+2026-03-28 21:14:53,709 [ERROR] app: process_ingest_latest FAILED: exit_code=1
+
+2026-03-28 21:14:53,643 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1292, "Incorrect datetime value: '2026-03-18 16:27:02 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 846, in <module>
+    main()
+    ~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 834, in main
+    cand_count, dedup_count, run_id, ins, upd = process_file(path)
+                                                ~~~~~~~~~~~~^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 640, in process_file
+    rc = upsert_article(conn, c, source_id)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 504, in upsert_article
+    result = conn.execute(text("""
+        INSERT INTO articles (
+    ...<48 lines>...
+        "relevance": 0 if c.auto_irrelevant else None,
+    })
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1292, "Incorrect datetime value: '2026-03-18 16:27:02 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+[SQL: 
+        INSERT INTO articles (
+            source_id, url, url_canonical, url_hash,
+            title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
+            snippet, language,
+            ingestion_engine, ingestion_query_id, ingestion_rank,
+            relevance,
+            first_seen_at, last_seen_at
+        )
+        VALUES (
+            %(source_id)s, %(url)s, %(url_canonical)s, %(url_hash)s,
+            %(title)s, %(normalized_title)s, %(title_hash)s, %(published_at_text)s, %(published_at_real)s, %(published_conf)s,
+            %(snippet)s, %(language)s,
+            %(ingestion_engine)s, %(ingestion_query_id)s, %(ingestion_rank)s,
+            %(relevance)s,
+            NOW(), NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            last_seen_at = NOW(),
+            title = COALESCE(VALUES(title), title),
+            normalized_title = COALESCE(VALUES(normalized_title), normalized_title),
+            title_hash = COALESCE(VALUES(title_hash), title_hash),
+            published_at_text = COALESCE(VALUES(published_at_text), published_at_text),
+            published_at_real = COALESCE(published_at_real, VALUES(published_at_real)),
+            published_conf = COALESCE(published_conf, VALUES(published_conf)),
+            snippet = COALESCE(VALUES(snippet), snippet),
+            language = COALESCE(VALUES(language), language),
+            ingestion_engine = COALESCE(VALUES(ingestion_engine), ingestion_engine),
+            ingestion_query_id = COALESCE(VALUES(ingestion_query_id), ingestion_query_id),
+            ingestion_rank = CASE
+                WHEN ingestion_rank IS NULL THEN VALUES(ingestion_rank)
+                WHEN VALUES(ingestion_rank) IS NULL THEN ingestion_rank
+                ELSE LEAST(VALUES(ingestion_rank), ingestion_rank)
+            END
+    ]
+[parameters: {'source_id': 33, 'url': 'https://www.horizons.dz/language/ar/2026/03/%D9%85%D9%82%D8%B1%D9%85%D8%A7%D9%86-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7/', 'url_canonical': 'https://horizons.dz/language/ar/2026/03/%D9%85%D9%82%D8%B1%D9%85%D8%A7%D9%86-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7', 'url_hash': 'fcbc3beaf593806c7efa3210bbda899cf5f38bf910ff85f6de8d65caeacefabf', 'title': 'مقرمان يستقبل سفير جمهورية سلوفاكيا', 'normalized_title': 'مقرمان يستقبل سفير جمهورية سلوفاكيا', 'title_hash': '9b23c74d1541687993123c0e4934e06295e80db5c1c1188adcdd9a4c2d5e1122', 'published_at_text': 'Il y a 6 jours', 'published_at_real': '2026-03-18 16:27:02 UTC', 'published_conf': 'search', 'snippet': 'واستنادا لبيان الوزارة "يندرج هذا اللقاء في إطار الديناميكية الملحوظة التي تشهدها علاقات الصداقة والتعاون بين الجزائر وسلوفاكيا، إذ تباحث الطرفان السبل.', 'language': None, 'ingestion_engine': 'google_news', 'ingestion_query_id': 'q1', 'ingestion_rank': 1, 'relevance': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+ in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1127
+2026-03-28 21:14:53,714 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:14:53] "POST /process/ingest_latest HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:14:53,751 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:14:53] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:15:06,656 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:15:06] "GET / HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:15:06,695 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:15:06] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:15:08,006 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:15:08] "GET /process HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:15:08,039 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:15:08] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:15:12,456 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:15:12] "GET /process HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:15:12,479 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:15:12] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:15:16,445 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260325_222738/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:15:16,445 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260325_222738/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:15:16,643 [ERROR] app: process_ingest_latest FAILED: exit_code=1
+
+2026-03-28 21:15:16,582 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1292, "Incorrect datetime value: '2026-03-25 18:50:33 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 846, in <module>
+    main()
+    ~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 834, in main
+    cand_count, dedup_count, run_id, ins, upd = process_file(path)
+                                                ~~~~~~~~~~~~^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 640, in process_file
+    rc = upsert_article(conn, c, source_id)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 504, in upsert_article
+    result = conn.execute(text("""
+        INSERT INTO articles (
+    ...<48 lines>...
+        "relevance": 0 if c.auto_irrelevant else None,
+    })
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1292, "Incorrect datetime value: '2026-03-25 18:50:33 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+[SQL: 
+        INSERT INTO articles (
+            source_id, url, url_canonical, url_hash,
+            title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
+            snippet, language,
+            ingestion_engine, ingestion_query_id, ingestion_rank,
+            relevance,
+            first_seen_at, last_seen_at
+        )
+        VALUES (
+            %(source_id)s, %(url)s, %(url_canonical)s, %(url_hash)s,
+            %(title)s, %(normalized_title)s, %(title_hash)s, %(published_at_text)s, %(published_at_real)s, %(published_conf)s,
+            %(snippet)s, %(language)s,
+            %(ingestion_engine)s, %(ingestion_query_id)s, %(ingestion_rank)s,
+            %(relevance)s,
+            NOW(), NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            last_seen_at = NOW(),
+            title = COALESCE(VALUES(title), title),
+            normalized_title = COALESCE(VALUES(normalized_title), normalized_title),
+            title_hash = COALESCE(VALUES(title_hash), title_hash),
+            published_at_text = COALESCE(VALUES(published_at_text), published_at_text),
+            published_at_real = COALESCE(published_at_real, VALUES(published_at_real)),
+            published_conf = COALESCE(published_conf, VALUES(published_conf)),
+            snippet = COALESCE(VALUES(snippet), snippet),
+            language = COALESCE(VALUES(language), language),
+            ingestion_engine = COALESCE(VALUES(ingestion_engine), ingestion_engine),
+            ingestion_query_id = COALESCE(VALUES(ingestion_query_id), ingestion_query_id),
+            ingestion_rank = CASE
+                WHEN ingestion_rank IS NULL THEN VALUES(ingestion_rank)
+                WHEN VALUES(ingestion_rank) IS NULL THEN ingestion_rank
+                ELSE LEAST(VALUES(ingestion_rank), ingestion_rank)
+            END
+    ]
+[parameters: {'source_id': 37, 'url': 'https://www.echoroukonline.com/%D8%A5%D9%8A%D8%B7%D8%A7%D9%84%D9%8A%D8%A7-%D8%A3%D9%85%D8%A7%D9%85-%D8%A7%D9%85%D8%AA%D8%AD%D8%A7%D9%86-%D8%B9%D8%B3%D9%8A%D8%B1-%D9%88%D8%AA%D9%88%D9%86%D8%B3-%D8%AA%D9%86%D8%AA%D8%B8%D8%B1-%D9%85', 'url_canonical': 'https://echoroukonline.com/%D8%A5%D9%8A%D8%B7%D8%A7%D9%84%D9%8A%D8%A7-%D8%A3%D9%85%D8%A7%D9%85-%D8%A7%D9%85%D8%AA%D8%AD%D8%A7%D9%86-%D8%B9%D8%B3%D9%8A%D8%B1-%D9%88%D8%AA%D9%88%D9%86%D8%B3-%D8%AA%D9%86%D8%AA%D8%B8%D8%B1-%D9%85', 'url_hash': 'df5352bc3429a340dd5dc2824842eea80276c5a77f57632713fc97582c1abeba', 'title': 'إيطاليا أمام امتحان عسير وتونس تنتظر معرفة آخر منافسيها – الشروق أونلاين', 'normalized_title': 'إيطاليا أمام امتحان عسير وتونس تنتظر معرفة آخر منافسيها - الشروق أونلاين', 'title_hash': '73fc97ca369bc41b1108ae8d107ee7ee6120387a07b2f5ad3b76a25e07b93479', 'published_at_text': 'il y a 2 heures', 'published_at_real': '2026-03-25 18:50:33 UTC', 'published_conf': 'search', 'snippet': 'يتنافس 16 منتخبا أوروبيا على أربعة مقاعد في ملحق القارة لنهائيات مونديال 2026 من خلال أربعة مسارات تنطلق الخميس بمباريات0.', 'language': None, 'ingestion_engine': 'google_news', 'ingestion_query_id': 'q1', 'ingestion_rank': 1, 'relevance': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+ in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1127
+2026-03-28 21:15:16,643 [ERROR] app: process_ingest_latest FAILED: exit_code=1
+
+2026-03-28 21:15:16,582 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1292, "Incorrect datetime value: '2026-03-25 18:50:33 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 846, in <module>
+    main()
+    ~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 834, in main
+    cand_count, dedup_count, run_id, ins, upd = process_file(path)
+                                                ~~~~~~~~~~~~^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 640, in process_file
+    rc = upsert_article(conn, c, source_id)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 504, in upsert_article
+    result = conn.execute(text("""
+        INSERT INTO articles (
+    ...<48 lines>...
+        "relevance": 0 if c.auto_irrelevant else None,
+    })
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1292, "Incorrect datetime value: '2026-03-25 18:50:33 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+[SQL: 
+        INSERT INTO articles (
+            source_id, url, url_canonical, url_hash,
+            title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
+            snippet, language,
+            ingestion_engine, ingestion_query_id, ingestion_rank,
+            relevance,
+            first_seen_at, last_seen_at
+        )
+        VALUES (
+            %(source_id)s, %(url)s, %(url_canonical)s, %(url_hash)s,
+            %(title)s, %(normalized_title)s, %(title_hash)s, %(published_at_text)s, %(published_at_real)s, %(published_conf)s,
+            %(snippet)s, %(language)s,
+            %(ingestion_engine)s, %(ingestion_query_id)s, %(ingestion_rank)s,
+            %(relevance)s,
+            NOW(), NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            last_seen_at = NOW(),
+            title = COALESCE(VALUES(title), title),
+            normalized_title = COALESCE(VALUES(normalized_title), normalized_title),
+            title_hash = COALESCE(VALUES(title_hash), title_hash),
+            published_at_text = COALESCE(VALUES(published_at_text), published_at_text),
+            published_at_real = COALESCE(published_at_real, VALUES(published_at_real)),
+            published_conf = COALESCE(published_conf, VALUES(published_conf)),
+            snippet = COALESCE(VALUES(snippet), snippet),
+            language = COALESCE(VALUES(language), language),
+            ingestion_engine = COALESCE(VALUES(ingestion_engine), ingestion_engine),
+            ingestion_query_id = COALESCE(VALUES(ingestion_query_id), ingestion_query_id),
+            ingestion_rank = CASE
+                WHEN ingestion_rank IS NULL THEN VALUES(ingestion_rank)
+                WHEN VALUES(ingestion_rank) IS NULL THEN ingestion_rank
+                ELSE LEAST(VALUES(ingestion_rank), ingestion_rank)
+            END
+    ]
+[parameters: {'source_id': 37, 'url': 'https://www.echoroukonline.com/%D8%A5%D9%8A%D8%B7%D8%A7%D9%84%D9%8A%D8%A7-%D8%A3%D9%85%D8%A7%D9%85-%D8%A7%D9%85%D8%AA%D8%AD%D8%A7%D9%86-%D8%B9%D8%B3%D9%8A%D8%B1-%D9%88%D8%AA%D9%88%D9%86%D8%B3-%D8%AA%D9%86%D8%AA%D8%B8%D8%B1-%D9%85', 'url_canonical': 'https://echoroukonline.com/%D8%A5%D9%8A%D8%B7%D8%A7%D9%84%D9%8A%D8%A7-%D8%A3%D9%85%D8%A7%D9%85-%D8%A7%D9%85%D8%AA%D8%AD%D8%A7%D9%86-%D8%B9%D8%B3%D9%8A%D8%B1-%D9%88%D8%AA%D9%88%D9%86%D8%B3-%D8%AA%D9%86%D8%AA%D8%B8%D8%B1-%D9%85', 'url_hash': 'df5352bc3429a340dd5dc2824842eea80276c5a77f57632713fc97582c1abeba', 'title': 'إيطاليا أمام امتحان عسير وتونس تنتظر معرفة آخر منافسيها – الشروق أونلاين', 'normalized_title': 'إيطاليا أمام امتحان عسير وتونس تنتظر معرفة آخر منافسيها - الشروق أونلاين', 'title_hash': '73fc97ca369bc41b1108ae8d107ee7ee6120387a07b2f5ad3b76a25e07b93479', 'published_at_text': 'il y a 2 heures', 'published_at_real': '2026-03-25 18:50:33 UTC', 'published_conf': 'search', 'snippet': 'يتنافس 16 منتخبا أوروبيا على أربعة مقاعد في ملحق القارة لنهائيات مونديال 2026 من خلال أربعة مسارات تنطلق الخميس بمباريات0.', 'language': None, 'ingestion_engine': 'google_news', 'ingestion_query_id': 'q1', 'ingestion_rank': 1, 'relevance': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+ in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1127
+2026-03-28 21:15:16,649 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:15:16] "POST /process/ingest_latest HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:15:16,675 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:15:16] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:16:22,770 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:16:22] "GET /process HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:16:22,801 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:16:22] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:16:28,297 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:16:28,297 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:16:28,513 [ERROR] app: process_ingest_latest FAILED: exit_code=1
+
+2026-03-28 21:16:28,447 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1292, "Incorrect datetime value: '2026-03-18 16:27:02 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 846, in <module>
+    main()
+    ~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 834, in main
+    cand_count, dedup_count, run_id, ins, upd = process_file(path)
+                                                ~~~~~~~~~~~~^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 640, in process_file
+    rc = upsert_article(conn, c, source_id)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 504, in upsert_article
+    result = conn.execute(text("""
+        INSERT INTO articles (
+    ...<48 lines>...
+        "relevance": 0 if c.auto_irrelevant else None,
+    })
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1292, "Incorrect datetime value: '2026-03-18 16:27:02 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+[SQL: 
+        INSERT INTO articles (
+            source_id, url, url_canonical, url_hash,
+            title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
+            snippet, language,
+            ingestion_engine, ingestion_query_id, ingestion_rank,
+            relevance,
+            first_seen_at, last_seen_at
+        )
+        VALUES (
+            %(source_id)s, %(url)s, %(url_canonical)s, %(url_hash)s,
+            %(title)s, %(normalized_title)s, %(title_hash)s, %(published_at_text)s, %(published_at_real)s, %(published_conf)s,
+            %(snippet)s, %(language)s,
+            %(ingestion_engine)s, %(ingestion_query_id)s, %(ingestion_rank)s,
+            %(relevance)s,
+            NOW(), NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            last_seen_at = NOW(),
+            title = COALESCE(VALUES(title), title),
+            normalized_title = COALESCE(VALUES(normalized_title), normalized_title),
+            title_hash = COALESCE(VALUES(title_hash), title_hash),
+            published_at_text = COALESCE(VALUES(published_at_text), published_at_text),
+            published_at_real = COALESCE(published_at_real, VALUES(published_at_real)),
+            published_conf = COALESCE(published_conf, VALUES(published_conf)),
+            snippet = COALESCE(VALUES(snippet), snippet),
+            language = COALESCE(VALUES(language), language),
+            ingestion_engine = COALESCE(VALUES(ingestion_engine), ingestion_engine),
+            ingestion_query_id = COALESCE(VALUES(ingestion_query_id), ingestion_query_id),
+            ingestion_rank = CASE
+                WHEN ingestion_rank IS NULL THEN VALUES(ingestion_rank)
+                WHEN VALUES(ingestion_rank) IS NULL THEN ingestion_rank
+                ELSE LEAST(VALUES(ingestion_rank), ingestion_rank)
+            END
+    ]
+[parameters: {'source_id': 33, 'url': 'https://www.horizons.dz/language/ar/2026/03/%D9%85%D9%82%D8%B1%D9%85%D8%A7%D9%86-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7/', 'url_canonical': 'https://horizons.dz/language/ar/2026/03/%D9%85%D9%82%D8%B1%D9%85%D8%A7%D9%86-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7', 'url_hash': 'fcbc3beaf593806c7efa3210bbda899cf5f38bf910ff85f6de8d65caeacefabf', 'title': 'مقرمان يستقبل سفير جمهورية سلوفاكيا', 'normalized_title': 'مقرمان يستقبل سفير جمهورية سلوفاكيا', 'title_hash': '9b23c74d1541687993123c0e4934e06295e80db5c1c1188adcdd9a4c2d5e1122', 'published_at_text': 'Il y a 6 jours', 'published_at_real': '2026-03-18 16:27:02 UTC', 'published_conf': 'search', 'snippet': 'واستنادا لبيان الوزارة "يندرج هذا اللقاء في إطار الديناميكية الملحوظة التي تشهدها علاقات الصداقة والتعاون بين الجزائر وسلوفاكيا، إذ تباحث الطرفان السبل.', 'language': None, 'ingestion_engine': 'google_news', 'ingestion_query_id': 'q1', 'ingestion_rank': 1, 'relevance': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+ in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1127
+2026-03-28 21:16:28,513 [ERROR] app: process_ingest_latest FAILED: exit_code=1
+
+2026-03-28 21:16:28,447 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1292, "Incorrect datetime value: '2026-03-18 16:27:02 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 846, in <module>
+    main()
+    ~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 834, in main
+    cand_count, dedup_count, run_id, ins, upd = process_file(path)
+                                                ~~~~~~~~~~~~^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 640, in process_file
+    rc = upsert_article(conn, c, source_id)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py", line 504, in upsert_article
+    result = conn.execute(text("""
+        INSERT INTO articles (
+    ...<48 lines>...
+        "relevance": 0 if c.auto_irrelevant else None,
+    })
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1292, "Incorrect datetime value: '2026-03-18 16:27:02 UTC' for column `dz_news`.`articles`.`published_at_real` at row 1")
+[SQL: 
+        INSERT INTO articles (
+            source_id, url, url_canonical, url_hash,
+            title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
+            snippet, language,
+            ingestion_engine, ingestion_query_id, ingestion_rank,
+            relevance,
+            first_seen_at, last_seen_at
+        )
+        VALUES (
+            %(source_id)s, %(url)s, %(url_canonical)s, %(url_hash)s,
+            %(title)s, %(normalized_title)s, %(title_hash)s, %(published_at_text)s, %(published_at_real)s, %(published_conf)s,
+            %(snippet)s, %(language)s,
+            %(ingestion_engine)s, %(ingestion_query_id)s, %(ingestion_rank)s,
+            %(relevance)s,
+            NOW(), NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            last_seen_at = NOW(),
+            title = COALESCE(VALUES(title), title),
+            normalized_title = COALESCE(VALUES(normalized_title), normalized_title),
+            title_hash = COALESCE(VALUES(title_hash), title_hash),
+            published_at_text = COALESCE(VALUES(published_at_text), published_at_text),
+            published_at_real = COALESCE(published_at_real, VALUES(published_at_real)),
+            published_conf = COALESCE(published_conf, VALUES(published_conf)),
+            snippet = COALESCE(VALUES(snippet), snippet),
+            language = COALESCE(VALUES(language), language),
+            ingestion_engine = COALESCE(VALUES(ingestion_engine), ingestion_engine),
+            ingestion_query_id = COALESCE(VALUES(ingestion_query_id), ingestion_query_id),
+            ingestion_rank = CASE
+                WHEN ingestion_rank IS NULL THEN VALUES(ingestion_rank)
+                WHEN VALUES(ingestion_rank) IS NULL THEN ingestion_rank
+                ELSE LEAST(VALUES(ingestion_rank), ingestion_rank)
+            END
+    ]
+[parameters: {'source_id': 33, 'url': 'https://www.horizons.dz/language/ar/2026/03/%D9%85%D9%82%D8%B1%D9%85%D8%A7%D9%86-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7/', 'url_canonical': 'https://horizons.dz/language/ar/2026/03/%D9%85%D9%82%D8%B1%D9%85%D8%A7%D9%86-%D9%8A%D8%B3%D8%AA%D9%82%D8%A8%D9%84-%D8%B3%D9%81%D9%8A%D8%B1-%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9-%D8%B3%D9%84%D9%88%D9%81%D8%A7%D9%83%D9%8A%D8%A7', 'url_hash': 'fcbc3beaf593806c7efa3210bbda899cf5f38bf910ff85f6de8d65caeacefabf', 'title': 'مقرمان يستقبل سفير جمهورية سلوفاكيا', 'normalized_title': 'مقرمان يستقبل سفير جمهورية سلوفاكيا', 'title_hash': '9b23c74d1541687993123c0e4934e06295e80db5c1c1188adcdd9a4c2d5e1122', 'published_at_text': 'Il y a 6 jours', 'published_at_real': '2026-03-18 16:27:02 UTC', 'published_conf': 'search', 'snippet': 'واستنادا لبيان الوزارة "يندرج هذا اللقاء في إطار الديناميكية الملحوظة التي تشهدها علاقات الصداقة والتعاون بين الجزائر وسلوفاكيا، إذ تباحث الطرفان السبل.', 'language': None, 'ingestion_engine': 'google_news', 'ingestion_query_id': 'q1', 'ingestion_rank': 1, 'relevance': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+ in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1127
+2026-03-28 21:16:28,518 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:16:28] "POST /process/ingest_latest HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:16:28,566 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:16:28] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:19:26,613 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:19:26,676 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:19:26,834 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:19:26,836 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:20:18,950 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:20:19,006 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:20:19,173 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:20:19,175 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:20:34,757 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:20:34,757 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:20:34,952 [INFO] app: process_ingest_latest OK: exit_code=0, bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1124
+2026-03-28 21:20:34,952 [INFO] app: process_ingest_latest OK: exit_code=0, bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1124
+2026-03-28 21:20:34,963 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:20:34] "POST /process/ingest_latest HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:20:34,997 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:20:34] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:23:21,249 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:23:21,249 [INFO] app: process_ingest_latest started: bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1120
+2026-03-28 21:23:21,463 [INFO] app: process_ingest_latest OK: exit_code=0, bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1124
+2026-03-28 21:23:21,463 [INFO] app: process_ingest_latest OK: exit_code=0, bundle=/home/vovo/PycharmProjects/SK_DZ_media/bundle/runs/run_20260324_230207/news_bundle.json in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1124
+2026-03-28 21:23:21,475 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:23:21] "POST /process/ingest_latest HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:23:21,505 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:23:21] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:23:47,278 [INFO] app: process_extract_bulk started: limit=50 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1138
+2026-03-28 21:23:47,278 [INFO] app: process_extract_bulk started: limit=50 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1138
+2026-03-28 21:24:00,137 [INFO] app: process_extract_bulk OK in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1142
+2026-03-28 21:24:00,137 [INFO] app: process_extract_bulk OK in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1142
+2026-03-28 21:24:00,143 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:24:00] "POST /process/extract_bulk HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 21:24:00,182 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 21:24:00] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:01:50,344 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/extract_bulk.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:01:50,445 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:01:50,624 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:01:50,626 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:02:34,050 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:02:34] "GET / HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:02:34,098 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:02:34] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:02:46,577 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:02:46] "GET /process HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:02:46,611 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:02:46] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:02:48,668 [INFO] app: process_extract_bulk started: limit=50 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1138
+2026-03-28 22:02:48,668 [INFO] app: process_extract_bulk started: limit=50 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1138
+2026-03-28 22:02:48,925 [INFO] app: process_extract_bulk OK in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1142
+2026-03-28 22:02:48,925 [INFO] app: process_extract_bulk OK in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1142
+2026-03-28 22:02:48,931 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:02:48] "POST /process/extract_bulk HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:02:48,970 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:02:48] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:03:37,139 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:03:37] "GET /browse HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:03:37,213 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:03:37] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:03:49,471 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:03:49] "GET /browse?days=0&extraction=unextracted&sk=0&rel=all&del=1&av=1 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:03:49,517 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:03:49] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:04:18,540 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:04:18] "GET /article/17 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:04:18,569 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:04:18] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:04:45,657 [INFO] app: Article content set manually: id=17, chars=2962 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1013
+2026-03-28 22:04:45,657 [INFO] app: Article content set manually: id=17, chars=2962 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1013
+2026-03-28 22:04:45,658 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:04:45] "[32mPOST /article/17/set_content HTTP/1.1[0m" 302 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:04:45,671 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:04:45] "GET /article/17 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:04:45,707 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:04:45] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:05:13,275 [INFO] app: Article labeled: id=17, relevance=1, note='' in /home/vovo/PycharmProjects/SK_DZ_media/app.py:877
+2026-03-28 22:05:13,275 [INFO] app: Article labeled: id=17, relevance=1, note='' in /home/vovo/PycharmProjects/SK_DZ_media/app.py:877
+2026-03-28 22:05:13,275 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:05:13] "[32mPOST /article/17/label HTTP/1.1[0m" 302 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:05:13,284 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:05:13] "GET /article/17 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:05:13,317 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:05:13] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:05:19,969 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:05:19] "GET /article/30 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:05:20,002 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:05:20] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:06:28,264 [INFO] app: Article labeled: id=30, relevance=0, note='' in /home/vovo/PycharmProjects/SK_DZ_media/app.py:877
+2026-03-28 22:06:28,264 [INFO] app: Article labeled: id=30, relevance=0, note='' in /home/vovo/PycharmProjects/SK_DZ_media/app.py:877
+2026-03-28 22:06:28,264 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:06:28] "[32mPOST /article/30/label HTTP/1.1[0m" 302 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:06:28,274 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:06:28] "GET /article/30 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:06:28,311 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:06:28] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:06:36,920 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:06:36] "GET /article/28 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:06:36,968 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:06:36] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:07:08,779 [INFO] app: Article labeled: id=28, relevance=0, note='' in /home/vovo/PycharmProjects/SK_DZ_media/app.py:877
+2026-03-28 22:07:08,779 [INFO] app: Article labeled: id=28, relevance=0, note='' in /home/vovo/PycharmProjects/SK_DZ_media/app.py:877
+2026-03-28 22:07:08,780 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:07:08] "[32mPOST /article/28/label HTTP/1.1[0m" 302 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:07:08,792 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:07:08] "GET /article/28 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:07:08,828 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:07:08] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:07:14,442 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:07:14] "GET /browse?days=0&extraction=unextracted&sk=0&rel=all&del=1&av=1 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:07:14,470 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:07:14] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:07:23,644 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:07:23] "GET /article/50 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:07:23,680 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:07:23] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:08:02,558 [INFO] app: bulk_delete (soft): 1 articles [50] in /home/vovo/PycharmProjects/SK_DZ_media/app.py:387
+2026-03-28 22:08:02,558 [INFO] app: bulk_delete (soft): 1 articles [50] in /home/vovo/PycharmProjects/SK_DZ_media/app.py:387
+2026-03-28 22:08:02,559 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:08:02] "[32mPOST /bulk/delete HTTP/1.1[0m" 302 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:08:02,574 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:08:02] "GET /browse?days=0&sk=0&rel=all&del=1&av=1 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:08:02,610 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:08:02] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:08:28,339 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:08:28] "GET /browse?days=0&sk=0&rel=all&del=1&av=1 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:08:28,371 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:08:28] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:03,283 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/app.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:03,346 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:03,506 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:03,508 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:29,900 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:12:29] "[35m[1mGET /article/6 HTTP/1.1[0m" 500 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:29,986 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:12:29] "GET /article/6?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:29,992 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:12:29] "GET /article/6?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:30,144 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:12:30] "GET /article/6?__debugger__=yes&cmd=resource&f=console.png&s=nfAkkSpNiGP0wQBMPm4Z HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:12:30,245 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:12:30] "GET /article/6?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:14:56,709 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:14:56] "GET /article/6 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:14:56,740 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:14:56] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:15:11,247 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:15:11] "GET /article/19 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:15:11,279 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:15:11] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:15:26,983 [INFO] app: Article deleted (soft): id=19 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:619
+2026-03-28 22:15:26,983 [INFO] app: Article deleted (soft): id=19 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:619
+2026-03-28 22:15:26,983 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:15:26] "[32mPOST /delete/19 HTTP/1.1[0m" 302 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:15:26,993 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:15:26] "GET /article/19 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:15:27,019 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:15:27] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:18:31,006 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:18:31] "GET /article/37 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:18:31,040 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:18:31] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:18:53,442 [INFO] app: Article deleted (soft): id=37 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:619
+2026-03-28 22:18:53,442 [INFO] app: Article deleted (soft): id=37 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:619
+2026-03-28 22:18:53,442 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:18:53] "[32mPOST /delete/37 HTTP/1.1[0m" 302 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:18:53,452 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:18:53] "GET /article/37 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-28 22:18:53,485 [INFO] werkzeug: 127.0.0.1 - - [28/Mar/2026 22:18:53] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 03:43:19,846 [INFO] werkzeug: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5088 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 03:43:19,846 [INFO] werkzeug: [33mPress CTRL+C to quit[0m in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 03:43:19,846 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 02:43:20,015 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 02:43:20,017 [INFO] werkzeug:  * Debugger PIN: 128-346-128 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:15:41,114 [INFO] werkzeug: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5088 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:15:41,120 [INFO] werkzeug: [33mPress CTRL+C to quit[0m in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:15:41,121 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:15:41,313 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:15:41,315 [INFO] werkzeug:  * Debugger PIN: 113-108-228 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:15:44,225 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:15:44] "GET /browse?days=0&sk=0&rel=all&del=1&av=1 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:15:44,253 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:15:44] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:15:45,911 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:15:45] "GET /browse?days=0&sk=0&rel=all&del=1&av=1 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:15:45,936 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:15:45] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:15:47,145 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:15:47] "GET /article/34 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:15:47,171 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:15:47] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:21:33,236 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/app.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:21:33,296 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:21:33,471 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:21:33,473 [INFO] werkzeug:  * Debugger PIN: 113-108-228 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:22:04,550 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/app.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:22:04,609 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:22:04,791 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:22:04,793 [INFO] werkzeug:  * Debugger PIN: 113-108-228 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:24:40,195 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/app.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:24:40,243 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:24:40,392 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:24:40,394 [INFO] werkzeug:  * Debugger PIN: 113-108-228 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:00,539 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:00] "GET / HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:00,586 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:00] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:02,717 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:02] "GET / HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:02,747 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:02] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:04,174 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:04] "GET /process HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:04,204 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:04] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:05,505 [INFO] app: process_extract_bulk started: limit=50, job=c3856c6dc906 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1166
+2026-03-29 22:27:05,505 [INFO] app: process_extract_bulk started: limit=50, job=c3856c6dc906 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1166
+2026-03-29 22:27:05,511 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:05] "POST /process/extract_bulk HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:05,556 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:05] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:07,599 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:07] "GET /process/job/c3856c6dc906 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:17,033 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:17] "GET /process HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 22:27:17,056 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 22:27:17] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-30 00:04:32,258 [INFO] werkzeug: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5088 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-30 00:04:32,258 [INFO] werkzeug: [33mPress CTRL+C to quit[0m in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-30 00:04:32,259 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:04:32,413 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:04:32,415 [INFO] werkzeug:  * Debugger PIN: 113-108-228 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:04:36,857 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:04:36] "GET /browse HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:04:36,888 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:04:36] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:04:41,882 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:04:41] "GET /article/40 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:04:41,912 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:04:41] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:05:25,086 [INFO] app: Article translated AR→FR: id=40 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1016
+2026-03-29 23:05:25,086 [INFO] app: Article translated AR→FR: id=40 in /home/vovo/PycharmProjects/SK_DZ_media/app.py:1016
+2026-03-29 23:05:25,087 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:05:25] "[32mPOST /article/40/translate HTTP/1.1[0m" 302 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:05:25,098 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:05:25] "GET /article/40 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:05:25,137 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:05:25] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:05:35,367 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:05:35] "GET /browse HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:05:35,390 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:05:35] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:05:57,406 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:05:57] "GET /article/40 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:05:57,438 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:05:57] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:12:46,894 [INFO] werkzeug:  * Detected change in '/home/vovo/PycharmProjects/SK_DZ_media/app.py', reloading in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-30 00:12:46,984 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:12:47,136 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:12:47,138 [INFO] werkzeug:  * Debugger PIN: 113-108-228 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:27,208 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:27] "GET /browse HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:27,267 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:27] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-30 00:13:47,222 [INFO] werkzeug: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5088 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-30 00:13:47,222 [INFO] werkzeug: [33mPress CTRL+C to quit[0m in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-30 00:13:47,222 [INFO] werkzeug:  * Restarting with stat in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:47,364 [WARNING] werkzeug:  * Debugger is active! in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:47,366 [INFO] werkzeug:  * Debugger PIN: 113-108-228 in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:50,179 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:50] "GET /browse HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:50,210 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:50] "GET /static/app.css HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:50,328 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:50] "[33mGET /favicon.ico HTTP/1.1[0m" 404 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:55,832 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:55] "GET /article/40 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:55,863 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:55] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:58,755 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:58] "GET /browse HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:13:58,784 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:13:58] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:14:00,198 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:14:00] "GET /article/51 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:14:00,227 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:14:00] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:14:02,488 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:14:02] "GET /browse HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:14:02,520 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:14:02] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:14:18,510 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:14:18] "GET /article/40 HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:14:18,578 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:14:18] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:14:22,634 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:14:22] "GET /browse HTTP/1.1" 200 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97
+2026-03-29 23:14:22,655 [INFO] werkzeug: 127.0.0.1 - - [29/Mar/2026 23:14:22] "[36mGET /static/app.css HTTP/1.1[0m" 304 - in /home/vovo/PycharmProjects/SK_DZ_media/.venv/lib/python3.14/site-packages/werkzeug/_internal.py:97

@@ -499,8 +499,9 @@ def insert_minimal_run(conn, *, engine: str, bundle_filename: str) -> int:
     return int(conn.execute(text("SELECT LAST_INSERT_ID()")).scalar_one())
 
 
-def upsert_article(conn, c: ArticleCandidate, source_id: int) -> None:
-    conn.execute(text("""
+def upsert_article(conn, c: ArticleCandidate, source_id: int) -> int:
+    """Returns rowcount: 1=inserted, 2=updated, 0=no change."""
+    result = conn.execute(text("""
         INSERT INTO articles (
             source_id, url, url_canonical, url_hash,
             title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
@@ -543,7 +544,7 @@ def upsert_article(conn, c: ArticleCandidate, source_id: int) -> None:
         "normalized_title": c.normalized_title,
         "title_hash": c.title_hash,
         "published_at_text": c.published_at_raw,
-        "published_at_real": c.published_at_iso,
+        "published_at_real": c.published_at_iso[:19] if c.published_at_iso else None,
         "published_conf": "search" if c.published_at_iso else None,
         "snippet": c.snippet,
         "language": c.language,
@@ -552,6 +553,7 @@ def upsert_article(conn, c: ArticleCandidate, source_id: int) -> None:
         "ingestion_rank": c.rank,
         "relevance": 0 if c.auto_irrelevant else None,
     })
+    return result.rowcount
 
 
 def link_run_article(conn, run_id: int, article_id: int, query_id: str):
@@ -631,9 +633,15 @@ def process_file(bundle_path: Path, *, use_clean: bool = True) -> tuple[int, int
             source_map = preload_sources(conn)
 
         # 4. upsert all articles without per-row SELECT
+        inserted = 0
+        updated = 0
         for c in deduped:
             source_id = source_map[c.domain]
-            upsert_article(conn, c, source_id)
+            rc = upsert_article(conn, c, source_id)
+            if rc == 1:
+                inserted += 1
+            elif rc == 2:
+                updated += 1
 
         # 5. preload article ids once for all deduped url_hashes
         article_id_map = preload_article_ids_by_url_hash(
@@ -656,13 +664,13 @@ def process_file(bundle_path: Path, *, use_clean: bool = True) -> tuple[int, int
             linked += 1
 
     logger.info(
-        "Processed %s: candidates=%s deduped=%s linked=%s run_id=%s",
-        bundle_path.name, len(cands), len(deduped), linked, run_id
+        "Processed %s: candidates=%s deduped=%s inserted=%s updated=%s linked=%s run_id=%s",
+        bundle_path.name, len(cands), len(deduped), inserted, updated, linked, run_id
     )
 
     _translate_pending_titles(article_id_map.values())
 
-    return len(cands), len(deduped), run_id
+    return len(cands), len(deduped), run_id, inserted, updated
 
 
 def _translate_pending_titles(article_ids) -> None:
@@ -819,15 +827,19 @@ def main():
 
     total_candidates = 0
     total_deduped = 0
+    total_inserted = 0
+    total_updated = 0
 
     for path in inputs:
-        cand_count, dedup_count, run_id = process_file(path)
+        cand_count, dedup_count, run_id, ins, upd = process_file(path)
         total_candidates += cand_count
         total_deduped += dedup_count
-        print(f"{path.name}: candidates={cand_count}, deduped={dedup_count}, run_id={run_id}")
+        total_inserted += ins
+        total_updated += upd
+        print(f"{path.name}: candidates={cand_count}, deduped={dedup_count}, inserted={ins}, updated={upd}, run_id={run_id}")
 
     if len(inputs) > 1:
-        print(f"TOTAL: candidates={total_candidates}, deduped={total_deduped}")
+        print(f"TOTAL: candidates={total_candidates}, deduped={total_deduped}, inserted={total_inserted}, updated={total_updated}")
 
 
 if __name__ == "__main__":

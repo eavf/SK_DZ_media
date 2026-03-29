@@ -33,6 +33,17 @@
     .pill.purple { background: rgba(185,110,255,.12); border-color: rgba(185,110,255,.35); color: rgba(225,205,255,1); }
     .pill.orange { background: rgba(255,170,64,.12); border-color: rgba(255,170,64,.35); color: rgba(255,220,180,1); }
     .pill.red { background: rgba(255,80,80,.12); border-color: rgba(255,80,80,.35); color: rgba(255,190,190,1); }
+
+    /* pill linky zarovnané s tlačítkom Použiť */
+    a.pill-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 10px;
+      font-size: 13px;
+      border-radius: 10px;
+      text-decoration: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -52,13 +63,13 @@
         <span class="pill">DZ News</span>
         <span class="pill">port: {{ port }}</span>
 
-        <span class="pill">days={{ days }}</span>
-        <span class="pill {% if extraction == 'ok' %}ok{% elif extraction == 'unextracted' %}warn{% endif %}">{{ extraction }}</span>
-        {% if only_slovak %}<span class="pill ok">sk=1</span>{% else %}<span class="pill">sk=0</span>{% endif %}
-        <span class="pill">rel={{ relevance }}</span>
+        <span class="pill {% if days > 0 %}ok{% endif %}">{{ 'všetky dni' if days == 0 else (days|string + ' d') }}</span>
+        <span class="pill {% if extraction == 'ok' %}ok{% elif extraction == 'unextracted' %}warn{% endif %}">{% if extraction == 'ok' %}extrahované{% elif extraction == 'unextracted' %}bez textu{% else %}všetky{% endif %}</span>
+        {% if only_slovak %}<span class="pill ok">SK: áno</span>{% else %}<span class="pill">SK: nie</span>{% endif %}
+        <span class="pill {% if relevance == '1' %}ok{% elif relevance == '0' %}warn{% elif relevance == 'null' %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '0' %}nerelevantné{% elif relevance == 'null' %}rel: neoznačené{% else %}rel: všetky{% endif %}</span>
 
-        {% if include_deleted %}<span class="pill warn">del=1</span>{% else %}<span class="pill">del=0</span>{% endif %}
-        {% if include_avoided %}<span class="pill warn">av=1</span>{% else %}<span class="pill">av=0</span>{% endif %}
+        {% if include_deleted %}<span class="pill warn">+ zmazané</span>{% endif %}
+        {% if include_avoided %}<span class="pill warn">+ skryté</span>{% endif %}
       </div>
 
       <div class="right">
@@ -114,9 +125,9 @@
 
             <div class="hr" style="width:100%;flex-basis:100%"></div>
             <button type="submit">Použiť</button>
-            <a class="pill" href="/browse">Reset</a>
-            <a class="pill" href="/browse?extraction=all&days=0&rel=all&del=0&av=0&sk=0">Všetky v DB</a>
-            <a class="pill warn" href="/browse?extraction=all&days=0&rel=all&del=0&av=1&sk=0">Skryté (avoided)</a>
+            <a class="pill pill-btn" href="/browse">Reset</a>
+            <a class="pill pill-btn" href="/browse?extraction=all&days=0&rel=all&del=0&av=0&sk=0">Všetky v DB</a>
+            <a class="pill pill-btn warn" href="/browse?extraction=all&days=0&rel=all&del=0&av=1&sk=0">Skryté (avoided)</a>
           </form>
 
           <div class="hr" style="width:100%;flex-basis:100%"></div>

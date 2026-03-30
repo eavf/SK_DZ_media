@@ -32,6 +32,8 @@ a:hover{ text-decoration:underline }
   margin-bottom:12px;
 }
 .left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+.right{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.topbar-sep{ width:1px; height:18px; background:var(--line); flex-shrink:0; margin:0 2px; }
 
 .pill{
   font-size:12px;
@@ -44,6 +46,9 @@ a:hover{ text-decoration:underline }
 .pill.ok{ color:#9ff7c2; border-color:rgba(69,212,131,.35); background:rgba(69,212,131,.08) }
 .pill.bad{ color:#ffb3b3; border-color:rgba(255,107,107,.35); background:rgba(255,107,107,.08) }
 .pill.warn{ color:#ffe4a6; border-color:rgba(255,204,102,.35); background:rgba(255,204,102,.08) }
+.pill.admin{ color:#a8d8ff; border-color:rgba(100,180,255,.35); background:rgba(100,180,255,.08) }
+.pill.anon{ color:var(--muted); border-color:rgba(145,164,199,.2); background:transparent }
+button.pill{ cursor:pointer; font-family:inherit; font-size:12px }
 
 .card{
   background:var(--card);

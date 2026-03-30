@@ -1,126 +1,103 @@
-<!doctype html>
-<html lang="sk">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DZ News – Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
-  <style>
-    .hub-grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
-    @media(min-width:980px){ .hub-grid{ grid-template-columns:1fr 1fr 1fr; } }
-    .hub-card{ display:flex; flex-direction:column; gap:10px; min-height:210px; }
-    .hub-actions{ margin-top:auto; display:flex; flex-wrap:wrap; gap:10px; }
-    .hub-ico{
-      display:inline-flex; align-items:center; justify-content:center;
-      width:38px; height:38px; border-radius:12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.02);
-      font-size:18px; line-height:1;
-      flex:0 0 auto;
-    }
-    .btn-primary{ background: var(--btn2); border-color: rgba(139,188,255,.25); }
-  </style>
-</head>
+{% extends "base.html" %}
+{% block title %}DZ News – Dashboard{% endblock %}
 
-<body>
-  <div class="wrap">
+{% block styles %}
+<style>
+  .hub-grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
+  @media(min-width:980px){ .hub-grid{ grid-template-columns:1fr 1fr 1fr; } }
+  .hub-card{ display:flex; flex-direction:column; gap:10px; min-height:210px; }
+  .hub-actions{ margin-top:auto; display:flex; flex-wrap:wrap; gap:10px; }
+  .hub-ico{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border-radius:12px;
+    border:1px solid var(--line);
+    background: rgba(255,255,255,.02);
+    font-size:18px; line-height:1;
+    flex:0 0 auto;
+  }
+  .btn-primary{ background: var(--btn2); border-color: rgba(139,188,255,.25); }
+</style>
+{% endblock %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, msg in messages %}
-          <div class="banner {{ category }}">{{ msg }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+{% block topbar_left %}
+  <span class="pill">DZ News</span>
+  <span class="pill">port: {{ port }}</span>
+{% endblock %}
 
-    <div class="topbar">
-      <div class="left">
-        <span class="pill">DZ News</span>
-        <span class="pill">port: {{ port }}</span>
-      </div>
-      <div class="right">
-        <a class="pill ok" href="/">Dashboard</a>
-        <a class="pill" href="/browse">Browse</a>
-        <a class="pill" href="/stats">Stats</a>
+{% block content %}
+<div class="card">
+  <h1>Platforma</h1>
+  <div class="sub">Vyber si, čo chceš robiť: hľadať • spracovať • listovať.</div>
+
+  <div class="toolbar-grid" style="margin-top:12px">
+    <div class="box">
+      <h2>Stav</h2>
+      <div class="meta">
+        <div class="row"><div class="k">Posledná aktualizácia</div><div class="v">{{ last_update or "—" }}</div></div>
+        <div class="row"><div class="k">Nájdené (24h)</div><div class="v">{{ found_24h or 0 }}</div></div>
+        <div class="row"><div class="k">Čaká na spracovanie</div><div class="v">{{ pending_count or 0 }}</div></div>
+        <div class="row"><div class="k">Chyby</div><div class="v">{{ errors_count or 0 }}</div></div>
       </div>
     </div>
 
-    <div class="card">
-      <h1>Platforma</h1>
-      <div class="sub">Vyber si, čo chceš robiť: hľadať • spracovať • listovať.</div>
-
-      <div class="toolbar-grid" style="margin-top:12px">
-        <div class="box">
-          <h2>Stav</h2>
-          <div class="meta">
-            <div class="row"><div class="k">Posledná aktualizácia</div><div class="v">{{ last_update or "—" }}</div></div>
-            <div class="row"><div class="k">Nájdené (24h)</div><div class="v">{{ found_24h or 0 }}</div></div>
-            <div class="row"><div class="k">Čaká na spracovanie</div><div class="v">{{ pending_count or 0 }}</div></div>
-            <div class="row"><div class="k">Chyby</div><div class="v">{{ errors_count or 0 }}</div></div>
-          </div>
-        </div>
-
-        <div class="box">
-          <h2>Rýchle akcie</h2>
-          <div class="actions" style="margin-top:0">
-            <a href="/browse"><button class="btn-primary" type="button">Otvoriť zoznam článkov</button></a>
-            <form method="post" action="/export/word"><button type="submit">Export Word</button></form>
-            <form method="post" action="/export/csv"><button type="submit">Export CSV</button></form>
-          </div>
-          <div class="small" style="margin-top:10px">Pozn.: exporty používajú aktuálnu logiku backendu.</div>
-        </div>
+    <div class="box">
+      <h2>Rýchle akcie</h2>
+      <div class="actions" style="margin-top:0">
+        <a href="/browse"><button class="btn-primary" type="button">Otvoriť zoznam článkov</button></a>
+        <form method="post" action="/export/word"><button type="submit">Export Word</button></form>
+        <form method="post" action="/export/csv"><button type="submit">Export CSV</button></form>
       </div>
+      <div class="small" style="margin-top:10px">Pozn.: exporty používajú aktuálnu logiku backendu.</div>
+    </div>
+  </div>
 
-      <div class="hr"></div>
+  <div class="hr"></div>
 
-      <h2>Moduly</h2>
-      <div class="hub-grid">
+  <h2>Moduly</h2>
+  <div class="hub-grid">
 
-        <div class="card hub-card">
-          <div style="display:flex; justify-content:space-between; gap:10px;">
-            <div>
-              <h2 style="margin:0 0 4px;">Hľadať</h2>
-              <div class="small">Spustiť zber / crawler, nastaviť zdroje a filtre.</div>
-            </div>
-            <div class="hub-ico">🔎</div>
-          </div>
-          <div class="hub-actions">
-            <a href="/search"><button class="btn-primary" type="button">Vyhľadávanie</button></a>
-            <a href="/sources"><button type="button">Zdroje</button></a>
-          </div>
+    <div class="card hub-card">
+      <div style="display:flex; justify-content:space-between; gap:10px;">
+        <div>
+          <h2 style="margin:0 0 4px;">Hľadať</h2>
+          <div class="small">Spustiť zber / crawler, nastaviť zdroje a filtre.</div>
         </div>
+        <div class="hub-ico">🔎</div>
+      </div>
+      <div class="hub-actions">
+        <a href="/search"><button class="btn-primary" type="button">Vyhľadávanie</button></a>
+        <a href="/sources"><button type="button">Zdroje</button></a>
+      </div>
+    </div>
 
-        <div class="card hub-card">
-          <div style="display:flex; justify-content:space-between; gap:10px;">
-            <div>
-              <h2 style="margin:0 0 4px;">Spracovať</h2>
-              <div class="small">Pipeline, re-run, riešenie chýb, označovanie relevancie.</div>
-            </div>
-            <div class="hub-ico">⚙️</div>
-          </div>
-          <div class="hub-actions">
-            <a href="/process"><button class="btn-primary" type="button">Spracovanie</button></a>
-            <a href="/errors"><button type="button">Chyby</button></a>
-          </div>
+    <div class="card hub-card">
+      <div style="display:flex; justify-content:space-between; gap:10px;">
+        <div>
+          <h2 style="margin:0 0 4px;">Spracovať</h2>
+          <div class="small">Pipeline, re-run, riešenie chýb, označovanie relevancie.</div>
         </div>
+        <div class="hub-ico">⚙️</div>
+      </div>
+      <div class="hub-actions">
+        <a href="/process"><button class="btn-primary" type="button">Spracovanie</button></a>
+        <a href="/errors"><button type="button">Chyby</button></a>
+      </div>
+    </div>
 
-        <div class="card hub-card">
-          <div style="display:flex; justify-content:space-between; gap:10px;">
-            <div>
-              <h2 style="margin:0 0 4px;">Listovať</h2>
-              <div class="small">Prehľad článkov, archív, exporty.</div>
-            </div>
-            <div class="hub-ico">📚</div>
-          </div>
-          <div class="hub-actions">
-            <a href="/browse"><button class="btn-primary" type="button">Browse</button></a>
-            <a href="/stats"><button type="button">Stats</button></a>
-          </div>
+    <div class="card hub-card">
+      <div style="display:flex; justify-content:space-between; gap:10px;">
+        <div>
+          <h2 style="margin:0 0 4px;">Listovať</h2>
+          <div class="small">Prehľad článkov, archív, exporty.</div>
         </div>
-
+        <div class="hub-ico">📚</div>
+      </div>
+      <div class="hub-actions">
+        <a href="/browse"><button class="btn-primary" type="button">Browse</button></a>
+        <a href="/stats"><button type="button">Stats</button></a>
       </div>
     </div>
 
   </div>
-</body>
-</html>
+</div>
+{% endblock %}

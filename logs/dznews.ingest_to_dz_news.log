@@ -1,17 +1,9 @@
-2026-03-14 13:49:57,283 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:34
-2026-03-15 09:29:12,714 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:32
-2026-03-15 09:32:29,874 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:32
-2026-03-15 09:32:34,290 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=26 deduped=13 linked=13 run_id=2 in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:631
-2026-03-27 16:26:02,972 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:724
-2026-03-27 16:26:03,006 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=1 deduped=1 linked=1 run_id=3 in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:632
-2026-03-27 18:32:09,321 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:740
-2026-03-27 18:32:09,350 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=25 deduped=23 linked=23 run_id=4 in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:648
-2026-03-28 21:12:36,821 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
-2026-03-28 21:12:36,844 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=0 deduped=0 inserted=0 updated=0 linked=0 run_id=5 in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:666
-2026-03-28 21:14:53,643 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
-2026-03-28 21:15:16,582 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
-2026-03-28 21:16:28,447 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
-2026-03-28 21:20:34,894 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
-2026-03-28 21:20:34,918 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=25 deduped=23 inserted=0 updated=23 linked=23 run_id=9 in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:666
-2026-03-28 21:23:21,393 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:809
-2026-03-28 21:23:21,420 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=25 deduped=23 inserted=0 updated=23 linked=23 run_id=10 in /home/vovo/PycharmProjects/SK_DZ_media/ingest_to_dz_news_reworked.py:666
+2026-03-28 10:47:03,209 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:740
+2026-03-28 10:47:03,433 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=6 deduped=4 linked=4 run_id=3 in /app/ingest_to_dz_news_reworked.py:648
+2026-03-28 20:54:59,846 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:801
+2026-03-28 21:18:13,405 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:801
+2026-03-28 21:18:25,971 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:801
+2026-03-28 21:20:55,119 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:801
+2026-03-29 15:00:50,268 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:809
+2026-03-29 22:01:24,167 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:809
+2026-03-29 22:01:24,564 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=22 deduped=21 inserted=21 updated=0 linked=21 run_id=8 in /app/ingest_to_dz_news_reworked.py:666

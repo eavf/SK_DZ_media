@@ -13,11 +13,14 @@ from urllib.parse import urlparse
 import logging
 from logging.handlers import RotatingFileHandler
 
+from functools import wraps
+
 from flask import Flask, render_template, request, redirect, url_for, send_file, abort, flash
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from dotenv import load_dotenv
 from sqlalchemy import text, bindparam
 from docx import Document
-
+from werkzeug.security import check_password_hash
 
 from config.config import get_db_engine, require, init_context
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -61,6 +64,53 @@ app.config["SECRET_KEY"] = require(settings.flask_secret_key, "FLASK_SECRET_KEY"
 # za reverse proxy (Synology) – aby Flask vedel o pôvodnom HTTPS/hoste
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 configure_logging(app, settings)
+
+# ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+
+class User(UserMixin):
+    def __init__(self, id: int, username: str, role: str):
+        self.id = id
+        self.username = username
+        self.role = role
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == "admin"
+
+
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
+login_manager.login_message = "Pre túto akciu sa musíš prihlásiť."
+login_manager.login_message_category = "warn"
+
+
+@login_manager.user_loader
+def load_user(user_id: str):
+    engine = get_db_engine()
+    with engine.connect() as conn:
+        row = conn.execute(
+            text("SELECT id, username, role FROM users WHERE id = :id"),
+            {"id": int(user_id)},
+        ).fetchone()
+    if row:
+        return User(row[0], row[1], row[2])
+    return None
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return login_manager.unauthorized()
+        if not current_user.is_admin:
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ---------------------------------------------------------------------------
 
 SLOVAK_TERMS = settings.search_terms.get("slovakia", [])
 TERM_RE = re.compile(r"(" + "|".join(re.escape(t) for t in SLOVAK_TERMS) + r")", re.IGNORECASE)
@@ -383,6 +433,7 @@ def browse():
 
 
 @app.post("/bulk/delete")
+@admin_required
 def bulk_delete():
     mode = request.form.get("mode", "soft")  # soft|hard
     ids_int = get_selected_article_ids()
@@ -414,6 +465,7 @@ def bulk_delete():
 
 
 @app.post("/undelete/<int:article_id>")
+@admin_required
 def undelete(article_id: int):
     """Undo soft delete: vráti článok späť (deleted_at=NULL)."""
     engine = get_db_engine()
@@ -429,6 +481,7 @@ def undelete(article_id: int):
 
 
 @app.post("/bulk/exclude_domains")
+@admin_required
 def bulk_exclude_domains():
     note = (request.form.get("note") or "").strip()[:255]
     ids_int = get_selected_article_ids()
@@ -602,6 +655,7 @@ def stats():
 
 
 @app.post("/label/<int:article_id>")
+@admin_required
 def label(article_id: int):
     rel = request.form.get("relevance")  # "1" or "0" or "null"
     note = (request.form.get("note") or "").strip()[:255]
@@ -629,6 +683,7 @@ def label(article_id: int):
 
 
 @app.post("/delete/<int:article_id>")
+@admin_required
 def delete(article_id: int):
     mode = request.form.get("mode", "soft")  # soft | hard
 
@@ -648,6 +703,7 @@ def delete(article_id: int):
 
 
 @app.get("/export/csv")
+@admin_required
 def export_csv():
     days = int(request.args.get("days", 7))
     extraction = request.args.get("extraction", "ok")
@@ -699,6 +755,7 @@ def export_csv():
 
 
 @app.get("/export/word")
+@admin_required
 def export_word():
     days = int(request.args.get("days", 7))
     extraction = request.args.get("extraction", "ok")
@@ -881,6 +938,7 @@ def article_detail(article_id: int):
 
 
 @app.post("/article/<int:article_id>/label")
+@admin_required
 def article_label(article_id: int):
     relevance_raw = request.form.get("relevance", "null")
     note = (request.form.get("note") or "").strip()[:255]
@@ -906,6 +964,7 @@ def article_label(article_id: int):
 
 
 @app.post("/article/<int:article_id>/exclude_domain")
+@admin_required
 def article_exclude_domain(article_id: int):
     note = (request.form.get("note") or "").strip()[:255]  # voliteľné: dôvod
 
@@ -939,6 +998,7 @@ def article_exclude_domain(article_id: int):
 
 
 @app.post("/article/<int:article_id>/unexclude_domain")
+@admin_required
 def article_unexclude_domain(article_id: int):
     engine = get_db_engine()
     with engine.begin() as conn:
@@ -957,6 +1017,7 @@ def article_unexclude_domain(article_id: int):
 
 
 @app.post("/article/<int:article_id>/fetch")
+@admin_required
 def fetch_extract_article(article_id: int):
     code, out = run_script([PYTHON_BIN, "refetch_article.py", "--article-id", str(article_id)])
     if code == 0:
@@ -970,6 +1031,7 @@ def fetch_extract_article(article_id: int):
 
 
 @app.post("/article/<int:article_id>/translate")
+@admin_required
 def article_translate(article_id: int):
     engine = get_db_engine()
     with engine.begin() as conn:
@@ -1019,6 +1081,7 @@ def article_translate(article_id: int):
 
 
 @app.post("/article/<int:article_id>/set_content")
+@admin_required
 def article_set_content(article_id: int):
     content = (request.form.get("content_text") or "").strip()
     if not content:
@@ -1043,6 +1106,7 @@ def article_set_content(article_id: int):
 
 
 @app.post("/bulk/restore")
+@admin_required
 def bulk_restore():
     ids_int = get_selected_article_ids()
     if not ids_int:
@@ -1059,6 +1123,7 @@ def bulk_restore():
 
 
 @app.get("/search")
+@admin_required
 def search_page():
     lb = latest_bundle_path()
     return render_template("search.html", latest_bundle=lb)
@@ -1081,6 +1146,7 @@ def _bundle_articles(bundle_path: str | None) -> list[dict]:
 
 
 @app.post("/search/run")
+@admin_required
 def search_run():
     cmd = [PYTHON_BIN, "search_flow_news.py"]
     hl = request.form.get("hl", "").strip()
@@ -1132,11 +1198,13 @@ def _list_runs() -> list[dict]:
 
 
 @app.get("/process")
+@admin_required
 def process_page():
     return render_template("process.html", runs=_list_runs(), latest_bundle=latest_bundle_path())
 
 
 @app.post("/process/ingest_latest")
+@admin_required
 def process_ingest_latest():
     lb = request.form.get("bundle_path") or latest_bundle_path()
     if not lb:
@@ -1160,6 +1228,7 @@ def process_ingest_latest():
 
 
 @app.post("/process/extract_bulk")
+@admin_required
 def process_extract_bulk():
     limit = request.form.get("limit", "50").strip() or "50"
     job_id = uuid.uuid4().hex[:12]
@@ -1175,6 +1244,7 @@ def process_extract_bulk():
 
 
 @app.get("/process/job/<job_id>")
+@admin_required
 def job_status(job_id: str):
     from flask import jsonify
     job = _job_status(job_id)
@@ -1184,6 +1254,7 @@ def job_status(job_id: str):
 
 
 @app.get("/errors")
+@admin_required
 def errors_page():
     days = int(request.args.get("days", 0))
     engine = get_db_engine()
@@ -1211,6 +1282,7 @@ def errors_page():
 
 
 @app.get("/sources")
+@admin_required
 def sources_page():
     q = (request.args.get("q") or "").strip().lower()
     days = int(request.args.get("days", 30))
@@ -1276,6 +1348,7 @@ def sources_page():
 
 
 @app.post("/source/create")
+@admin_required
 def source_create():
     domain_in = request.form.get("domain", "")
     note = (request.form.get("note") or "").strip()
@@ -1316,6 +1389,7 @@ def source_create():
 
 
 @app.post("/source/note/<int:source_id>")
+@admin_required
 def source_note(source_id: int):
     note = (request.form.get("note") or "").strip()
 
@@ -1333,6 +1407,7 @@ def source_note(source_id: int):
 
 
 @app.post("/source/avoid/<int:source_id>")
+@admin_required
 def source_avoid(source_id: int):
     engine = get_db_engine()
     with engine.begin() as conn:
@@ -1346,6 +1421,7 @@ def source_avoid(source_id: int):
 
 
 @app.post("/source/unavoid/<int:source_id>")
+@admin_required
 def source_unavoid(source_id: int):
     engine = get_db_engine()
     with engine.begin() as conn:
@@ -1356,6 +1432,34 @@ def source_unavoid(source_id: int):
     logger.info("Source unmuted: id=%s", source_id)
     flash("Doména od-umlčaná (unmute).", "ok")
     return redirect(request.referrer or "/sources")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        engine = get_db_engine()
+        with engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT id, username, password_hash, role FROM users WHERE username = :u"),
+                {"u": username},
+            ).fetchone()
+        if row and check_password_hash(row[2], password):
+            user = User(row[0], row[1], row[3])
+            login_user(user)
+            next_page = request.args.get("next")
+            return redirect(next_page or url_for("dashboard"))
+        flash("Nesprávne meno alebo heslo.", "error")
+    return render_template("login.html")
+
+
+@app.post("/logout")
+def logout():
+    logout_user()
+    return redirect(url_for("dashboard"))
 
 
 if __name__ == "__main__":

@@ -1,190 +1,172 @@
-<!doctype html>
-<html lang="sk">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DZ News – Process</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
-  <style>
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    pre.log { white-space: pre-wrap; border:1px solid var(--line); border-radius:14px; padding:10px; background: rgba(255,255,255,.02); }
-    .run-table td { vertical-align: middle; }
-    .run-table input[type=radio] { cursor: pointer; }
-    .sticky-bar {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: var(--bg, #111);
-      padding: 10px 0;
-      border-bottom: 1px solid var(--line);
-      margin-bottom: 10px;
-    }
-    .result-summary { margin-top: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  </style>
-</head>
-<body>
-<div class="wrap">
+{% extends "base.html" %}
+{% block title %}DZ News – Process{% endblock %}
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, msg in messages %}
-        <div class="banner {{ category }}">{{ msg }}</div>
-      {% endfor %}
+{% block styles %}
+<style>
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  pre.log { white-space: pre-wrap; border:1px solid var(--line); border-radius:14px; padding:10px; background: rgba(255,255,255,.02); }
+  .run-table td { vertical-align: middle; }
+  .run-table input[type=radio] { cursor: pointer; }
+  .sticky-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg, #111);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 10px;
+  }
+  .result-summary { margin-top: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+</style>
+{% endblock %}
+
+{% block topbar_left %}
+  <a class="pill" href="/" id="backBtn">← späť</a>
+  <span class="pill ok">Process</span>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Spracovať</h1>
+
+  <div class="box">
+    <h2>Hromadná extrakcia</h2>
+    <div class="sub">Stiahne a extrahuje text pre všetky články bez content_text. Články bez slovenského kontextu budú soft-deleted.</div>
+    <form method="post" action="/process/extract_bulk" style="margin-top:10px"
+          onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').textContent='Spúšťam…';">
+      <div class="actions">
+        <input class="mono" type="number" name="limit" value="50" min="1" max="500" style="max-width:90px" title="Max počet článkov">
+        <button type="submit">Spustiť extrakciu</button>
+      </div>
+    </form>
+
+    {% if last_op == "extract" and extract_job_id %}
+      <div id="extract-status" style="margin-top:12px">
+        <span class="pill" id="extract-pill">⏳ Prebieha…</span>
+      </div>
+      <div id="extract-result" style="margin-top:8px"></div>
+      <details id="extract-log-wrap" style="margin-top:10px;display:none">
+        <summary style="cursor:pointer;font-weight:600;user-select:none">Log</summary>
+        <pre class="log mono" style="margin-top:8px" id="extract-log"></pre>
+      </details>
     {% endif %}
-  {% endwith %}
-
-  <div class="topbar">
-    <div class="left">
-      <a class="pill" href="/" id="backBtn">← späť</a>
-      <span class="pill ok">Process</span>
-    </div>
-    <div class="right">
-      <a class="pill" href="/">Dashboard</a>
-      <a class="pill" href="/browse">Browse</a>
-      <a class="pill" href="/stats">Stats</a>
-    </div>
   </div>
 
-  <div class="card">
-    <h1>Spracovať</h1>
+  <div class="hr"></div>
 
-    <div class="box">
-      <h2>Hromadná extrakcia</h2>
-      <div class="sub">Stiahne a extrahuje text pre všetky články bez content_text. Články bez slovenského kontextu budú soft-deleted.</div>
-      <form method="post" action="/process/extract_bulk" style="margin-top:10px"
-            onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').textContent='Spúšťam…';">
-        <div class="actions">
-          <input class="mono" type="number" name="limit" value="50" min="1" max="500" style="max-width:90px" title="Max počet článkov">
-          <button type="submit">Spustiť extrakciu</button>
+  <div class="box">
+    <h2>Spracovanie surových dát</h2>
+    <div class="sub">Vyber run a spusti ingest do DB (ingest_to_dz_news_reworked.py).</div>
+
+    {% if runs %}
+      <form method="post" action="/process/ingest_latest" id="ingestForm">
+        <div class="sticky-bar actions">
+          <button type="submit">Ingest vybraný run</button>
+          <span class="small" id="selectedLabel"></span>
         </div>
-      </form>
-
-      {% if last_op == "extract" and extract_job_id %}
-        <div id="extract-status" style="margin-top:12px">
-          <span class="pill" id="extract-pill">⏳ Prebieha…</span>
-        </div>
-        <div id="extract-result" style="margin-top:8px"></div>
-        <details id="extract-log-wrap" style="margin-top:10px;display:none">
-          <summary style="cursor:pointer;font-weight:600;user-select:none">Log</summary>
-          <pre class="log mono" style="margin-top:8px" id="extract-log"></pre>
-        </details>
-        <script>
-          (function(){
-            const jobId = {{ extract_job_id | tojson }};
-            const pill = document.getElementById("extract-pill");
-            const result = document.getElementById("extract-result");
-            const logWrap = document.getElementById("extract-log-wrap");
-            const logEl = document.getElementById("extract-log");
-
-            function poll(){
-              fetch("/process/job/" + jobId)
-                .then(r => r.json())
-                .then(data => {
-                  if(data.status === "running"){
-                    setTimeout(poll, 2000);
-                    return;
-                  }
-                  if(data.status === "done"){
-                    pill.textContent = "✓ Hotovo";
-                    pill.className = "pill ok";
-                  } else {
-                    pill.textContent = "✗ Chyba";
-                    pill.className = "pill bad";
-                  }
-                  if(data.summary){
-                    const s = data.summary;
-                    result.innerHTML =
-                      `<span class="pill ok">${s.ok} OK</span> ` +
-                      `<span class="pill bad">${s.failed} failed</span>` +
-                      (s.soft_deleted ? ` <span class="pill">${s.soft_deleted} soft-deleted</span>` : "") +
-                      (s.commercial   ? ` <span class="pill">${s.commercial} commercial</span>` : "");
-                  }
-                  if(data.out){
-                    logEl.textContent = data.out;
-                    logWrap.style.display = "";
-                    logWrap.open = true;
-                  }
-                })
-                .catch(() => setTimeout(poll, 3000));
-            }
-            setTimeout(poll, 2000);
-          })();
-        </script>
-      {% endif %}
-    </div>
-
-    <div class="hr"></div>
-
-    <div class="box">
-      <h2>Spracovanie surových dát</h2>
-      <div class="sub">Vyber run a spusti ingest do DB (ingest_to_dz_news_reworked.py).</div>
-
-      {% if runs %}
-        <form method="post" action="/process/ingest_latest" id="ingestForm">
-          <div class="sticky-bar actions">
-            <button type="submit">Ingest vybraný run</button>
-            <span class="small" id="selectedLabel"></span>
-          </div>
-          {% if last_op == "ingest" and last_log is defined %}
-            {% if last_summary %}
-              <div class="result-summary">
-                <strong>Výsledok:</strong>
-                <span class="pill">{{ last_summary.candidates }} kandidátov</span>
-                <span class="pill">{{ last_summary.deduped }} deduplikovaných</span>
-                {% if last_summary.inserted is defined %}
-                  <span class="pill ok">{{ last_summary.inserted }} nových</span>
-                  <span class="pill">{{ last_summary.updated }} aktualizovaných</span>
-                {% endif %}
-              </div>
-            {% endif %}
-            <details style="margin-top:10px" open>
-              <summary style="cursor:pointer;font-weight:600;user-select:none">
-                Log {% if last_rc == 0 %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">CHYBA (rc={{ last_rc }})</span>{% endif %}
-              </summary>
-              <pre class="log mono" style="margin-top:8px">{{ last_log }}</pre>
-            </details>
+        {% if last_op == "ingest" and last_log is defined %}
+          {% if last_summary %}
+            <div class="result-summary">
+              <strong>Výsledok:</strong>
+              <span class="pill">{{ last_summary.candidates }} kandidátov</span>
+              <span class="pill">{{ last_summary.deduped }} deduplikovaných</span>
+              {% if last_summary.inserted is defined %}
+                <span class="pill ok">{{ last_summary.inserted }} nových</span>
+                <span class="pill">{{ last_summary.updated }} aktualizovaných</span>
+              {% endif %}
+            </div>
           {% endif %}
-          <table class="table run-table" style="margin-top:10px">
-            <thead>
-              <tr>
-                <th style="width:40px"></th>
-                <th>Run</th>
-                <th style="width:120px">Čas</th>
-                <th style="width:80px">hl / gl</th>
-                <th style="width:80px">Články</th>
+          <details style="margin-top:10px" open>
+            <summary style="cursor:pointer;font-weight:600;user-select:none">
+              Log {% if last_rc == 0 %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">CHYBA (rc={{ last_rc }})</span>{% endif %}
+            </summary>
+            <pre class="log mono" style="margin-top:8px">{{ last_log }}</pre>
+          </details>
+        {% endif %}
+        <table class="table run-table" style="margin-top:10px">
+          <thead>
+            <tr>
+              <th style="width:40px"></th>
+              <th>Run</th>
+              <th style="width:120px">Čas</th>
+              <th style="width:80px">hl / gl</th>
+              <th style="width:80px">Články</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in runs %}
+              <tr class="trow {% if r.bundle_path == ingested_bundle|default('') %}ok{% endif %}">
+                <td>
+                  <input type="radio" name="bundle_path" value="{{ r.bundle_path }}"
+                    {% if loop.first %}checked{% endif %}>
+                </td>
+                <td>
+                  <span class="mono small">{{ r.run_id }}</span>
+                  {% if loop.first %}<span class="pill ok">latest</span>{% endif %}
+                  {% if r.bundle_path == ingested_bundle|default('') %}<span class="pill ok">práve ingested</span>{% endif %}
+                </td>
+                <td><div class="small">{{ r.timestamp|string|truncate(16, killwords=true, end='') if r.timestamp else "-" }}</div></td>
+                <td><div class="small">{{ r.hl or "-" }} / {{ r.gl or "-" }}</div></td>
+                <td><span class="pill">{{ r.articles }}</span></td>
               </tr>
-            </thead>
-            <tbody>
-              {% for r in runs %}
-                <tr class="trow {% if r.bundle_path == ingested_bundle|default('') %}ok{% endif %}">
-                  <td>
-                    <input type="radio" name="bundle_path" value="{{ r.bundle_path }}"
-                      {% if loop.first %}checked{% endif %}>
-                  </td>
-                  <td>
-                    <span class="mono small">{{ r.run_id }}</span>
-                    {% if loop.first %}<span class="pill ok">latest</span>{% endif %}
-                    {% if r.bundle_path == ingested_bundle|default('') %}<span class="pill ok">práve ingested</span>{% endif %}
-                  </td>
-                  <td><div class="small">{{ r.timestamp|string|truncate(16, killwords=true, end='') if r.timestamp else "-" }}</div></td>
-                  <td><div class="small">{{ r.hl or "-" }} / {{ r.gl or "-" }}</div></td>
-                  <td><span class="pill">{{ r.articles }}</span></td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </form>
-      {% else %}
-        <div class="muted" style="margin-top:12px">Žiadne runy nenájdené v bundle/runs/.</div>
-      {% endif %}
-
-    </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </form>
+    {% else %}
+      <div class="muted" style="margin-top:12px">Žiadne runy nenájdené v bundle/runs/.</div>
+    {% endif %}
 
   </div>
-</div>
 
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
-  // Zobraz meno vybraného runu v sticky bare
+  {% if last_op == "extract" and extract_job_id %}
+  (function(){
+    const jobId = {{ extract_job_id | tojson }};
+    const pill = document.getElementById("extract-pill");
+    const result = document.getElementById("extract-result");
+    const logWrap = document.getElementById("extract-log-wrap");
+    const logEl = document.getElementById("extract-log");
+
+    function poll(){
+      fetch("/process/job/" + jobId)
+        .then(r => r.json())
+        .then(data => {
+          if(data.status === "running"){
+            setTimeout(poll, 2000);
+            return;
+          }
+          if(data.status === "done"){
+            pill.textContent = "✓ Hotovo";
+            pill.className = "pill ok";
+          } else {
+            pill.textContent = "✗ Chyba";
+            pill.className = "pill bad";
+          }
+          if(data.summary){
+            const s = data.summary;
+            result.innerHTML =
+              `<span class="pill ok">${s.ok} OK</span> ` +
+              `<span class="pill bad">${s.failed} failed</span>` +
+              (s.soft_deleted ? ` <span class="pill">${s.soft_deleted} soft-deleted</span>` : "") +
+              (s.commercial   ? ` <span class="pill">${s.commercial} commercial</span>` : "");
+          }
+          if(data.out){
+            logEl.textContent = data.out;
+            logWrap.style.display = "";
+            logWrap.open = true;
+          }
+        })
+        .catch(() => setTimeout(poll, 3000));
+    }
+    setTimeout(poll, 2000);
+  })();
+  {% endif %}
+
   (function(){
     const label = document.getElementById("selectedLabel");
     if(!label) return;
@@ -200,7 +182,6 @@
     updateLabel();
   })();
 
-  // Ingest form: confirm + spinner
   (function(){
     const form = document.getElementById("ingestForm");
     if(!form) return;
@@ -223,5 +204,4 @@
     }
   })();
 </script>
-</body>
-</html>
+{% endblock %}

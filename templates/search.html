@@ -1,118 +1,100 @@
-<!doctype html>
-<html lang="sk">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DZ News – Search</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
-  <style>
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    pre.log { white-space: pre-wrap; border:1px solid var(--line); border-radius:14px; padding:10px; background: rgba(255,255,255,.02); }
-  </style>
-</head>
-<body>
-<div class="wrap">
+{% extends "base.html" %}
+{% block title %}DZ News – Search{% endblock %}
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, msg in messages %}
-        <div class="banner {{ category }}">{{ msg }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+{% block styles %}
+<style>
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  pre.log { white-space: pre-wrap; border:1px solid var(--line); border-radius:14px; padding:10px; background: rgba(255,255,255,.02); }
+</style>
+{% endblock %}
 
-  <div class="topbar">
-    <div class="left">
-      <span class="pill">DZ News</span>
-      <span class="pill ok">Search</span>
-    </div>
-    <div class="right">
-      <a class="pill" href="/" id="backBtn">← späť</a>
-      <a class="pill" href="/">Dashboard</a>
-      <a class="pill" href="/browse">Browse</a>
-      <a class="pill" href="/stats">Stats</a>
-    </div>
+{% block topbar_left %}
+  <span class="pill">DZ News</span>
+  <span class="pill ok">Search</span>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Search (SerpAPI)</h1>
+  <div class="sub">Vyplň parametre priamo pre SerpAPI: hl / gl / num / when:Xd.</div>
+
+  <div class="actions" style="margin-top:12px">
+    <form method="post" action="/search/run" class="actions" style="margin-top:0">
+      <input class="mono" type="text" name="hl" value="{{ hl | default('') }}" placeholder="hl (fr)" style="max-width:90px" title="Jazyk výsledkov (napr. fr, ar, en)">
+      <input class="mono" type="text" name="gl" value="{{ gl | default('') }}" placeholder="gl (dz)" style="max-width:90px" title="Krajina vyhľadávania (napr. dz, fr, sk)">
+      <input class="mono" type="text" name="num" value="{{ num | default('') }}" placeholder="num" style="max-width:90px" title="Počet výsledkov (napr. 20, 50)">
+      <input class="mono" type="text" name="when" value="{{ when | default('') }}" placeholder="when (7d)" style="max-width:120px" title="Časové okno: 1d, 7d, 30d, 70d, 2h… (d=dni, h=hodiny, m=mesiac)">
+      <button type="submit">Spustiť search</button>
+    </form>
   </div>
 
-  <div class="card">
-    <h1>Search (SerpAPI)</h1>
-    <div class="sub">Vyplň parametre priamo pre SerpAPI: hl / gl / num / when:Xd.</div>
-
-    <div class="actions" style="margin-top:12px">
-      <form method="post" action="/search/run" class="actions" style="margin-top:0">
-        <input class="mono" type="text" name="hl" value="{{ hl | default('') }}" placeholder="hl (fr)" style="max-width:90px" title="Jazyk výsledkov (napr. fr, ar, en)">
-        <input class="mono" type="text" name="gl" value="{{ gl | default('') }}" placeholder="gl (dz)" style="max-width:90px" title="Krajina vyhľadávania (napr. dz, fr, sk)">
-        <input class="mono" type="text" name="num" value="{{ num | default('') }}" placeholder="num" style="max-width:90px" title="Počet výsledkov (napr. 20, 50)">
-        <input class="mono" type="text" name="when" value="{{ when | default('') }}" placeholder="when (7d)" style="max-width:120px" title="Časové okno: 1d, 7d, 30d, 70d, 2h… (d=dni, h=hodiny, m=mesiac)">
-        <button type="submit">Spustiť search</button>
-      </form>
-    </div>
-
-    {% if latest_bundle %}
-      <div class="hr"></div>
-      <div class="box">
-        <h2>Posledný bundle</h2>
-        <div class="small mono">{{ latest_bundle }}</div>
-        <div class="small" style="margin-top:8px">
-          (Je uložený v <code>bundle/runs/...</code>.)
-        </div>
+  {% if latest_bundle %}
+    <div class="hr"></div>
+    <div class="box">
+      <h2>Posledný bundle</h2>
+      <div class="small mono">{{ latest_bundle }}</div>
+      <div class="small" style="margin-top:8px">
+        (Je uložený v <code>bundle/runs/...</code>.)
       </div>
-    {% endif %}
+    </div>
+  {% endif %}
 
-    {% if last_log %}
-      <div class="hr"></div>
-      <details class="box">
-        <summary style="cursor:pointer;font-weight:600;user-select:none">
-          Log skriptu {% if last_rc == 0 %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">CHYBA (rc={{ last_rc }})</span>{% endif %}
-        </summary>
-        <pre class="log mono" style="margin-top:10px">{{ last_log }}</pre>
-      </details>
-    {% endif %}
+  {% if last_log %}
+    <div class="hr"></div>
+    <details class="box">
+      <summary style="cursor:pointer;font-weight:600;user-select:none">
+        Log skriptu {% if last_rc == 0 %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">CHYBA (rc={{ last_rc }})</span>{% endif %}
+      </summary>
+      <pre class="log mono" style="margin-top:10px">{{ last_log }}</pre>
+    </details>
+  {% endif %}
 
-    {% if bundle_articles %}
-      <div class="hr"></div>
-      <details class="box" open>
-        <summary style="cursor:pointer;font-weight:600;user-select:none">
-          Nájdené články ({{ bundle_articles|length }})
-        </summary>
-        <table class="table" style="margin-top:8px">
-          <thead>
-            <tr>
-              <th>Titulok</th>
-              <th style="width:170px">Zdroj</th>
-              <th style="width:140px">Dátum</th>
+  {% if bundle_articles %}
+    <div class="hr"></div>
+    <details class="box" open>
+      <summary style="cursor:pointer;font-weight:600;user-select:none">
+        Nájdené články ({{ bundle_articles|length }})
+      </summary>
+      <table class="table" style="margin-top:8px">
+        <thead>
+          <tr>
+            <th>Titulok</th>
+            <th style="width:170px">Zdroj</th>
+            <th style="width:140px">Dátum</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in bundle_articles %}
+            <tr class="trow">
+              <td>
+                <a href="{{ a.link }}" target="_blank" rel="noopener" style="font-weight:600">
+                  {{ a.title or "(bez názvu)" }}
+                </a>
+                {% if a.snippet %}
+                  <div class="small" style="margin-top:4px">{{ a.snippet }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="pill">{{ a.source or "-" }}</span>
+              </td>
+              <td>
+                <div class="small">{{ a.date or "-" }}</div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {% for a in bundle_articles %}
-              <tr class="trow">
-                <td>
-                  <a href="{{ a.link }}" target="_blank" rel="noopener" style="font-weight:600">
-                    {{ a.title or "(bez názvu)" }}
-                  </a>
-                  {% if a.snippet %}
-                    <div class="small" style="margin-top:4px">{{ a.snippet }}</div>
-                  {% endif %}
-                </td>
-                <td>
-                  <span class="pill">{{ a.source or "-" }}</span>
-                </td>
-                <td>
-                  <div class="small">{{ a.date or "-" }}</div>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </details>
-    {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  {% endif %}
 
-  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
 <script>
   (function(){
     const btn = document.getElementById("backBtn");
-    if(document.referrer){
+    if(btn && document.referrer){
       try {
         const ref = new URL(document.referrer);
         if(ref.origin === window.location.origin && ref.pathname !== window.location.pathname){
@@ -122,5 +104,4 @@
     }
   })();
 </script>
-</body>
-</html>
+{% endblock %}

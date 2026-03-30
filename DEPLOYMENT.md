@@ -16,7 +16,6 @@ Image je uložený na Docker Hub: `eavfeavf/dz-news:latest`.
 ```
 /volume1/docker/dz_news/
 ├── docker-compose.yml
-├── docker-compose.yml
 ├── templates/          ← volume mount (Flask šablóny)
 ├── config/             ← volume mount (konfig + JSON súbory)
 ├── static/             ← volume mount (CSS, JS, obrázky)
@@ -122,6 +121,27 @@ DB_PASS=<heslo ktoré si nastavil>
 ---
 
 ## DB migrácie
+
+### 001 – tabuľka users (autentifikácia)
+
+Spusti raz pred prvým deployom s autentifikáciou:
+
+```bash
+# lokálne (ak máš prístup k DB)
+mysql -u root dz_news < migrations/001_add_users.sql
+
+# alebo cez SSH na Synology
+ssh synology "mysql -u root dz_news" < migrations/001_add_users.sql
+```
+
+Po migrácii vytvor admin účet — cez Container Manager → Terminal alebo SSH:
+
+```bash
+ssh synology
+sudo /usr/local/bin/docker exec -it dz-app python create_admin.py
+```
+
+### Ostatné migrácie
 
 Spúšťajú sa manuálne cez Container Manager → Terminal:
 

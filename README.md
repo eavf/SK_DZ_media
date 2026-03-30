@@ -26,6 +26,7 @@
 - Relevance labeling and soft-delete workflow
 - Export to **Word** and **CSV**
 - Scheduled pipeline with **email notifications**
+- **Authentication** — admin/read-only access control (session-based, `users` table in DB)
 - Dockerized deployment
 
 ### Architecture
@@ -119,6 +120,25 @@ python app.py
 python scheduler.py
 ```
 
+### Authentication
+
+The app uses session-based authentication with two access levels:
+
+| Role | Access |
+|---|---|
+| Unauthenticated | Browse articles, view article detail, stats |
+| Admin | Everything — search, process, label, delete, export, source management |
+
+**Initial setup** (run once after DB is created):
+
+```bash
+# 1. Create the users table
+mysql -u root dz_news < migrations/001_add_users.sql
+
+# 2. Create the admin account
+python create_admin.py
+```
+
 ### Docker
 
 ```bash
@@ -149,6 +169,7 @@ docker pull eavfeavf/dz-news:latest
 - Označovanie relevancie a soft-delete workflow
 - Export do **Word** a **CSV**
 - Automatická pipeline s **emailovými notifikáciami**
+- **Autentifikácia** — prístupové práva admin / len čítanie (session-based, tabuľka `users` v DB)
 - Dockerizované nasadenie
 
 ### Architektúra
@@ -232,6 +253,25 @@ python app.py
 python scheduler.py
 ```
 
+### Autentifikácia
+
+Aplikácia používa session-based autentifikáciu s dvoma úrovňami prístupu:
+
+| Rola | Prístup |
+|---|---|
+| Neprihlásený | Prehliadanie článkov, detail článku, štatistiky |
+| Admin | Všetko — vyhľadávanie, spracovanie, označovanie, mazanie, export, správa zdrojov |
+
+**Prvotné nastavenie** (spustiť raz po vytvorení DB):
+
+```bash
+# 1. Vytvorenie tabuľky users
+mysql -u root dz_news < migrations/001_add_users.sql
+
+# 2. Vytvorenie admin účtu
+python create_admin.py
+```
+
 ### Docker
 
 ```bash
@@ -262,6 +302,7 @@ docker pull eavfeavf/dz-news:latest
 - Étiquetage de pertinence et workflow de suppression douce
 - Export en **Word** et **CSV**
 - Pipeline planifié avec **notifications par e-mail**
+- **Authentification** — contrôle d'accès admin / lecture seule (session Flask, table `users` en base)
 - Déploiement dockerisé
 
 ### Architecture
@@ -343,6 +384,25 @@ python app.py
 
 ```bash
 python scheduler.py
+```
+
+### Authentification
+
+L'application utilise une authentification par session avec deux niveaux d'accès :
+
+| Rôle | Accès |
+|---|---|
+| Non connecté | Navigation des articles, détail article, statistiques |
+| Admin | Tout — recherche, traitement, étiquetage, suppression, export, gestion des sources |
+
+**Configuration initiale** (à exécuter une fois après la création de la base) :
+
+```bash
+# 1. Créer la table users
+mysql -u root dz_news < migrations/001_add_users.sql
+
+# 2. Créer le compte admin
+python create_admin.py
 ```
 
 ### Docker

@@ -39,6 +39,9 @@
 {% endblock %}
 
 {% block topbar_right_extra %}
+  {% if current_user.is_authenticated and current_user.is_admin %}
+    <a class="pill warn" href="/article/{{ r['id'] }}/edit">Editovať</a>
+  {% endif %}
   <a class="pill" href="{{ online_url }}" target="_blank" rel="noopener">Otvoriť online ↗</a>
 {% endblock %}
 

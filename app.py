@@ -850,6 +850,101 @@ def export_word():
                      mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
+@app.get("/article/<int:article_id>/edit")
+@admin_required
+def article_edit(article_id: int):
+    engine = get_db_engine()
+    with engine.connect() as conn:
+        r = conn.execute(text("""
+            SELECT a.id, a.title, a.title_fr,
+                   a.snippet, a.snippet_fr,
+                   a.published_at_text, a.published_at_real, a.published_conf,
+                   a.language, a.lang_detected,
+                   a.relevance, a.relevance_note,
+                   a.source_label,
+                   a.content_text, a.content_text_fr,
+                   a.extraction_ok,
+                   s.domain
+            FROM articles a
+            JOIN sources s ON s.id = a.source_id
+            WHERE a.id = :id
+        """), {"id": article_id}).mappings().fetchone()
+    if r is None:
+        abort(404)
+    return render_template("article_edit.html", r=r)
+
+
+@app.post("/article/<int:article_id>/edit")
+@admin_required
+def article_edit_save(article_id: int):
+    def _str(key):
+        v = request.form.get(key, "").strip()
+        return v if v else None
+
+    def _dt(key):
+        v = (request.form.get(key) or "").strip()
+        if not v:
+            return None
+        try:
+            return datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            try:
+                return datetime.strptime(v, "%Y-%m-%d")
+            except ValueError:
+                return None
+
+    published_conf = _str("published_conf")
+    if published_conf not in (None, "search", "absolute"):
+        published_conf = None
+
+    relevance_raw = request.form.get("relevance", "null")
+    relevance = None if relevance_raw == "null" else int(relevance_raw)
+
+    extraction_ok = 1 if request.form.get("extraction_ok") == "1" else 0
+
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        conn.execute(text("""
+            UPDATE articles SET
+                title             = :title,
+                title_fr          = :title_fr,
+                snippet           = :snippet,
+                snippet_fr        = :snippet_fr,
+                published_at_text = :published_at_text,
+                published_at_real = :published_at_real,
+                published_conf    = :published_conf,
+                language          = :language,
+                lang_detected     = :lang_detected,
+                relevance         = :relevance,
+                relevance_note    = :relevance_note,
+                source_label      = :source_label,
+                content_text      = :content_text,
+                content_text_fr   = :content_text_fr,
+                extraction_ok     = :extraction_ok
+            WHERE id = :id
+        """), {
+            "title":             _str("title"),
+            "title_fr":          _str("title_fr"),
+            "snippet":           _str("snippet"),
+            "snippet_fr":        _str("snippet_fr"),
+            "published_at_text": _str("published_at_text"),
+            "published_at_real": _dt("published_at_real"),
+            "published_conf":    published_conf,
+            "language":          _str("language"),
+            "lang_detected":     _str("lang_detected"),
+            "relevance":         relevance,
+            "relevance_note":    _str("relevance_note"),
+            "source_label":      _str("source_label"),
+            "content_text":      _str("content_text"),
+            "content_text_fr":   _str("content_text_fr"),
+            "extraction_ok":     extraction_ok,
+            "id":                article_id,
+        })
+    logger.info("Article edited: id=%s by=%s", article_id, current_user.username)
+    flash("Článok uložený.", "ok")
+    return redirect(url_for("article_detail", article_id=article_id))
+
+
 @app.get("/article/<int:article_id>")
 def article_detail(article_id: int):
     engine = get_db_engine()

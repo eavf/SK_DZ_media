@@ -261,3 +261,12 @@ code{
 .ctx-line:active{
   transform: translateY(1px);
 }
+
+.field-label{
+  display:block;
+  font-size:11px;
+  opacity:.55;
+  margin-bottom:4px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}

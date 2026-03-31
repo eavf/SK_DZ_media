@@ -391,7 +391,7 @@ def browse():
         FROM articles a
         JOIN sources s ON s.id = a.source_id
         WHERE {where_sql}
-        ORDER BY a.last_seen_at DESC
+        ORDER BY a.published_at_real IS NULL, a.published_at_real DESC
         LIMIT {limit}
     """
 

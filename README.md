@@ -139,6 +139,39 @@ mysql -u root dz_news < migrations/001_add_users.sql
 python create_admin.py
 ```
 
+### Article date resolution
+
+Each article stores three date-related fields:
+
+| DB field | Description |
+|---|---|
+| `published_at_text` | Raw date string as returned by SerpAPI (e.g. `"Il y a 5 jours"`, `"2025-12-09"`) |
+| `published_at_real` | Parsed datetime used for sorting and display |
+| `published_conf` | Confidence label: `search` (from SerpAPI) or `absolute` (from HTML extraction) |
+
+**Processing pipeline:**
+
+```
+SerpAPI date field
+    ↓ search_flow_news._parse_serp_date()
+    │
+    ├─ absolute date (e.g. "2025-12-09")
+    │       → stored as published_at in bundle JSON
+    │       → ingest sets published_at_real, published_conf = 'search'
+    │
+    └─ relative date (e.g. "yesterday", "il y a 3 jours")
+            → NOT stored in bundle — too unreliable for re-surfaced articles
+            → published_at_real stays NULL until extraction
+
+HTML extraction (trafilatura via extract_bulk.py / refetch_article.py)
+    → reads <meta property="article:published_time"> and similar tags
+    → overwrites published_at_real, sets published_conf = 'absolute'
+```
+
+**Why relative SerpAPI dates are not used:** Google News can re-surface old articles in new searches. A date like `"yesterday"` is then computed relative to the search time, not the article's true publication date — resulting in values that are months off. Only absolute date strings from SerpAPI are trusted at ingest time; all others are resolved later from the article HTML.
+
+**Maintenance:** `fix_serp_dates.py` can be used to reset any `published_at_real` values that were ingested from relative SerpAPI dates (detects them by matching the raw `published_at_text` against relative-date patterns).
+
 ### Docker
 
 ```bash
@@ -272,6 +305,39 @@ mysql -u root dz_news < migrations/001_add_users.sql
 python create_admin.py
 ```
 
+### Určovanie dátumu článku
+
+Každý článok uchováva tri dátumové polia:
+
+| Pole v DB | Popis |
+|---|---|
+| `published_at_text` | Surový reťazec dátumu z SerpAPI (napr. `"Il y a 5 jours"`, `"2025-12-09"`) |
+| `published_at_real` | Sparsovaný datetime používaný na zoradenie a zobrazenie |
+| `published_conf` | Dôveryhodnosť: `search` (zo SerpAPI) alebo `absolute` (z HTML extrakcie) |
+
+**Procesný postup:**
+
+```
+Pole date zo SerpAPI
+    ↓ search_flow_news._parse_serp_date()
+    │
+    ├─ absolútny dátum (napr. "2025-12-09")
+    │       → uložený ako published_at v bundle JSON
+    │       → ingest nastaví published_at_real, published_conf = 'search'
+    │
+    └─ relatívny dátum (napr. "yesterday", "il y a 3 jours")
+            → NEULOŽENÝ do bundle — nespoľahlivý pre re-surfované staré články
+            → published_at_real ostáva NULL až do extrakcie
+
+HTML extrakcia (trafilatura cez extract_bulk.py / refetch_article.py)
+    → číta <meta property="article:published_time"> a podobné tagy
+    → prepíše published_at_real, nastaví published_conf = 'absolute'
+```
+
+**Prečo sa relatívne dátumy zo SerpAPI nepoužívajú:** Google News môže staré články znovu zaradiť do výsledkov vyhľadávania. Dátum ako `"yesterday"` sa potom vypočíta relatívne od času searchu, nie od skutočného dátumu publikovania — výsledok je o mesiace nesprávny. Pri ingeste sa preto dôveruje iba absolútnym reťazcom; ostatné sa doplnia neskôr z HTML článku.
+
+**Údržba:** `fix_serp_dates.py` resetuje prípadné `published_at_real` hodnoty, ktoré boli nastavené z relatívnych dátumov SerpAPI (detekuje ich podľa vzoru v `published_at_text`).
+
 ### Docker
 
 ```bash
@@ -404,6 +470,39 @@ mysql -u root dz_news < migrations/001_add_users.sql
 # 2. Créer le compte admin
 python create_admin.py
 ```
+
+### Résolution de la date des articles
+
+Chaque article stocke trois champs liés à la date :
+
+| Champ DB | Description |
+|---|---|
+| `published_at_text` | Chaîne brute renvoyée par SerpAPI (ex. `"Il y a 5 jours"`, `"2025-12-09"`) |
+| `published_at_real` | Datetime analysé utilisé pour le tri et l'affichage |
+| `published_conf` | Niveau de confiance : `search` (SerpAPI) ou `absolute` (extraction HTML) |
+
+**Pipeline de traitement :**
+
+```
+Champ date de SerpAPI
+    ↓ search_flow_news._parse_serp_date()
+    │
+    ├─ date absolue (ex. "2025-12-09")
+    │       → stockée comme published_at dans le bundle JSON
+    │       → l'ingestion définit published_at_real, published_conf = 'search'
+    │
+    └─ date relative (ex. "yesterday", "il y a 3 jours")
+            → NON stockée dans le bundle — trop peu fiable pour les anciens articles re-surfacés
+            → published_at_real reste NULL jusqu'à l'extraction
+
+Extraction HTML (trafilatura via extract_bulk.py / refetch_article.py)
+    → lit <meta property="article:published_time"> et balises similaires
+    → écrase published_at_real, définit published_conf = 'absolute'
+```
+
+**Pourquoi les dates relatives de SerpAPI ne sont pas utilisées :** Google News peut remettre en avant d'anciens articles dans de nouvelles recherches. Une date comme `"yesterday"` est alors calculée par rapport à l'heure de la recherche, et non à la date de publication réelle — ce qui peut donner un résultat décalé de plusieurs mois. Seules les chaînes de dates absolues de SerpAPI sont fiables à l'ingestion ; les autres sont résolues ultérieurement depuis le HTML de l'article.
+
+**Maintenance :** `fix_serp_dates.py` réinitialise les valeurs `published_at_real` éventuellement définies à partir de dates relatives SerpAPI (détectées par correspondance de motif dans `published_at_text`).
 
 ### Docker
 

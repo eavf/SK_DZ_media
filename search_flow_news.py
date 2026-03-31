@@ -174,14 +174,17 @@ _EN_REL = re.compile(
 )
 
 
-def _parse_serp_date(date_str: str | None, fetched_at: datetime) -> str | None:
-    """Convert SerpAPI date string to ISO date (YYYY-MM-DD). Returns None if unparseable."""
+def _parse_serp_date(date_str: str | None, fetched_at: datetime) -> tuple[str | None, bool]:
+    """Convert SerpAPI date string to ISO date (YYYY-MM-DD).
+    Returns (iso_date, is_absolute). is_absolute=True only for dates that were not
+    computed from a relative string (e.g. "yesterday", "3 days ago").
+    """
     if not date_str:
-        return None
+        return None, False
     s = date_str.strip()
 
     if re.match(r"\d{4}-\d{2}-\d{2}", s):
-        return s[:10]
+        return s[:10], True
 
     m = _FR_REL.match(s)
     if m:
@@ -196,7 +199,7 @@ def _parse_serp_date(date_str: str | None, fetched_at: datetime) -> str | None:
             delta = timedelta(weeks=n)
         else:  # mois
             delta = timedelta(days=n * 30)
-        return (fetched_at - delta).date().isoformat()
+        return (fetched_at - delta).date().isoformat(), False
 
     m = _EN_REL.match(s)
     if m:
@@ -209,20 +212,23 @@ def _parse_serp_date(date_str: str | None, fetched_at: datetime) -> str | None:
             delta = timedelta(days=n)
         else:  # week
             delta = timedelta(weeks=n)
-        return (fetched_at - delta).date().isoformat()
+        return (fetched_at - delta).date().isoformat(), False
 
     if re.match(r"(yesterday|hier)$", s, re.IGNORECASE):
-        return (fetched_at - timedelta(days=1)).date().isoformat()
+        return (fetched_at - timedelta(days=1)).date().isoformat(), False
 
-    return None
+    return None, False
 
 
 def _enrich_dates(items: list[dict], fetched_at: datetime) -> None:
-    """Add published_at ISO field to items that don't already have one."""
+    """Add published_at ISO field to items with an absolute (non-computed) date only.
+    Relative dates ("yesterday", "3 days ago") are skipped — they are unreliable for
+    articles that Google re-surfaces long after original publication.
+    """
     for item in items:
         if "published_at" not in item:
-            iso = _parse_serp_date(item.get("date"), fetched_at)
-            if iso:
+            iso, is_absolute = _parse_serp_date(item.get("date"), fetched_at)
+            if iso and is_absolute:
                 item["published_at"] = iso
 
 

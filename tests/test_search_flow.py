@@ -6,8 +6,12 @@ from __future__ import annotations
 
 import pytest
 
+from datetime import datetime, timezone
+
 from search_flow_news import (
     BLOCKLIST_DOMAINS,
+    _enrich_dates,
+    _parse_serp_date,
     clean_news_results,
     contains_preferred_links,
     deduplicate_news,
@@ -239,6 +243,77 @@ class TestShouldRunPreferredFallback:
     def test_empty_combined_triggers(self):
         result = should_run_preferred_fallback({}, {}, [], num=10)
         assert result is True
+
+
+# ── _parse_serp_date ──────────────────────────────────────────────────────────
+
+class TestParseSerp:
+    _NOW = datetime(2026, 3, 30, 12, 0, 0, tzinfo=timezone.utc)
+
+    def test_iso_date_is_absolute(self):
+        iso, is_abs = _parse_serp_date("2025-12-09", self._NOW)
+        assert iso == "2025-12-09"
+        assert is_abs is True
+
+    def test_yesterday_is_relative(self):
+        iso, is_abs = _parse_serp_date("yesterday", self._NOW)
+        assert iso == "2026-03-29"
+        assert is_abs is False
+
+    def test_hier_is_relative(self):
+        _, is_abs = _parse_serp_date("Hier", self._NOW)
+        assert is_abs is False
+
+    def test_fr_relative_jours(self):
+        iso, is_abs = _parse_serp_date("il y a 3 jours", self._NOW)
+        assert iso == "2026-03-27"
+        assert is_abs is False
+
+    def test_en_relative_days(self):
+        iso, is_abs = _parse_serp_date("5 days ago", self._NOW)
+        assert iso == "2026-03-25"
+        assert is_abs is False
+
+    def test_none_input(self):
+        iso, is_abs = _parse_serp_date(None, self._NOW)
+        assert iso is None
+        assert is_abs is False
+
+    def test_unparseable_returns_none(self):
+        iso, is_abs = _parse_serp_date("some garbage string", self._NOW)
+        assert iso is None
+        assert is_abs is False
+
+
+# ── _enrich_dates ─────────────────────────────────────────────────────────────
+
+class TestEnrichDates:
+    _NOW = datetime(2026, 3, 30, 12, 0, 0, tzinfo=timezone.utc)
+
+    def test_absolute_date_is_stored(self):
+        items = [{"link": "https://aps.dz/a", "date": "2025-12-09"}]
+        _enrich_dates(items, self._NOW)
+        assert items[0].get("published_at") == "2025-12-09"
+
+    def test_relative_date_is_not_stored(self):
+        items = [{"link": "https://aps.dz/a", "date": "yesterday"}]
+        _enrich_dates(items, self._NOW)
+        assert "published_at" not in items[0]
+
+    def test_relative_fr_date_is_not_stored(self):
+        items = [{"link": "https://aps.dz/a", "date": "il y a 3 jours"}]
+        _enrich_dates(items, self._NOW)
+        assert "published_at" not in items[0]
+
+    def test_existing_published_at_is_not_overwritten(self):
+        items = [{"link": "https://aps.dz/a", "date": "2025-01-01", "published_at": "2025-12-09"}]
+        _enrich_dates(items, self._NOW)
+        assert items[0]["published_at"] == "2025-12-09"
+
+    def test_no_date_field_leaves_no_published_at(self):
+        items = [{"link": "https://aps.dz/a"}]
+        _enrich_dates(items, self._NOW)
+        assert "published_at" not in items[0]
 
 
 # ── domain_stats ──────────────────────────────────────────────────────────────

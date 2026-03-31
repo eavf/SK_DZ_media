@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Vytvorí alebo aktualizuje admin účet v DB.
+Vytvorí alebo aktualizuje používateľský účet v DB.
 Použitie:
-    python create_admin.py
+    python create_admin.py                  # rola admin (default)
+    python create_admin.py --role power
+    python create_admin.py --role user
 """
+import argparse
 import getpass
 import sys
 
@@ -12,11 +15,23 @@ from werkzeug.security import generate_password_hash
 
 from config.config import get_db_engine, init_cli
 
+VALID_ROLES = ("admin", "power", "user")
+
 
 def main():
     init_cli("create_admin")
 
-    username = input("Username [admin]: ").strip() or "admin"
+    p = argparse.ArgumentParser()
+    p.add_argument("--role", choices=VALID_ROLES, default="admin",
+                   help="Rola používateľa (default: admin)")
+    args = p.parse_args()
+
+    default_username = "admin" if args.role == "admin" else ""
+    username = input(f"Username [{default_username}]: ").strip() or default_username
+    if not username:
+        print("Username nesmie byť prázdny.")
+        sys.exit(1)
+
     password = getpass.getpass("Password: ")
     if not password:
         print("Heslo nesmie byť prázdne.")
@@ -33,16 +48,16 @@ def main():
 
         if existing:
             conn.execute(
-                text("UPDATE users SET password_hash = :h, role = 'admin' WHERE username = :u"),
-                {"h": password_hash, "u": username},
+                text("UPDATE users SET password_hash = :h, role = :r WHERE username = :u"),
+                {"h": password_hash, "r": args.role, "u": username},
             )
-            print(f"Používateľ '{username}' aktualizovaný (role=admin, nové heslo).")
+            print(f"Používateľ '{username}' aktualizovaný (role={args.role}, nové heslo).")
         else:
             conn.execute(
-                text("INSERT INTO users (username, password_hash, role) VALUES (:u, :h, 'admin')"),
-                {"u": username, "h": password_hash},
+                text("INSERT INTO users (username, password_hash, role) VALUES (:u, :h, :r)"),
+                {"u": username, "h": password_hash, "r": args.role},
             )
-            print(f"Admin '{username}' vytvorený.")
+            print(f"Používateľ '{username}' vytvorený (role={args.role}).")
 
 
 if __name__ == "__main__":

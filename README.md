@@ -122,12 +122,16 @@ python scheduler.py
 
 ### Authentication
 
-The app uses session-based authentication with two access levels:
+The app uses session-based authentication with four access levels:
 
 | Role | Access |
 |---|---|
 | Unauthenticated | Browse articles, view article detail, stats |
-| Admin | Everything — search, process, label, delete, export, source management |
+| `user` | + Run pipeline: search, ingest, extract, translate |
+| `power` | + Label, delete, export, modify article records |
+| `admin` | + Sources management, user management |
+
+Roles are hierarchical — each level includes everything below it.
 
 **Initial setup** (run once after DB is created):
 
@@ -135,8 +139,13 @@ The app uses session-based authentication with two access levels:
 # 1. Create the users table
 mysql -u root dz_news < migrations/001_add_users.sql
 
-# 2. Create the admin account
-python create_admin.py
+# 2. Apply role constraints
+mysql -u root dz_news < migrations/002_user_roles.sql
+
+# 3. Create accounts
+python create_admin.py                 # admin (default)
+python create_admin.py --role power    # power user
+python create_admin.py --role user     # regular user
 ```
 
 ### Article date resolution
@@ -288,12 +297,16 @@ python scheduler.py
 
 ### Autentifikácia
 
-Aplikácia používa session-based autentifikáciu s dvoma úrovňami prístupu:
+Aplikácia používa session-based autentifikáciu so štyrmi úrovňami prístupu:
 
 | Rola | Prístup |
 |---|---|
 | Neprihlásený | Prehliadanie článkov, detail článku, štatistiky |
-| Admin | Všetko — vyhľadávanie, spracovanie, označovanie, mazanie, export, správa zdrojov |
+| `user` | + Spúšťanie pipeline: search, ingest, extrakcia, preklad |
+| `power` | + Označovanie, mazanie, export, úprava záznamov článkov |
+| `admin` | + Správa zdrojov, správa používateľov |
+
+Roly sú hierarchické — každá úroveň zahŕňa všetko z nižších úrovní.
 
 **Prvotné nastavenie** (spustiť raz po vytvorení DB):
 
@@ -301,8 +314,13 @@ Aplikácia používa session-based autentifikáciu s dvoma úrovňami prístupu:
 # 1. Vytvorenie tabuľky users
 mysql -u root dz_news < migrations/001_add_users.sql
 
-# 2. Vytvorenie admin účtu
-python create_admin.py
+# 2. Pridanie CHECK constraintu pre role
+mysql -u root dz_news < migrations/002_user_roles.sql
+
+# 3. Vytvorenie účtov
+python create_admin.py                 # admin (default)
+python create_admin.py --role power    # power user
+python create_admin.py --role user     # bežný používateľ
 ```
 
 ### Určovanie dátumu článku
@@ -454,12 +472,16 @@ python scheduler.py
 
 ### Authentification
 
-L'application utilise une authentification par session avec deux niveaux d'accès :
+L'application utilise une authentification par session avec quatre niveaux d'accès :
 
 | Rôle | Accès |
 |---|---|
 | Non connecté | Navigation des articles, détail article, statistiques |
-| Admin | Tout — recherche, traitement, étiquetage, suppression, export, gestion des sources |
+| `user` | + Exécuter le pipeline : recherche, ingestion, extraction, traduction |
+| `power` | + Étiquetage, suppression, export, modification des enregistrements |
+| `admin` | + Gestion des sources, gestion des utilisateurs |
+
+Les rôles sont hiérarchiques — chaque niveau inclut tout ce qui est en dessous.
 
 **Configuration initiale** (à exécuter une fois après la création de la base) :
 
@@ -467,8 +489,13 @@ L'application utilise une authentification par session avec deux niveaux d'accè
 # 1. Créer la table users
 mysql -u root dz_news < migrations/001_add_users.sql
 
-# 2. Créer le compte admin
-python create_admin.py
+# 2. Ajouter la contrainte CHECK pour les rôles
+mysql -u root dz_news < migrations/002_user_roles.sql
+
+# 3. Créer les comptes
+python create_admin.py                 # admin (défaut)
+python create_admin.py --role power    # power user
+python create_admin.py --role user     # utilisateur standard
 ```
 
 ### Résolution de la date des articles

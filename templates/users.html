@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h1>Používatelia</h1>
+      <div class="sub">Správa účtov a rolí. Roly sú hierarchické: user &lt; power &lt; admin.</div>
+    </div>
+    <div class="badge">
+      <span class="pill">{{ users|length }} účtov</span>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="box" style="max-width:480px">
+    <h2>Pridať používateľa</h2>
+    <form method="post" action="/user/create" class="actions" style="margin-top:0">
+      <input type="text"     name="username" placeholder="username" required autocomplete="off">
+      <input type="password" name="password" placeholder="heslo"    required autocomplete="new-password">
+      <select name="role">
+        <option value="user">user</option>
+        <option value="power">power</option>
+        <option value="admin">admin</option>
+      </select>
+      <button type="submit">Pridať</button>
+    </form>
+  </div>
+
+  <div class="hr"></div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th style="width:100px">Rola</th>
+        <th style="width:180px">Vytvorený</th>
+        <th style="width:220px">Zmeniť rolu</th>
+        <th style="width:100px">Akcie</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for u in users %}
+      <tr class="trow">
+        <td>
+          <span style="font-weight:700">{{ u.username }}</span>
+          {% if u.id == current_user.id %}
+            <span class="pill ok" style="margin-left:6px">ty</span>
+          {% endif %}
+        </td>
+
+        <td>
+          {% if u.role == "admin" %}
+            <span class="pill warn">admin</span>
+          {% elif u.role == "power" %}
+            <span class="pill">power</span>
+          {% else %}
+            <span class="pill ok">user</span>
+          {% endif %}
+        </td>
+
+        <td class="small">{{ u.created_at }}</td>
+
+        <td>
+          {% if u.id != current_user.id %}
+            <form method="post" action="/user/{{ u.id }}/role" class="actions" style="margin-top:0">
+              <select name="role">
+                <option value="user"  {% if u.role == "user"  %}selected{% endif %}>user</option>
+                <option value="power" {% if u.role == "power" %}selected{% endif %}>power</option>
+                <option value="admin" {% if u.role == "admin" %}selected{% endif %}>admin</option>
+              </select>
+              <button type="submit">Uložiť</button>
+            </form>
+          {% else %}
+            <span class="small">—</span>
+          {% endif %}
+        </td>
+
+        <td>
+          {% if u.id != current_user.id %}
+            <form method="post" action="/user/{{ u.id }}/delete"
+                  onsubmit="return confirm('Zmazať používateľa {{ u.username }}?');">
+              <button type="submit" class="pill warn">Zmazať</button>
+            </form>
+          {% else %}
+            <span class="small">—</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

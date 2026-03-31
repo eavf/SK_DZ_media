@@ -20,7 +20,7 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, curren
 from dotenv import load_dotenv
 from sqlalchemy import text, bindparam
 from docx import Document
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from config.config import get_db_engine, require, init_context
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -69,15 +69,25 @@ configure_logging(app, settings)
 # Auth
 # ---------------------------------------------------------------------------
 
+_ROLE_RANK = {"user": 1, "power": 2, "admin": 3}
+
+
 class User(UserMixin):
     def __init__(self, id: int, username: str, role: str):
         self.id = id
         self.username = username
         self.role = role
 
+    def has_role(self, minimum: str) -> bool:
+        return _ROLE_RANK.get(self.role, 0) >= _ROLE_RANK.get(minimum, 99)
+
     @property
     def is_admin(self) -> bool:
         return self.role == "admin"
+
+    @property
+    def is_power(self) -> bool:
+        return self.has_role("power")
 
 
 login_manager = LoginManager(app)
@@ -99,15 +109,29 @@ def load_user(user_id: str):
     return None
 
 
+def _role_required(minimum_role: str):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return login_manager.unauthorized()
+            if not current_user.has_role(minimum_role):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+
+def user_required(f):
+    return _role_required("user")(f)
+
+
+def power_required(f):
+    return _role_required("power")(f)
+
+
 def admin_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if not current_user.is_authenticated:
-            return login_manager.unauthorized()
-        if not current_user.is_admin:
-            abort(403)
-        return f(*args, **kwargs)
-    return decorated
+    return _role_required("admin")(f)
 
 
 # ---------------------------------------------------------------------------
@@ -433,7 +457,7 @@ def browse():
 
 
 @app.post("/bulk/delete")
-@admin_required
+@power_required
 def bulk_delete():
     mode = request.form.get("mode", "soft")  # soft|hard
     ids_int = get_selected_article_ids()
@@ -465,7 +489,7 @@ def bulk_delete():
 
 
 @app.post("/undelete/<int:article_id>")
-@admin_required
+@power_required
 def undelete(article_id: int):
     """Undo soft delete: vráti článok späť (deleted_at=NULL)."""
     engine = get_db_engine()
@@ -481,7 +505,7 @@ def undelete(article_id: int):
 
 
 @app.post("/bulk/exclude_domains")
-@admin_required
+@power_required
 def bulk_exclude_domains():
     note = (request.form.get("note") or "").strip()[:255]
     ids_int = get_selected_article_ids()
@@ -655,7 +679,7 @@ def stats():
 
 
 @app.post("/label/<int:article_id>")
-@admin_required
+@power_required
 def label(article_id: int):
     rel = request.form.get("relevance")  # "1" or "0" or "null"
     note = (request.form.get("note") or "").strip()[:255]
@@ -683,7 +707,7 @@ def label(article_id: int):
 
 
 @app.post("/delete/<int:article_id>")
-@admin_required
+@power_required
 def delete(article_id: int):
     mode = request.form.get("mode", "soft")  # soft | hard
 
@@ -703,7 +727,7 @@ def delete(article_id: int):
 
 
 @app.get("/export/csv")
-@admin_required
+@power_required
 def export_csv():
     days = int(request.args.get("days", 7))
     extraction = request.args.get("extraction", "ok")
@@ -755,7 +779,7 @@ def export_csv():
 
 
 @app.get("/export/word")
-@admin_required
+@power_required
 def export_word():
     days = int(request.args.get("days", 7))
     extraction = request.args.get("extraction", "ok")
@@ -938,7 +962,7 @@ def article_detail(article_id: int):
 
 
 @app.post("/article/<int:article_id>/label")
-@admin_required
+@power_required
 def article_label(article_id: int):
     relevance_raw = request.form.get("relevance", "null")
     note = (request.form.get("note") or "").strip()[:255]
@@ -964,7 +988,7 @@ def article_label(article_id: int):
 
 
 @app.post("/article/<int:article_id>/exclude_domain")
-@admin_required
+@power_required
 def article_exclude_domain(article_id: int):
     note = (request.form.get("note") or "").strip()[:255]  # voliteľné: dôvod
 
@@ -998,7 +1022,7 @@ def article_exclude_domain(article_id: int):
 
 
 @app.post("/article/<int:article_id>/unexclude_domain")
-@admin_required
+@power_required
 def article_unexclude_domain(article_id: int):
     engine = get_db_engine()
     with engine.begin() as conn:
@@ -1017,7 +1041,7 @@ def article_unexclude_domain(article_id: int):
 
 
 @app.post("/article/<int:article_id>/fetch")
-@admin_required
+@user_required
 def fetch_extract_article(article_id: int):
     code, out = run_script([PYTHON_BIN, "refetch_article.py", "--article-id", str(article_id)])
     if code == 0:
@@ -1031,7 +1055,7 @@ def fetch_extract_article(article_id: int):
 
 
 @app.post("/article/<int:article_id>/translate")
-@admin_required
+@user_required
 def article_translate(article_id: int):
     engine = get_db_engine()
     with engine.begin() as conn:
@@ -1081,7 +1105,7 @@ def article_translate(article_id: int):
 
 
 @app.post("/article/<int:article_id>/set_content")
-@admin_required
+@power_required
 def article_set_content(article_id: int):
     content = (request.form.get("content_text") or "").strip()
     if not content:
@@ -1106,7 +1130,7 @@ def article_set_content(article_id: int):
 
 
 @app.post("/bulk/restore")
-@admin_required
+@power_required
 def bulk_restore():
     ids_int = get_selected_article_ids()
     if not ids_int:
@@ -1123,7 +1147,7 @@ def bulk_restore():
 
 
 @app.get("/search")
-@admin_required
+@user_required
 def search_page():
     lb = latest_bundle_path()
     return render_template("search.html", latest_bundle=lb)
@@ -1146,7 +1170,7 @@ def _bundle_articles(bundle_path: str | None) -> list[dict]:
 
 
 @app.post("/search/run")
-@admin_required
+@user_required
 def search_run():
     cmd = [PYTHON_BIN, "search_flow_news.py"]
     hl = request.form.get("hl", "").strip()
@@ -1198,13 +1222,13 @@ def _list_runs() -> list[dict]:
 
 
 @app.get("/process")
-@admin_required
+@user_required
 def process_page():
     return render_template("process.html", runs=_list_runs(), latest_bundle=latest_bundle_path())
 
 
 @app.post("/process/ingest_latest")
-@admin_required
+@user_required
 def process_ingest_latest():
     lb = request.form.get("bundle_path") or latest_bundle_path()
     if not lb:
@@ -1228,7 +1252,7 @@ def process_ingest_latest():
 
 
 @app.post("/process/extract_bulk")
-@admin_required
+@user_required
 def process_extract_bulk():
     limit = request.form.get("limit", "50").strip() or "50"
     job_id = uuid.uuid4().hex[:12]
@@ -1244,7 +1268,7 @@ def process_extract_bulk():
 
 
 @app.get("/process/job/<job_id>")
-@admin_required
+@user_required
 def job_status(job_id: str):
     from flask import jsonify
     job = _job_status(job_id)
@@ -1254,7 +1278,7 @@ def job_status(job_id: str):
 
 
 @app.get("/errors")
-@admin_required
+@power_required
 def errors_page():
     days = int(request.args.get("days", 0))
     engine = get_db_engine()
@@ -1432,6 +1456,94 @@ def source_unavoid(source_id: int):
     logger.info("Source unmuted: id=%s", source_id)
     flash("Doména od-umlčaná (unmute).", "ok")
     return redirect(request.referrer or "/sources")
+
+
+_VALID_ROLES = ("user", "power", "admin")
+
+
+@app.get("/users")
+@admin_required
+def users_page():
+    engine = get_db_engine()
+    with engine.connect() as conn:
+        rows = conn.execute(text("""
+            SELECT id, username, role, created_at
+            FROM users
+            ORDER BY role DESC, username
+        """)).mappings().fetchall()
+    return render_template("users.html", users=rows)
+
+
+@app.post("/user/create")
+@admin_required
+def user_create():
+    username = (request.form.get("username") or "").strip()
+    password = request.form.get("password") or ""
+    role = request.form.get("role", "user")
+
+    if not username or not password:
+        flash("Username aj heslo sú povinné.", "warn")
+        return redirect(url_for("users_page"))
+    if role not in _VALID_ROLES:
+        flash("Neplatná rola.", "warn")
+        return redirect(url_for("users_page"))
+
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        existing = conn.execute(
+            text("SELECT id FROM users WHERE username = :u"), {"u": username}
+        ).fetchone()
+        if existing:
+            flash(f"Používateľ '{username}' už existuje.", "warn")
+            return redirect(url_for("users_page"))
+        conn.execute(
+            text("INSERT INTO users (username, password_hash, role) VALUES (:u, :h, :r)"),
+            {"u": username, "h": generate_password_hash(password), "r": role},
+        )
+    logger.info("User created: username=%s role=%s by=%s", username, role, current_user.username)
+    flash(f"Používateľ '{username}' ({role}) vytvorený.", "ok")
+    return redirect(url_for("users_page"))
+
+
+@app.post("/user/<int:user_id>/role")
+@admin_required
+def user_set_role(user_id: int):
+    role = request.form.get("role", "")
+    if role not in _VALID_ROLES:
+        flash("Neplatná rola.", "warn")
+        return redirect(url_for("users_page"))
+    if user_id == current_user.id:
+        flash("Nemôžeš zmeniť vlastnú rolu.", "warn")
+        return redirect(url_for("users_page"))
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        conn.execute(
+            text("UPDATE users SET role = :r WHERE id = :id"),
+            {"r": role, "id": user_id},
+        )
+    logger.info("User role changed: id=%s role=%s by=%s", user_id, role, current_user.username)
+    flash("Rola zmenená.", "ok")
+    return redirect(url_for("users_page"))
+
+
+@app.post("/user/<int:user_id>/delete")
+@admin_required
+def user_delete(user_id: int):
+    if user_id == current_user.id:
+        flash("Nemôžeš zmazať vlastný účet.", "warn")
+        return redirect(url_for("users_page"))
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        row = conn.execute(
+            text("SELECT username FROM users WHERE id = :id"), {"id": user_id}
+        ).fetchone()
+        if not row:
+            flash("Používateľ neexistuje.", "warn")
+            return redirect(url_for("users_page"))
+        conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+    logger.info("User deleted: id=%s username=%s by=%s", user_id, row[0], current_user.username)
+    flash(f"Používateľ '{row[0]}' zmazaný.", "ok")
+    return redirect(url_for("users_page"))
 
 
 @app.route("/login", methods=["GET", "POST"])

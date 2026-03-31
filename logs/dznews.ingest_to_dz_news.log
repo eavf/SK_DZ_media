@@ -1,9 +1,0 @@
-2026-03-28 10:47:03,209 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:740
-2026-03-28 10:47:03,433 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=6 deduped=4 linked=4 run_id=3 in /app/ingest_to_dz_news_reworked.py:648
-2026-03-28 20:54:59,846 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:801
-2026-03-28 21:18:13,405 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:801
-2026-03-28 21:18:25,971 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:801
-2026-03-28 21:20:55,119 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:801
-2026-03-29 15:00:50,268 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:809
-2026-03-29 22:01:24,167 [INFO] ingest_to_dz_news: Config loaded: 12 preferred domains, 7 ranked sources, 12 URL cleanup keys in /app/ingest_to_dz_news_reworked.py:809
-2026-03-29 22:01:24,564 [INFO] ingest_to_dz_news: Processed news_bundle.json: candidates=22 deduped=21 inserted=21 updated=0 linked=21 run_id=8 in /app/ingest_to_dz_news_reworked.py:666

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}DZ News – edit článku #{{ r.id }}{% endblock %}
+
+{% block topbar_left %}
+  <a href="/article/{{ r.id }}" class="pill">← späť na detail</a>
+  <span class="pill warn">EDIT</span>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h1>Editácia článku #{{ r.id }}</h1>
+      <div class="sub">{{ r.domain }}</div>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <form method="post" action="/article/{{ r.id }}/edit">
+
+    <!-- Tituly -->
+    <div class="box" style="margin-bottom:12px">
+      <h2>Tituly</h2>
+
+      <label class="field-label">title</label>
+      <input type="text" name="title" value="{{ r.title or '' }}"
+             style="width:100%;margin-bottom:10px">
+
+      <label class="field-label">title_fr</label>
+      <input type="text" name="title_fr" value="{{ r.title_fr or '' }}"
+             style="width:100%">
+    </div>
+
+    <!-- Snippet -->
+    <div class="box" style="margin-bottom:12px">
+      <h2>Snippet</h2>
+
+      <label class="field-label">snippet</label>
+      <textarea name="snippet" rows="3"
+                style="width:100%;margin-bottom:10px">{{ r.snippet or '' }}</textarea>
+
+      <label class="field-label">snippet_fr</label>
+      <textarea name="snippet_fr" rows="3"
+                style="width:100%">{{ r.snippet_fr or '' }}</textarea>
+    </div>
+
+    <!-- Dátum a jazyk -->
+    <div class="box" style="margin-bottom:12px">
+      <h2>Dátum publikovania &amp; jazyk</h2>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px">
+        <div>
+          <label class="field-label">published_at_text (raw)</label>
+          <input type="text" name="published_at_text"
+                 value="{{ r.published_at_text or '' }}" style="width:100%">
+        </div>
+        <div>
+          <label class="field-label">published_at_real (YYYY-MM-DD HH:MM:SS)</label>
+          <input type="text" name="published_at_real"
+                 value="{{ r.published_at_real.strftime('%Y-%m-%d %H:%M:%S') if r.published_at_real else '' }}"
+                 placeholder="2025-12-09 16:47:28" style="width:100%">
+        </div>
+        <div>
+          <label class="field-label">published_conf</label>
+          <select name="published_conf" style="width:100%">
+            <option value=""       {% if not r.published_conf %}selected{% endif %}>— (NULL)</option>
+            <option value="search" {% if r.published_conf == 'search' %}selected{% endif %}>search</option>
+            <option value="absolute" {% if r.published_conf == 'absolute' %}selected{% endif %}>absolute</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px">
+        <div>
+          <label class="field-label">language</label>
+          <input type="text" name="language" value="{{ r.language or '' }}"
+                 placeholder="fr / ar / en" style="width:100%">
+        </div>
+        <div>
+          <label class="field-label">lang_detected</label>
+          <input type="text" name="lang_detected" value="{{ r.lang_detected or '' }}"
+                 placeholder="fr / ar / en" style="width:100%">
+        </div>
+        <div>
+          <label class="field-label">source_label</label>
+          <input type="text" name="source_label" value="{{ r.source_label or '' }}"
+                 style="width:100%">
+        </div>
+      </div>
+    </div>
+
+    <!-- Relevancia -->
+    <div class="box" style="margin-bottom:12px">
+      <h2>Relevancia</h2>
+      <div style="display:grid; grid-template-columns:180px 1fr; gap:12px; align-items:start">
+        <div>
+          <label class="field-label">relevance</label>
+          <select name="relevance" style="width:100%">
+            <option value="null" {% if r.relevance is none %}selected{% endif %}>— (neoznačené)</option>
+            <option value="1"    {% if r.relevance == 1 %}selected{% endif %}>1 – relevantné</option>
+            <option value="0"    {% if r.relevance == 0 %}selected{% endif %}>0 – nerelevantné</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">relevance_note</label>
+          <input type="text" name="relevance_note" value="{{ r.relevance_note or '' }}"
+                 style="width:100%">
+        </div>
+      </div>
+    </div>
+
+    <!-- Extrakcia -->
+    <div class="box" style="margin-bottom:12px">
+      <h2>Extrakcia</h2>
+
+      <div style="margin-bottom:12px">
+        <label class="field-label">extraction_ok</label><br>
+        <label style="cursor:pointer">
+          <input type="checkbox" name="extraction_ok" value="1"
+                 {% if r.extraction_ok %}checked{% endif %}>
+          označiť ako úspešne extrahovaný
+        </label>
+      </div>
+
+      <label class="field-label">content_text (originál)</label>
+      <textarea name="content_text" rows="12"
+                style="width:100%;margin-bottom:12px;font-family:inherit;font-size:13px">{{ r.content_text or '' }}</textarea>
+
+      <label class="field-label">content_text_fr (preklad)</label>
+      <textarea name="content_text_fr" rows="12"
+                style="width:100%;font-family:inherit;font-size:13px">{{ r.content_text_fr or '' }}</textarea>
+    </div>
+
+    <div class="actions">
+      <button type="submit">Uložiť zmeny</button>
+      <a class="pill" href="/article/{{ r.id }}">Zrušiť</a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

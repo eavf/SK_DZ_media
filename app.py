@@ -254,6 +254,8 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
         params["rel"] = int(relevance)
     elif relevance == "null":
         where.append("a.relevance IS NULL")
+    elif relevance == "1_or_null":
+        where.append("(a.relevance = 1 OR a.relevance IS NULL)")
 
     # Slovak context filter:
     # If extracted text exists -> search there; else fall back to title/snippet.
@@ -386,9 +388,9 @@ def dashboard():
 @app.get("/browse")
 def browse():
     days = int(request.args.get("days", 0))
-    extraction = request.args.get("extraction", "ok")  # ok | unextracted | all
+    extraction = request.args.get("extraction", "all")  # ok | unextracted | all
     only_slovak = request.args.get("sk", "0") == "1"
-    relevance = request.args.get("rel", "all")  # all | 1 | 0 | null
+    relevance = request.args.get("rel", "1_or_null")  # all | 1 | 0 | null | 1_or_null
     include_deleted = request.args.get("del", "0") == "1"
     include_avoided = request.args.get("av", "0") == "1"
 

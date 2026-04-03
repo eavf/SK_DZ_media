@@ -19,9 +19,13 @@
     margin-top: 14px;
   }
   @media(min-width: 980px){
-    .toolbar-grid{ grid-template-columns: 2fr 3fr; }
+    .toolbar-grid{ grid-template-columns: 3fr 2fr; }
   }
   .counter{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .filter-list { display: flex; flex-direction: column; gap: 7px; margin-top: 0; }
+  .filter-item { display: flex; flex-direction: row; align-items: center; gap: 10px; }
+  .filter-item label { font-size: 12px; opacity: .6; min-width: 130px; text-align: right; flex-shrink: 0; }
+  .filter-item input, .filter-item select { flex: 1; }
   .pill.gray { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); color: rgba(255,255,255,.9); }
   .pill.info { background: rgba(64,160,255,.12); border-color: rgba(64,160,255,.35); color: rgba(180,220,255,1); }
   .pill.purple { background: rgba(185,110,255,.12); border-color: rgba(185,110,255,.35); color: rgba(225,205,255,1); }
@@ -45,7 +49,7 @@
   <span class="pill {% if days > 0 %}ok{% endif %}">{{ 'všetky dni' if days == 0 else (days|string + ' d') }}</span>
   <span class="pill {% if extraction == 'ok' %}ok{% elif extraction == 'unextracted' %}warn{% endif %}">{% if extraction == 'ok' %}extrahované{% elif extraction == 'unextracted' %}bez textu{% else %}všetky{% endif %}</span>
   {% if only_slovak %}<span class="pill ok">SK: áno</span>{% else %}<span class="pill">SK: nie</span>{% endif %}
-  <span class="pill {% if relevance == '1' %}ok{% elif relevance == '0' %}warn{% elif relevance == 'null' %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '0' %}nerelevantné{% elif relevance == 'null' %}rel: neoznačené{% else %}rel: všetky{% endif %}</span>
+  <span class="pill {% if relevance == '1' %}ok{% elif relevance == '1_or_null' %}ok{% elif relevance == '0' %}warn{% elif relevance == 'null' %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '1_or_null' %}rel + neoznačené{% elif relevance == '0' %}nerelevantné{% elif relevance == 'null' %}rel: neoznačené{% else %}rel: všetky{% endif %}</span>
   {% if include_deleted %}<span class="pill warn">+ zmazané</span>{% endif %}
   {% if include_avoided %}<span class="pill warn">+ skryté</span>{% endif %}
 {% endblock %}
@@ -60,43 +64,65 @@
   <div class="toolbar-grid">
     <div class="box">
       <h2>Filtre</h2>
-      <form method="get" action="/browse" class="actions" style="margin-top: 0">
-        <input type="text" name="days" value="{{ days }}" style="max-width:90px" title="Počet dní (0 = všetky)">
+      <form method="get" action="/browse" style="margin-top: 0">
+        <div class="filter-list">
+          <div class="filter-item">
+            <label for="f-days">Počet dní (0 = všetky)</label>
+            <input id="f-days" type="text" name="days" value="{{ days }}" style="max-width:90px">
+          </div>
 
-        <select name="extraction" title="Stav extrakcie">
-          <option value="ok" {% if extraction == "ok" %}selected{% endif %}>len extrahované</option>
-          <option value="all" {% if extraction == "all" %}selected{% endif %}>všetky</option>
-          <option value="unextracted" {% if extraction == "unextracted" %}selected{% endif %}>bez textu</option>
-        </select>
+          <div class="filter-item">
+            <label for="f-extraction">Stav extrakcie</label>
+            <select id="f-extraction" name="extraction">
+              <option value="ok" {% if extraction == "ok" %}selected{% endif %}>len extrahované</option>
+              <option value="all" {% if extraction == "all" %}selected{% endif %}>všetky</option>
+              <option value="unextracted" {% if extraction == "unextracted" %}selected{% endif %}>bez textu</option>
+            </select>
+          </div>
 
-        <select name="sk" title="sk">
-          <option value="0" {% if not only_slovak %}selected{% endif %}>sk=0 (všetko)</option>
-          <option value="1" {% if only_slovak %}selected{% endif %}>sk=1 (SK kontext)</option>
-        </select>
+          <div class="filter-item">
+            <label for="f-sk">Slovenský kontext</label>
+            <select id="f-sk" name="sk">
+              <option value="0" {% if not only_slovak %}selected{% endif %}>všetko</option>
+              <option value="1" {% if only_slovak %}selected{% endif %}>len SK kontext</option>
+            </select>
+          </div>
 
-        <select name="rel" title="rel">
-          <option value="all" {% if relevance == "all" %}selected{% endif %}>rel=all</option>
-          <option value="1" {% if relevance == "1" %}selected{% endif %}>rel=1 (relevantné)</option>
-          <option value="0" {% if relevance == "0" %}selected{% endif %}>rel=0 (nerelevantné)</option>
-          <option value="null" {% if relevance == "null" %}selected{% endif %}>rel=null (neoznačené)</option>
-        </select>
+          <div class="filter-item">
+            <label for="f-rel">Relevancia</label>
+            <select id="f-rel" name="rel">
+              <option value="all" {% if relevance == "all" %}selected{% endif %}>všetky</option>
+              <option value="1_or_null" {% if relevance == "1_or_null" %}selected{% endif %}>relevantné + neoznačené</option>
+              <option value="1" {% if relevance == "1" %}selected{% endif %}>relevantné</option>
+              <option value="0" {% if relevance == "0" %}selected{% endif %}>nerelevantné</option>
+              <option value="null" {% if relevance == "null" %}selected{% endif %}>neoznačené</option>
+            </select>
+          </div>
 
-        <select name="del" title="del">
-          <option value="0" {% if not include_deleted %}selected{% endif %}>del=0 (bez deleted)</option>
-          <option value="1" {% if include_deleted %}selected{% endif %}>del=1 (aj deleted)</option>
-        </select>
+          <div class="filter-item">
+            <label for="f-del">Zmazané</label>
+            <select id="f-del" name="del">
+              <option value="0" {% if not include_deleted %}selected{% endif %}>bez deleted</option>
+              <option value="1" {% if include_deleted %}selected{% endif %}>aj deleted</option>
+            </select>
+          </div>
 
-        <select name="av" title="av">
-          <option value="0" {% if not include_avoided %}selected{% endif %}>av=0 (bez avoided)</option>
-          <option value="1" {% if include_avoided %}selected{% endif %}>av=1 (aj avoided)</option>
-        </select>
-        </br>
+          <div class="filter-item">
+            <label for="f-av">Skryté domény</label>
+            <select id="f-av" name="av">
+              <option value="0" {% if not include_avoided %}selected{% endif %}>bez avoided</option>
+              <option value="1" {% if include_avoided %}selected{% endif %}>aj avoided</option>
+            </select>
+          </div>
+        </div>
 
-        <div class="hr" style="width:100%;flex-basis:100%"></div>
-        <button type="submit">Použiť</button>
-        <a class="pill pill-btn" href="/browse">Reset</a>
-        <a class="pill pill-btn" href="/browse?extraction=all&days=0&rel=all&del=0&av=0&sk=0">Všetky v DB</a>
-        <a class="pill pill-btn warn" href="/browse?extraction=all&days=0&rel=all&del=0&av=1&sk=0">Skryté (avoided)</a>
+        <div class="hr" style="width:100%;margin:12px 0 8px"></div>
+        <div class="actions" style="margin-top:0;flex-wrap:wrap">
+          <button type="submit">Použiť</button>
+          <a class="pill pill-btn" href="/browse">Reset</a>
+          <a class="pill pill-btn" href="/browse?extraction=all&days=0&rel=all&del=0&av=0&sk=0">Všetky v DB</a>
+          <a class="pill pill-btn warn" href="/browse?extraction=all&days=0&rel=all&del=0&av=1&sk=0">Skryté (avoided)</a>
+        </div>
       </form>
 
       <div class="hr" style="width:100%;flex-basis:100%"></div>
@@ -123,10 +149,17 @@
           <button type="submit">Undo soft delete</button>
         </form>
 
+        <div class="hr" style="width:100%;margin:12px 0 8px"></div>
+
         <form method="post" action="/bulk/exclude_domains" onsubmit="return confirm('Umlčať (exclude) domény z označených článkov?');">
           <input type="text" name="note" placeholder="dôvod umlčania (voliteľné)">
           <button type="submit">Bulk exclude domain</button>
         </form>
+        <div class="small" style="margin-top:10px">
+          Tip: exclude domain nastaví <code>sources.is_avoided=1</code> pre domény vybraných článkov.
+        </div>
+
+        <div class="hr" style="width:100%;margin:12px 0 8px"></div>
 
         <form method="post" action="/export/csv">
           <button type="submit">Export CSV</button>
@@ -135,10 +168,6 @@
         <form method="post" action="/export/word">
           <button type="submit">Export Word</button>
         </form>
-      </div>
-
-      <div class="small" style="margin-top:10px">
-        Tip: exclude domain nastaví <code>sources.is_avoided=1</code> pre domény vybraných článkov.
       </div>
     </div>
   </div>

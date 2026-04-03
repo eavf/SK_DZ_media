@@ -103,6 +103,22 @@
       <div class="row"><div class="k">URL hash</div><div class="v"><code>{{ r["url_hash"] }}</code></div></div>
       <div class="row"><div class="k">Content hash</div><div class="v">{% if r["content_hash"] %}<code>{{ r["content_hash"] }}</code>{% else %}-{% endif %}</div></div>
     </details>
+
+    <details style="margin-top:4px">
+      <summary style="cursor:pointer;opacity:.6;font-size:12px;user-select:none;padding:4px 0">URL / canonical ▾</summary>
+      <div style="margin-top:6px;font-size:12px;line-height:1.8;word-break:break-all">
+        URL (raw): <a href="{{ r['url'] }}" target="_blank" rel="noopener">{{ r["url"] }}</a><br>
+        {% if r["final_url"] %}
+          URL (final): <a href="{{ r['final_url'] }}" target="_blank" rel="noopener">{{ r["final_url"] }}</a><br>
+        {% endif %}
+        {% if r["url_canonical"] %}
+          canonical (raw): <a href="{{ r['url_canonical'] }}" target="_blank" rel="noopener">{{ r["url_canonical"] }}</a><br>
+        {% endif %}
+        {% if r["final_url_canonical"] %}
+          canonical (final): <a href="{{ r['final_url_canonical'] }}" target="_blank" rel="noopener">{{ r["final_url_canonical"] }}</a>
+        {% endif %}
+      </div>
+    </details>
   </div>
 
   <div class="actions">
@@ -112,6 +128,13 @@
         Fetch &amp; extract now
       </button>
     </form>
+
+    <form method="post" action="/article/{{ r['id'] }}/translate">
+      <button type="submit" onclick="return confirm('Preložiť obsah AR→FR cez DeepL? Spotrebuje kredity.');">
+        {{ 'Preložiť znova (AR-FR)' if r['content_text_fr'] else 'Preložiť (AR-FR)' }}
+      </button>
+    </form>
+    <div class="hr" style="width:100%;margin:12px 0 8px"></div>
 
     <form method="post" action="/article/{{ r['id'] }}/set_content" style="width:100%">
       <details style="width:100%">
@@ -123,71 +146,58 @@
       </details>
     </form>
 
-    <form method="post" action="/article/{{ r['id'] }}/translate">
-      <button type="submit" onclick="return confirm('Preložiť obsah AR→FR cez DeepL? Spotrebuje kredity.');">
-        {{ 'Preložiť znova (AR-FR)' if r['content_text_fr'] else 'Preložiť (AR-FR)' }}
-      </button>
-    </form>
+    <div class="hr" style="width:100%;margin:12px 0 8px"></div>
 
-    <form method="post" action="/article/{{ r['id'] }}/label">
-      <select name="relevance" id="relevanceSelect" title="Relevancia">
-        <option value="null">neoznačené</option>
-        <option value="1">relevantné</option>
-        <option value="0">nerelevantné</option>
-      </select>
-      <script>
-        document.getElementById('relevanceSelect').value = "{{ 'null' if r['relevance'] is none else r['relevance'] }}";
-      </script>
-      <input type="text" name="note" placeholder="poznámka (voliteľné)" value="{{ r['relevance_note'] or '' }}">
-      <button type="submit">Uložiť</button>
-    </form>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;width:100%">
+      <form method="post" action="/article/{{ r['id'] }}/label">
+        <div style="font-size:12px;opacity:.6;margin-bottom:6px">Relevancia</div>
+        <select name="relevance" id="relevanceSelect" title="Relevancia">
+          <option value="null">neoznačené</option>
+          <option value="1">relevantné</option>
+          <option value="0">nerelevantné</option>
+        </select>
+        <script>
+          document.getElementById('relevanceSelect').value = "{{ 'null' if r['relevance'] is none else r['relevance'] }}";
+        </script>
+        <input type="text" name="note" placeholder="poznámka (voliteľné)" value="{{ r['relevance_note'] or '' }}">
+        <button type="submit">Uložiť</button>
+      </form>
 
-    {% if r["is_avoided"] %}
-      <form method="post" action="/article/{{ r['id'] }}/unexclude_domain">
-        <button type="submit" onclick="return confirm('Zrušiť umlčanie domény {{ r['domain'] }}?');">
-          Unmute domain
-        </button>
-      </form>
-    {% else %}
-      <form method="post" action="/article/{{ r['id'] }}/exclude_domain">
-        <input type="text" name="note" placeholder="dôvod umlčania (voliteľné)">
-        <button type="submit" onclick="return confirm('Umlčať celý zdroj {{ r['domain'] }}?');">
-          Exclude domain
-        </button>
-      </form>
-    {% endif %}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:12px;opacity:.6;margin-bottom:2px">Správa zdroja / článku</div>
+        {% if r["is_avoided"] %}
+          <form method="post" action="/article/{{ r['id'] }}/unexclude_domain">
+            <button type="submit" onclick="return confirm('Zrušiť umlčanie domény {{ r['domain'] }}?');">
+              Unmute domain
+            </button>
+          </form>
+        {% else %}
+          <form method="post" action="/article/{{ r['id'] }}/exclude_domain">
+            <input type="text" name="note" placeholder="dôvod umlčania (voliteľné)">
+            <button type="submit" onclick="return confirm('Umlčať celý zdroj {{ r['domain'] }}?');">
+              Umlč doménu
+            </button>
+          </form>
+        {% endif %}
 
-    {% if r["deleted_at"] %}
-      <form method="post" action="/undelete/{{ r['id'] }}">
-        <button type="submit">Obnoviť článok</button>
-      </form>
-    {% else %}
-      <form method="post" action="/delete/{{ r['id'] }}">
-        <button type="submit" class="bad" onclick="return confirm('Vymazať článok?');">
-          Vymazať článok
-        </button>
-      </form>
-    {% endif %}
+        {% if r["deleted_at"] %}
+          <form method="post" action="/undelete/{{ r['id'] }}">
+            <button type="submit">Obnoviť článok</button>
+          </form>
+        {% else %}
+          <form method="post" action="/delete/{{ r['id'] }}">
+            <button type="submit" class="bad" onclick="return confirm('Vymazať článok?');">
+              Vymazať článok
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
 
   </div>
 
   <div class="hr"></div>
 
-  <details class="sub">
-    <summary style="cursor:pointer;user-select:none;list-style:none">URL / canonical ▾</summary>
-    <div style="margin-top:6px">
-      URL (raw): <a href="{{ r['url'] }}" target="_blank" rel="noopener">{{ r["url"] }}</a><br>
-      {% if r["final_url"] %}
-        URL (final): <a href="{{ r['final_url'] }}" target="_blank" rel="noopener">{{ r["final_url"] }}</a><br>
-      {% endif %}
-      {% if r["url_canonical"] %}
-        canonical (raw): <a href="{{ r['url_canonical'] }}" target="_blank" rel="noopener">{{ r["url_canonical"] }}</a><br>
-      {% endif %}
-      {% if r["final_url_canonical"] %}
-        canonical (final): <a href="{{ r['final_url_canonical'] }}" target="_blank" rel="noopener">{{ r["final_url_canonical"] }}</a>
-      {% endif %}
-    </div>
-  </details>
 </div>
 
 <div class="article-grid">

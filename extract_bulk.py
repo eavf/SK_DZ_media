@@ -166,6 +166,62 @@ def save_result(conn, article_id: int, result) -> str:
     return "failed"
 
 
+def translate_missing_titles(limit: int, dry_run: bool) -> int:
+    """Preloží title/snippet pre arabské články s extraction_ok=1 a chýbajúcim title_fr."""
+    api_key = s.deepl_api_key
+    if not api_key:
+        logger.info("translate_missing_titles: DeepL API key chýba, preskakujem.")
+        return 0
+
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        rows = conn.execute(text("""
+            SELECT id, title, snippet, title_fr, snippet_fr
+            FROM articles
+            WHERE lang_detected = 'ar'
+              AND extraction_ok = 1
+              AND title_fr IS NULL
+              AND deleted_at IS NULL
+            ORDER BY id
+            LIMIT :limit
+        """), {"limit": limit}).mappings().fetchall()
+        rows = [dict(r) for r in rows]
+
+    if not rows:
+        logger.info("translate_missing_titles: žiadne články na preklad.")
+        return 0
+
+    logger.info("translate_missing_titles: %s článkov na preklad nadpisov.", len(rows))
+    count = 0
+    for row in rows:
+        texts, keys = [], []
+        if row.get("title"):
+            texts.append(row["title"]); keys.append("title_fr")
+        if not row.get("snippet_fr") and row.get("snippet"):
+            texts.append(row["snippet"]); keys.append("snippet_fr")
+        if not texts:
+            continue
+
+        if dry_run:
+            logger.info("[DRY-RUN] id=%s: preložilo by %s", row["id"], keys)
+            count += 1
+            continue
+
+        try:
+            translated = translate_ar_fr(api_key, texts)
+            updates = dict(zip(keys, translated))
+            updates["id"] = row["id"]
+            set_clause = ", ".join(f"{k} = :{k}" for k in keys)
+            with engine.begin() as conn:
+                conn.execute(text(f"UPDATE articles SET {set_clause} WHERE id = :id"), updates)
+            logger.info("Preložené AR→FR nadpis: id=%s, polia=%s", row["id"], keys)
+            count += 1
+        except Exception as e:
+            logger.warning("DeepL zlyhal pre id=%s: %s", row["id"], e)
+
+    return count
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Hromadná extrakcia článkov bez content_text.")
     p.add_argument("--limit", type=int, default=50, help="Max počet článkov (default 50)")
@@ -230,6 +286,9 @@ def main() -> int:
         "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s",
         counts["ok"], counts["soft_deleted"], counts["commercial"], counts["failed"]
     )
+
+    translated = translate_missing_titles(args.limit, args.dry_run)
+    logger.info("Preložených nadpisov: %s", translated)
     return 0
 
 

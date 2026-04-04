@@ -213,7 +213,7 @@
       {% endif %}
       {% if r["snippet_fr"] %}
         <div class="small" style="margin-top:8px;opacity:.7">FR:</div>
-        <div class="snippet" style="margin-top:4px">{{ r["snippet_fr"] }}</div>
+        <div class="snippet" style="margin-top:4px">{{ snippet_fr_hl|safe }}</div>
       {% endif %}
     </div>
 
@@ -267,7 +267,7 @@
     {% if r['content_text_fr'] %}
       <div class="box" style="margin-top:12px">
         <h2>Preklad (FR)</h2>
-        <div class="content" id="content-fr">{{ r['content_text_fr'] }}</div>
+        <div class="content" id="content-fr">{{ content_text_fr_hl|safe }}</div>
       </div>
     {% endif %}
   </div>

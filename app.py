@@ -22,7 +22,8 @@ from sqlalchemy import text, bindparam
 from docx import Document
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from config.config import get_db_engine, require, init_context
+from config.config import get_db_engine, require, init_context, get_settings
+import config.config as _config_mod
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
@@ -1065,6 +1066,8 @@ def article_detail(article_id: int):
 
     content_text_hl = highlight_terms_html(r.get("content_text") or "")
     snippet_hl = highlight_terms_html(r.get("snippet") or "")
+    content_text_fr_hl = highlight_terms_html(r.get("content_text_fr") or "")
+    snippet_fr_hl = highlight_terms_html(r.get("snippet_fr") or "")
 
     return render_template(
         "article.html",
@@ -1078,6 +1081,8 @@ def article_detail(article_id: int):
         sk_context_found=len(ctx_hl) > 0,
         content_text_hl=content_text_hl,
         snippet_hl=snippet_hl,
+        content_text_fr_hl=content_text_fr_hl,
+        snippet_fr_hl=snippet_fr_hl,
     )
 
 
@@ -1708,6 +1713,214 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("dashboard"))
+
+
+# ---------------------------------------------------------------------------
+# Admin – Queries
+# ---------------------------------------------------------------------------
+
+_VALID_QTYPES = ("q1", "q2", "q3")
+
+
+def _read_queries() -> dict:
+    try:
+        return json.loads(paths.queries_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"active": {"q1": "default", "q2": "default", "q3": "default"},
+                "q1_presets": [], "q2_presets": [], "q3_presets": []}
+
+
+def _write_queries(data: dict):
+    paths.queries_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _compute_default_queries() -> dict:
+    """Vráti dynamicky zostavené default query stringy (rovnaká logika ako search_flow_news)."""
+    sk = settings.search_terms.get("slovakia", [])
+    dz = settings.search_terms.get("algeria", [])
+    preferred = list(settings.preferred_domains)
+    sk_part = "(" + " OR ".join(sk) + ")" if sk else ""
+    dz_part = "(" + " OR ".join(f'"{t}"' if " " in t else t for t in dz) + ")" if dz else ""
+    url_f = "-inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page"
+    sites_q1 = "(" + " OR ".join(f"site:{d}" for d in sorted(preferred)) + ")" if preferred else "site:.dz"
+    return {
+        "q1": f"{sites_q1} {sk_part} {url_f}".strip(),
+        "q2": f"site:.dz {sk_part} {url_f}".strip(),
+        "q3": f"{sk_part} {dz_part}".strip(),
+    }
+
+
+@app.get("/admin/queries")
+@admin_required
+def queries_page():
+    data = _read_queries()
+    defaults = _compute_default_queries()
+    return render_template("admin_queries.html", data=data, defaults=defaults)
+
+
+@app.post("/admin/queries/activate")
+@admin_required
+def queries_activate():
+    qtype = request.form.get("qtype", "").strip()
+    preset_id = request.form.get("preset_id", "").strip()
+    if qtype not in _VALID_QTYPES or not preset_id:
+        flash("Neplatný vstup.", "bad")
+        return redirect(url_for("queries_page"))
+    data = _read_queries()
+    ids = [p["id"] for p in data.get(f"{qtype}_presets", [])]
+    if preset_id not in ids:
+        flash("Preset neexistuje.", "bad")
+        return redirect(url_for("queries_page"))
+    data["active"][qtype] = preset_id
+    _write_queries(data)
+    flash(f"{qtype.upper()} → aktivovaný preset: {preset_id}", "ok")
+    return redirect(url_for("queries_page"))
+
+
+@app.post("/admin/queries/save")
+@admin_required
+def queries_save():
+    qtype = request.form.get("qtype", "").strip()
+    label = request.form.get("label", "").strip()
+    query = request.form.get("query", "").strip()
+    preset_id = request.form.get("preset_id", "").strip()  # prázdne = nový
+    if qtype not in _VALID_QTYPES or not label or not query:
+        flash("Vyplň label aj query.", "bad")
+        return redirect(url_for("queries_page"))
+    data = _read_queries()
+    presets = data.setdefault(f"{qtype}_presets", [])
+    if preset_id and preset_id != "default":
+        # update existujúceho
+        for p in presets:
+            if p["id"] == preset_id:
+                p["label"] = label
+                p["query"] = query
+                flash(f"Preset '{label}' aktualizovaný.", "ok")
+                break
+        else:
+            flash("Preset nenájdený.", "bad")
+            return redirect(url_for("queries_page"))
+    else:
+        # nový preset
+        new_id = re.sub(r"[^a-z0-9_]", "_", label.lower())[:40]
+        # ak id koliduje, pridaj suffix
+        existing_ids = {p["id"] for p in presets}
+        base_id = new_id
+        i = 2
+        while new_id in existing_ids:
+            new_id = f"{base_id}_{i}"
+            i += 1
+        presets.append({"id": new_id, "label": label, "query": query})
+        flash(f"Nový preset '{label}' uložený.", "ok")
+    _write_queries(data)
+    return redirect(url_for("queries_page"))
+
+
+@app.post("/admin/queries/delete")
+@admin_required
+def queries_delete():
+    qtype = request.form.get("qtype", "").strip()
+    preset_id = request.form.get("preset_id", "").strip()
+    if qtype not in _VALID_QTYPES or not preset_id or preset_id == "default":
+        flash("Default preset nie je možné odstrániť.", "warn")
+        return redirect(url_for("queries_page"))
+    data = _read_queries()
+    presets = data.get(f"{qtype}_presets", [])
+    data[f"{qtype}_presets"] = [p for p in presets if p["id"] != preset_id]
+    if data["active"].get(qtype) == preset_id:
+        data["active"][qtype] = "default"
+    _write_queries(data)
+    flash(f"Preset '{preset_id}' odstránený.", "ok")
+    return redirect(url_for("queries_page"))
+
+
+# ---------------------------------------------------------------------------
+# Admin – Search terms
+# ---------------------------------------------------------------------------
+
+_VALID_GROUPS = ("slovakia", "algeria")
+
+
+def _reload_search_terms():
+    """Prepíše SLOVAK_TERMS a TERM_RE po zmene search_terms.json."""
+    global SLOVAK_TERMS, TERM_RE
+    _config_mod._CACHED = None
+    new_settings = get_settings(force_reload=True)
+    SLOVAK_TERMS = new_settings.search_terms.get("slovakia", [])
+    if SLOVAK_TERMS:
+        TERM_RE = re.compile(
+            r"(" + "|".join(re.escape(t) for t in SLOVAK_TERMS) + r")",
+            re.IGNORECASE,
+        )
+    else:
+        TERM_RE = re.compile(r"(?!)")
+
+
+def _read_search_terms() -> dict:
+    try:
+        return json.loads(paths.search_terms_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"slovakia": [], "algeria": []}
+
+
+def _write_search_terms(data: dict):
+    paths.search_terms_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+@app.get("/admin/search-terms")
+@admin_required
+def search_terms_page():
+    data = _read_search_terms()
+    sk_terms = data.get("slovakia", [])
+    dz_terms = data.get("algeria", [])
+    # Query preview
+    sk_q = " OR ".join(sk_terms) if sk_terms else "—"
+    dz_q = " OR ".join(dz_terms) if dz_terms else "—"
+    return render_template(
+        "admin_search_terms.html",
+        sk_terms=sk_terms,
+        dz_terms=dz_terms,
+        sk_q=sk_q,
+        dz_q=dz_q,
+    )
+
+
+@app.post("/admin/search-terms/add")
+@admin_required
+def search_terms_add():
+    group = request.form.get("group", "").strip()
+    term = request.form.get("term", "").strip()
+    if group not in _VALID_GROUPS or not term:
+        flash("Neplatný vstup.", "bad")
+        return redirect(url_for("search_terms_page"))
+    data = _read_search_terms()
+    lst = data.setdefault(group, [])
+    if term not in lst:
+        lst.append(term)
+        _write_search_terms(data)
+        _reload_search_terms()
+        flash(f"Pridaný termín: {term}", "ok")
+    else:
+        flash("Termín už existuje.", "warn")
+    return redirect(url_for("search_terms_page"))
+
+
+@app.post("/admin/search-terms/delete")
+@admin_required
+def search_terms_delete():
+    group = request.form.get("group", "").strip()
+    term = request.form.get("term", "").strip()
+    if group not in _VALID_GROUPS or not term:
+        flash("Neplatný vstup.", "bad")
+        return redirect(url_for("search_terms_page"))
+    data = _read_search_terms()
+    lst = data.get(group, [])
+    if term in lst:
+        lst.remove(term)
+        _write_search_terms(data)
+        _reload_search_terms()
+        flash(f"Odstránený termín: {term}", "ok")
+    return redirect(url_for("search_terms_page"))
 
 
 if __name__ == "__main__":

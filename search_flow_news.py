@@ -20,6 +20,21 @@ from search_mfa_gov import scrape_mfa
 s, paths = init_context()
 logger = logging.getLogger("search_flow_news")
 
+# Načítaj aktívne query presety
+def _load_active_query(qtype: str) -> str | None:
+    """Vráti aktívny query string pre qtype ('q1'/'q2'/'q3'), alebo None ak je default."""
+    try:
+        data = json.loads(paths.queries_path.read_text(encoding="utf-8"))
+        active_id = data.get("active", {}).get(qtype, "default")
+        if active_id == "default":
+            return None
+        for preset in data.get(f"{qtype}_presets", []):
+            if preset.get("id") == active_id:
+                return preset.get("query")  # môže byť None
+    except Exception:
+        pass
+    return None
+
 PREFERRED_DOMAINS = s.preferred_domains
 SOURCE_RANK = s.source_rank
 TOPIC_KEYWORDS = s.topic_keywords
@@ -492,7 +507,7 @@ def main() -> None:
     ts = int(time.time())
 
     # Q1: preferred media whitelist
-    q1 = build_query(PREFERRED_DOMAINS)
+    q1 = _load_active_query("q1") or build_query(PREFERRED_DOMAINS)
     logger.info("[1/2] Q1 (PREFERRED): %s", q1)
     try:
         q1_raw = serpapi_google_news_search(
@@ -511,7 +526,7 @@ def main() -> None:
     time.sleep(1.0)
 
     # Q2: broad Algerian web/context query
-    q2 = build_query()
+    q2 = _load_active_query("q2") or build_query()
     logger.info("[2/2] Q2 (CONTEXT): %s", q2)
     try:
         q2_raw = serpapi_google_news_search(
@@ -583,7 +598,7 @@ def main() -> None:
 
     if should_run_preferred_fallback(q1_raw, q2_raw, combined, num=num):
         time.sleep(1.0)
-        q3 = build_query_global()
+        q3 = _load_active_query("q3") or build_query_global()
         logger.info("\n[+fallback] Q3 (DZ BROAD): %s", q3)
         try:
             q3_raw = serpapi_google_news_search(
@@ -616,7 +631,7 @@ def main() -> None:
     logger.info("\n[MFA] Scraping mfa.gov.dz press releases...")
     mfa_items: list[dict] = []
     try:
-        mfa_items = scrape_mfa(args.when, SLOVAKIA_TERMS, logger)
+        mfa_items = scrape_mfa("2d", SLOVAKIA_TERMS, logger)
         logger.info("[MFA] Found %s matching press releases", len(mfa_items))
     except Exception:
         logger.exception("[MFA] Scraping failed, pokračujeme bez MFA výsledkov")

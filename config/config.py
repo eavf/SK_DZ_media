@@ -169,6 +169,9 @@ class ProjectPaths:
 
     log_dir: Path
 
+    search_terms_path: Path
+    queries_path: Path
+
 # ---- Do budúcna ----
 #    exports_dir: Path
 #    cache_dir: Path
@@ -297,6 +300,8 @@ def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = Non
         latest_dir=latest_dir,
         latest_bundle_path=latest_bundle_path,
         log_dir=log_dir,
+        search_terms_path=CONFIG_DIR / "search_terms.json",
+        queries_path=CONFIG_DIR / "queries.json",
     )
 
     # -------------------------------------------------------------------------

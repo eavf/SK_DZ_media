@@ -17,10 +17,12 @@ import fitz  # pymupdf
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-from config.config import get_settings, configure_root_logging
+import logging
+
+from config.config import get_settings
 
 s = get_settings()
-log = configure_root_logging(s, name="extract_articles")
+log = logging.getLogger("extract_articles")
 
 DEBUG_HTML_DIR = s.paths.bundle_dir / "debug_html"
 DEBUG_HTML_DIR.mkdir(parents=True, exist_ok=True)

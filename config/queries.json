@@ -1,0 +1,28 @@
+{
+  "active": {
+    "q1": "default",
+    "q2": "default",
+    "q3": "default"
+  },
+  "q1_presets": [
+    {
+      "id": "default",
+      "label": "Default (generovaný z terms + preferred domains)",
+      "query": null
+    }
+  ],
+  "q2_presets": [
+    {
+      "id": "default",
+      "label": "Default (generovaný z terms, site:.dz)",
+      "query": null
+    }
+  ],
+  "q3_presets": [
+    {
+      "id": "default",
+      "label": "Default (generovaný z terms SK + DZ)",
+      "query": null
+    }
+  ]
+}

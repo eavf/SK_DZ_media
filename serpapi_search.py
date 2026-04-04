@@ -1,95 +1,95 @@
-import os
+"""
+serpapi_search.py — Jednoduchý standalone SerpAPI search skript.
+
+Používa config.py pre API kľúč, search terms a nastavenia.
+Výsledky ukladá do bundle_dir.
+
+Usage:
+    python serpapi_search.py [--when 7d] [--num 20]
+"""
+from __future__ import annotations
+
+import argparse
 import json
 import time
-from datetime import date, timedelta
-from urllib.parse import urlencode
+from datetime import datetime, timezone
 
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+from config.config import init_cli, require
 
-api_key = os.getenv("SERPAPI_KEY")
-if not api_key:
-    raise SystemExit("Missing SERPAPI_KEY environment variable.")
-
+s, paths, log = init_cli("serpapi_search")
 
 SERPAPI_ENDPOINT = "https://serpapi.com/search.json"
 
 
-def compute_after_date(days: int = 7) -> str:
-    """Return YYYY-MM-DD for 'days' ago (calendar days)."""
-    d = date.today() - timedelta(days=days)
-    return d.isoformat()
+def build_queries() -> list[str]:
+    sk = s.search_terms.get("slovakia", [])
+    dz = s.search_terms.get("algeria", [])
+    preferred = s.preferred_domains
+
+    sk_part = "(" + " OR ".join(sk) + ")" if sk else ""
+    dz_part = "(" + " OR ".join(f'"{t}"' if " " in t else t for t in dz) + ")" if dz else ""
+    sites = "(" + " OR ".join(f"site:{d}" for d in sorted(preferred)) + ")" if preferred else "site:.dz"
+    url_f = "-inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page"
+
+    queries = []
+    if sk_part:
+        queries.append(f"site:.dz {sk_part} {url_f}")
+        if preferred:
+            queries.append(f"{sites} {sk_part} {url_f}")
+        if dz_part:
+            queries.append(f"{sk_part} {dz_part}")
+    return queries
 
 
-def build_queries(after_date: str) -> list[str]:
-    slovakia = '("Slovaquie" OR slovaque OR "Slovakia" OR Slovak OR سلوفاكيا OR سلوفاكي)'
-    algeria  = '("Algérie" OR "Algeria" OR Alger OR "Algiers" OR الجزائر OR "الجزائر العاصمة")'
-    preferred = "(site:lalgerieaujourdhui.dz OR site:radioalgerie.dz OR site:horizons.dz)"
-
-    # Tip: drž počet queries nízky; každá položka = 1 SerpAPI request.
-    return [
-        # 1) Hlavný zber – všetko na .dz
-        f"site:.dz {slovakia} after:{after_date}",
-
-        # 2) Preferované .dz zdroje – stabilné linky (nie ako jediný zdroj, len priorita)
-        f"{preferred} {slovakia} after:{after_date}",
-
-        # 3) Širšie než .dz – geo bias cez kľúčové slová (plus SerpAPI location/gl)
-        f"{slovakia} {algeria} after:{after_date}",
-
-        # 4) (Voliteľné) ak chceš chytať aj zmienky o Attafovi
-        # f'("Ahmed Attaf" OR Attaf OR "أحمد عطاف") {slovakia} {algeria} after:{after_date}',
-    ]
-
-
-def serpapi_search(query: str, api_key: str, num: int = 20, hl: str = "fr") -> dict:
-    """
-    Call SerpAPI Google Search.
-    Returns parsed JSON as dict.
-    """
+def serpapi_search(query: str, num: int, when: str) -> dict:
     params = {
-        "engine": "google",
+        "engine": s.serp_engine or "google",
+        "tbm": "nws",
         "q": query,
-        "hl": hl,
-        "num": num,
-        "api_key": api_key,
+        "hl": s.serp_hl,
+        "gl": s.serp_gl,
+        "num": min(num, 10),
+        "tbs": f"qdr:{when}",
+        "api_key": require(s.serpapi_key, "SERPAPI_KEY"),
     }
     resp = requests.get(SERPAPI_ENDPOINT, params=params, timeout=30)
     resp.raise_for_status()
     return resp.json()
 
 
-def save_json(data: dict, filename: str) -> None:
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
 def main() -> None:
-    after_date = compute_after_date(7)
-    queries = build_queries(after_date)
+    ap = argparse.ArgumentParser(description="Standalone SerpAPI search.")
+    ap.add_argument("--when", default=s.serp_when, help="Časové okno (napr. 7d, 30d)")
+    ap.add_argument("--num", type=int, default=s.serp_num, help="Počet výsledkov na query")
+    args = ap.parse_args()
 
+    queries = build_queries()
+    if not queries:
+        raise SystemExit("Žiadne search terms — skontroluj config/search_terms.json")
+
+    ts = int(datetime.now(timezone.utc).timestamp())
     all_results = []
-    for q in queries:
-        print(q)
 
     for i, q in enumerate(queries, start=1):
-        print(f"[{i}/{len(queries)}] Query: {q}")
-        data = serpapi_search(q, api_key=api_key, num=20, hl="fr")
+        log.info("[%s/%s] Query: %s", i, len(queries), q)
+        data = serpapi_search(q, num=args.num, when=args.when)
         all_results.append({"query": q, "response": data})
 
-        # Save each response separately for debugging / auditing
-        ts = int(time.time())
-        save_json(data, f"serpapi_{i}_{ts}.json")
+        out = paths.bundle_dir / f"serpapi_{i}_{ts}.json"
+        out.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        log.info("Uložené: %s", out)
 
-        # Gentle throttle (avoid accidental bursts)
         time.sleep(1.0)
 
-    # Save combined bundle too
-    ts = int(time.time())
-    save_json({"after_date": after_date, "results": all_results}, f"serpapi_bundle_{ts}.json")
-    print("Done.")
+    bundle = paths.bundle_dir / f"serpapi_bundle_{ts}.json"
+    bundle.write_text(
+        json.dumps({"when": args.when, "num": args.num, "results": all_results},
+                   ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+    log.info("Bundle: %s", bundle)
 
 
 if __name__ == "__main__":

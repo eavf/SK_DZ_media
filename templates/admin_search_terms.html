@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}DZ News – Search Terms{% endblock %}
+
+{% block styles %}
+<style>
+  .term-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .term-row .pill { min-width:0; word-break:break-all; }
+  .term-row form { margin:0; }
+  .add-row { display:flex; gap:8px; margin-top:10px; }
+  .add-row input { flex:1; }
+  .query-preview { font-family: ui-monospace, monospace; font-size:12px; white-space:pre-wrap;
+    background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; margin-top:8px; line-height:1.6; }
+</style>
+{% endblock %}
+
+{% block topbar_left %}
+  <span class="pill">DZ News</span>
+  <span class="pill admin">Admin</span>
+  <span class="pill ok">Search Terms</span>
+{% endblock %}
+
+{% block content %}
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in msgs %}
+    <div class="box" style="margin-bottom:10px">
+      <span class="pill {% if cat == 'ok' %}ok{% elif cat == 'bad' %}bad{% else %}warn{% endif %}">{{ msg }}</span>
+    </div>
+  {% endfor %}
+{% endwith %}
+
+<div class="card">
+  <h1>Správa vyhľadávacích výrazov</h1>
+  <div class="sub">Zmeny sa uložia do <code>config/search_terms.json</code> a prejavia sa okamžite (bez reštartu).</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px">
+
+    <!-- Slovakia terms -->
+    <div class="box">
+      <h2>Slovakia terms <span class="pill ok">SK</span></h2>
+      <div class="sub" style="margin-bottom:10px">Používajú sa na: zvýrazňovanie v UI, filtrovanie v MFA scraperi, SerpAPI query.</div>
+
+      {% for t in sk_terms %}
+        <div class="term-row">
+          <span class="pill ok" style="flex:1">{{ t }}</span>
+          <form method="post" action="/admin/search-terms/delete">
+            <input type="hidden" name="group" value="slovakia">
+            <input type="hidden" name="term" value="{{ t }}">
+            <button type="submit" class="pill bad" style="cursor:pointer;border:none;padding:3px 10px"
+              onclick="return confirm('Odstrániť: {{ t }}?')">×</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="muted">Žiadne termíny.</div>
+      {% endfor %}
+
+      <form method="post" action="/admin/search-terms/add" class="add-row">
+        <input type="hidden" name="group" value="slovakia">
+        <input type="text" name="term" placeholder="nový termín (napr. Pellegrini)" required>
+        <button type="submit">Pridať</button>
+      </form>
+    </div>
+
+    <!-- Algeria terms -->
+    <div class="box">
+      <h2>Algeria terms <span class="pill">DZ</span></h2>
+      <div class="sub" style="margin-bottom:10px">Používajú sa v SerpAPI Q3 (fallback) query — spolu so Slovakia terms.</div>
+
+      {% for t in dz_terms %}
+        <div class="term-row">
+          <span class="pill" style="flex:1">{{ t }}</span>
+          <form method="post" action="/admin/search-terms/delete">
+            <input type="hidden" name="group" value="algeria">
+            <input type="hidden" name="term" value="{{ t }}">
+            <button type="submit" class="pill bad" style="cursor:pointer;border:none;padding:3px 10px"
+              onclick="return confirm('Odstrániť: {{ t }}?')">×</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="muted">Žiadne termíny.</div>
+      {% endfor %}
+
+      <form method="post" action="/admin/search-terms/add" class="add-row">
+        <input type="hidden" name="group" value="algeria">
+        <input type="text" name="term" placeholder="nový termín (napr. Tebboune)" required>
+        <button type="submit">Pridať</button>
+      </form>
+    </div>
+
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="box">
+    <h2>Preview SerpAPI Q3 query</h2>
+    <div class="sub">Fallback query (bez obmedzenia domén):</div>
+    <div class="query-preview">({{ sk_q }}) ({{ dz_q }})</div>
+    <div class="small" style="margin-top:8px;opacity:.6">Q1 / Q2 queries kombinujú Slovakia terms so zoznamom preferovaných domén (config/sources.json).</div>
+  </div>
+</div>
+
+{% endblock %}

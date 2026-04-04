@@ -12,6 +12,7 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import requests
 import trafilatura
+import fitz  # pymupdf
 
 from config.config import get_settings, configure_root_logging
 
@@ -163,12 +164,59 @@ def is_js_shell(html: str) -> bool:
     return False
 
 
-def resolve_and_fetch(url: str, timeout: tuple[int, int] = (10, 25)) -> tuple[str, int, str]:
+def resolve_and_fetch(url: str, timeout: tuple[int, int] = (10, 25)) -> tuple[str, int, str, str, bytes]:
     sess = requests.Session()
     sess.headers.update(REQUEST_HEADERS)
     resp = sess.get(url, allow_redirects=True, timeout=timeout)
     resp.raise_for_status()
-    return resp.url, resp.status_code, resp.text
+    content_type = resp.headers.get("Content-Type", "")
+    return resp.url, resp.status_code, resp.text, content_type, resp.content
+
+
+def extract_text_from_pdf(content: bytes, url: str = "") -> str | None:
+    try:
+        doc = fitz.open(stream=content, filetype="pdf")
+        sk_terms = s.search_terms.get("slovakia", [])
+
+        all_pages = [page.get_text() for page in doc]
+        doc.close()
+
+        if sk_terms:
+            sk_pages = [
+                t for t in all_pages
+                if any(term.lower() in t.lower() for term in sk_terms)
+            ]
+            if sk_pages:
+                log.info("PDF SK-filter: %s/%s stránok obsahuje SK termíny url=%s",
+                         len(sk_pages), len(all_pages), url)
+                return "\n".join(sk_pages).strip() or None
+
+        # Žiadna SK stránka — vrátime celý text, no_slovak_context sa nastaví downstream
+        return "\n".join(all_pages).strip() or None
+
+    except Exception as e:
+        log.warning("PDF extraction error url=%s err=%s", url, e)
+        return None
+
+
+def is_legacy_arabic_encoding(text: str) -> bool:
+    """Detekuje starý proprietárny arabský font encoding (AXT a pod.) — garbled text.
+
+    Heuristika: text má veľmi málo Unicode arabských znakov, veľa legacy encoding
+    sekvencií (napr. 'Gd' = ال, 'GC' = أ, 'GE' = إ) a málo čitateľného Latin textu.
+    Francúzsko-arabské noviny s dominantným francúzskym textom sa nevylučujú.
+    """
+    if not text or len(text) < 200:
+        return False
+    non_ws = sum(1 for c in text if not c.isspace())
+    if non_ws == 0:
+        return False
+    arabic = sum(1 for c in text if '\u0600' <= c <= '\u06FF')
+    lowercase_basic = sum(1 for c in text if 'a' <= c <= 'z')
+    arabic_ratio = arabic / non_ws
+    lowercase_ratio = lowercase_basic / non_ws
+    legacy_markers = text.count('Gd') + text.count('GC') + text.count('GE')
+    return arabic_ratio < 0.05 and legacy_markers > 100 and lowercase_ratio < 0.30
 
 
 def extract_text_and_metadata(html: str) -> tuple[str | None, str | None, str | None]:
@@ -313,7 +361,7 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
     )
 
     try:
-        final_url, status, html = resolve_and_fetch(item.url)
+        final_url, status, html, content_type, raw_content = resolve_and_fetch(item.url)
         final_domain = urlparse(final_url).netloc.lower()
         final_root = domain_root(final_domain)
         final_canon = canonicalize_url(final_url)
@@ -331,17 +379,38 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
             result.fetch_error = "AGGREGATOR"
             return result
 
-        text_out, published_real, lang = extract_text_and_metadata(html)
-        if not text_out:
-            try:
-                stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                host = final_domain.replace(":", "_") or "unknown"
-                debug_file = DEBUG_HTML_DIR / f"fail_{stamp}_{host}.html"
-                debug_file.write_text(html or "", encoding="utf-8")
-            except Exception:
-                pass
-            result.fetch_error = "JS_RENDER_REQUIRED" if is_js_shell(html) else "EXTRACTION_EMPTY"
-            return result
+        is_pdf = "application/pdf" in content_type or final_url.lower().endswith(".pdf")
+
+        if is_pdf:
+            text_out = extract_text_from_pdf(raw_content, url=final_url)
+            published_real, lang = None, None
+            if not text_out:
+                try:
+                    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    host = final_domain.replace(":", "_") or "unknown"
+                    debug_file = DEBUG_HTML_DIR / f"fail_{stamp}_{host}.pdf"
+                    debug_file.write_bytes(raw_content)
+                except Exception:
+                    pass
+                log.warning("PDF_EXTRACTION_EMPTY url=%s", final_url)
+                result.fetch_error = "PDF_EXTRACTION_EMPTY"
+                return result
+            if is_legacy_arabic_encoding(text_out):
+                log.warning("PDF_LEGACY_ENCODING url=%s", final_url)
+                result.fetch_error = "PDF_LEGACY_ENCODING"
+                return result
+        else:
+            text_out, published_real, lang = extract_text_and_metadata(html)
+            if not text_out:
+                try:
+                    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    host = final_domain.replace(":", "_") or "unknown"
+                    debug_file = DEBUG_HTML_DIR / f"fail_{stamp}_{host}.html"
+                    debug_file.write_text(html or "", encoding="utf-8")
+                except Exception:
+                    pass
+                result.fetch_error = "JS_RENDER_REQUIRED" if is_js_shell(html) else "EXTRACTION_EMPTY"
+                return result
 
         matched_topics, matched_keywords = find_topic_matches(
             "\n".join(filter(None, [item.title or "", item.snippet or "", text_out])),

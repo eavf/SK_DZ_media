@@ -21,7 +21,7 @@
 ### Features
 
 - Automated daily news search via **SerpAPI** (Google News)
-- Full-text extraction via **trafilatura**
+- Full-text extraction via **trafilatura** (HTML) and **pymupdf** (PDF)
 - Arabic → French translation via **DeepL API**
 - Relevance labeling and soft-delete workflow
 - Export to **Word** and **CSV**
@@ -181,6 +181,19 @@ HTML extraction (trafilatura via extract_bulk.py / refetch_article.py)
 
 **Maintenance:** `fix_serp_dates.py` can be used to reset any `published_at_real` values that were ingested from relative SerpAPI dates (detects them by matching the raw `published_at_text` against relative-date patterns).
 
+### PDF extraction
+
+When a search result links directly to a PDF (detected by `Content-Type: application/pdf` or a `.pdf` URL), the extractor uses **pymupdf** instead of trafilatura.
+
+**Page-level SK filtering:** Only pages containing at least one configured Slovakia search term are extracted and stored. This keeps `content_text` focused on relevant content instead of storing the full newspaper issue.
+
+**Legacy Arabic encoding detection:** Many Algerian Arabic-language newspapers distribute PDF editions using old proprietary font encodings (AXT and similar). The extracted text appears as garbled Latin characters (`÷õGFô`, `ZƒGJ«ªÉ'`). The extractor detects this automatically and sets `fetch_error = PDF_LEGACY_ENCODING` without storing the garbled content.
+
+| `fetch_error` value | Meaning |
+|---|---|
+| `PDF_EXTRACTION_EMPTY` | pymupdf returned no text (e.g. image-only PDF) |
+| `PDF_LEGACY_ENCODING` | Garbled legacy Arabic font encoding — content not stored |
+
 ### Docker
 
 ```bash
@@ -206,7 +219,7 @@ docker pull eavfeavf/dz-news:latest
 ### Funkcie
 
 - Automatické denné vyhľadávanie cez **SerpAPI** (Google News)
-- Extrakcia plného textu cez **trafilatura**
+- Extrakcia plného textu cez **trafilatura** (HTML) a **pymupdf** (PDF)
 - Preklad arabčiny do francúzštiny cez **DeepL API**
 - Označovanie relevancie a soft-delete workflow
 - Export do **Word** a **CSV**
@@ -356,6 +369,19 @@ HTML extrakcia (trafilatura cez extract_bulk.py / refetch_article.py)
 
 **Údržba:** `fix_serp_dates.py` resetuje prípadné `published_at_real` hodnoty, ktoré boli nastavené z relatívnych dátumov SerpAPI (detekuje ich podľa vzoru v `published_at_text`).
 
+### Extrakcia PDF
+
+Ak výsledok vyhľadávania odkazuje priamo na PDF (detekcia podľa `Content-Type: application/pdf` alebo prípony `.pdf`), extraktor použije **pymupdf** namiesto trafilatura.
+
+**Filtrovanie stránok podľa SK termínov:** Ukladajú sa len stránky, ktoré obsahujú aspoň jeden nakonfigurovaný slovenský vyhľadávací termín. Vďaka tomu `content_text` obsahuje iba relevantnú časť namiesto celého čísla novín.
+
+**Detekcia starého arabského kódovania:** Mnohé alžírske arabské noviny distribuujú PDF vydania so starými proprietárnymi kódovaniami fontov (AXT a pod.). Extrahovaný text sa zobrazí ako nezmyselné Latin znaky (`÷õGFô`, `ZƒGJ«ªÉ'`). Extraktor to automaticky detekuje a nastaví `fetch_error = PDF_LEGACY_ENCODING` bez uloženia obsahu.
+
+| Hodnota `fetch_error` | Význam |
+|---|---|
+| `PDF_EXTRACTION_EMPTY` | pymupdf nevrátil žiadny text (napr. PDF tvorené len obrázkami) |
+| `PDF_LEGACY_ENCODING` | Staré arabské kódovanie fontov — obsah sa neuloží |
+
 ### Docker
 
 ```bash
@@ -381,7 +407,7 @@ docker pull eavfeavf/dz-news:latest
 ### Fonctionnalités
 
 - Recherche automatique quotidienne via **SerpAPI** (Google Actualités)
-- Extraction du texte intégral via **trafilatura**
+- Extraction du texte intégral via **trafilatura** (HTML) et **pymupdf** (PDF)
 - Traduction arabe → français via **l'API DeepL**
 - Étiquetage de pertinence et workflow de suppression douce
 - Export en **Word** et **CSV**
@@ -530,6 +556,19 @@ Extraction HTML (trafilatura via extract_bulk.py / refetch_article.py)
 **Pourquoi les dates relatives de SerpAPI ne sont pas utilisées :** Google News peut remettre en avant d'anciens articles dans de nouvelles recherches. Une date comme `"yesterday"` est alors calculée par rapport à l'heure de la recherche, et non à la date de publication réelle — ce qui peut donner un résultat décalé de plusieurs mois. Seules les chaînes de dates absolues de SerpAPI sont fiables à l'ingestion ; les autres sont résolues ultérieurement depuis le HTML de l'article.
 
 **Maintenance :** `fix_serp_dates.py` réinitialise les valeurs `published_at_real` éventuellement définies à partir de dates relatives SerpAPI (détectées par correspondance de motif dans `published_at_text`).
+
+### Extraction PDF
+
+Lorsqu'un résultat de recherche pointe directement vers un PDF (détecté par `Content-Type: application/pdf` ou l'extension `.pdf`), l'extracteur utilise **pymupdf** à la place de trafilatura.
+
+**Filtrage des pages par termes SK :** Seules les pages contenant au moins un terme de recherche Slovaquie configuré sont extraites et stockées. Cela permet de conserver dans `content_text` uniquement le contenu pertinent plutôt que l'intégralité du numéro du journal.
+
+**Détection de l'encodage arabe hérité :** De nombreux journaux algériens en langue arabe distribuent leurs éditions PDF avec d'anciens encodages de polices propriétaires (AXT et similaires). Le texte extrait apparaît sous forme de caractères latins illisibles (`÷õGFô`, `ZƒGJ«ªÉ'`). L'extracteur détecte cela automatiquement et définit `fetch_error = PDF_LEGACY_ENCODING` sans stocker le contenu illisible.
+
+| Valeur de `fetch_error` | Signification |
+|---|---|
+| `PDF_EXTRACTION_EMPTY` | pymupdf n'a retourné aucun texte (ex. PDF composé uniquement d'images) |
+| `PDF_LEGACY_ENCODING` | Encodage de police arabe hérité — le contenu n'est pas stocké |
 
 ### Docker
 

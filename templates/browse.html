@@ -46,10 +46,10 @@
 {% block topbar_left %}
   <span class="pill">DZ News</span>
   <span class="pill">port: {{ port }}</span>
-  <span class="pill {% if days > 0 %}ok{% endif %}">{{ 'všetky dni' if days == 0 else (days|string + ' d') }}</span>
-  <span class="pill {% if extraction == 'ok' %}ok{% elif extraction == 'unextracted' %}warn{% endif %}">{% if extraction == 'ok' %}extrahované{% elif extraction == 'unextracted' %}bez textu{% else %}všetky{% endif %}</span>
-  {% if only_slovak %}<span class="pill ok">SK: áno</span>{% else %}<span class="pill">SK: nie</span>{% endif %}
-  <span class="pill {% if relevance == '1' %}ok{% elif relevance == '1_or_null' %}ok{% elif relevance == '0' %}warn{% elif relevance == 'null' %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '1_or_null' %}rel + neoznačené{% elif relevance == '0' %}nerelevantné{% elif relevance == 'null' %}rel: neoznačené{% else %}rel: všetky{% endif %}</span>
+  {% if days > 0 %}<span class="pill ok">{{ days }}d</span>{% endif %}
+  {% if extraction == 'ok' %}<span class="pill ok">extrahované</span>{% elif extraction == 'unextracted' %}<span class="pill warn">bez textu</span>{% endif %}
+  {% if only_slovak %}<span class="pill ok">SK: áno</span>{% endif %}
+  {% if relevance != 'all' %}<span class="pill {% if relevance == '1' or relevance == '1_or_null' %}ok{% else %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '1_or_null' %}rel + neoznačené{% elif relevance == '0' %}nerelevantné{% elif relevance == 'null' %}rel: neoznačené{% endif %}</span>{% endif %}
   {% if include_deleted %}<span class="pill warn">+ zmazané</span>{% endif %}
   {% if include_avoided %}<span class="pill warn">+ skryté</span>{% endif %}
 {% endblock %}

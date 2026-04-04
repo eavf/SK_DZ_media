@@ -206,12 +206,22 @@
               {{ r.title or "(bez názvu)" }}
             </a>
 
-            <div class="small">
+            <div class="small" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               {% if r.url %}
                 <a href="{{ r.url }}" target="_blank" rel="noopener">online ↗</a>
               {% endif %}
               {% if r.relevance_note %}
-                • pozn.: {{ r.relevance_note }}
+                <span>• pozn.: {{ r.relevance_note }}</span>
+              {% endif %}
+              {% if r.relevance is none %}
+                <button type="button" class="pill ok quick-label" style="cursor:pointer;border:none;padding:2px 8px;font-size:11px"
+                  data-id="{{ r.id }}" data-rel="1"
+                  data-days="{{ days }}" data-extraction="{{ extraction }}" data-sk="{{ 1 if only_slovak else 0 }}"
+                  data-relfilter="{{ relevance }}" data-del="{{ 1 if include_deleted else 0 }}" data-av="{{ 1 if include_avoided else 0 }}">✓ rel</button>
+                <button type="button" class="pill warn quick-label" style="cursor:pointer;border:none;padding:2px 8px;font-size:11px"
+                  data-id="{{ r.id }}" data-rel="0"
+                  data-days="{{ days }}" data-extraction="{{ extraction }}" data-sk="{{ 1 if only_slovak else 0 }}"
+                  data-relfilter="{{ relevance }}" data-del="{{ 1 if include_deleted else 0 }}" data-av="{{ 1 if include_avoided else 0 }}">✗ irel</button>
               {% endif %}
             </div>
 
@@ -298,6 +308,27 @@
         sessionStorage.removeItem(SCROLL_KEY);
         window.scrollTo(0, parseInt(y, 10));
       }
+    });
+  })();
+
+  (function(){
+    document.querySelectorAll(".quick-label").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        const d = btn.dataset;
+        const f = document.createElement("form");
+        f.method = "post";
+        f.action = "/label/" + d.id;
+        f.style.display = "none";
+        [["relevance", d.rel], ["days", d.days], ["extraction", d.extraction],
+         ["sk", d.sk], ["rel", d.relfilter], ["del", d.del], ["av", d.av]
+        ].forEach(function([name, value]){
+          const i = document.createElement("input");
+          i.type = "hidden"; i.name = name; i.value = value;
+          f.appendChild(i);
+        });
+        document.body.appendChild(f);
+        f.submit();
+      });
     });
   })();
 

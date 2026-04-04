@@ -11,6 +11,7 @@ from collections import Counter
 
 import logging
 from config.config import init_context, init_cli, require
+from search_mfa_gov import scrape_mfa
 
 # ----------------------------
 # CONFIG
@@ -611,6 +612,20 @@ def main() -> None:
     else:
         logger.info("\n[no fallback] Conditions not met.")
 
+    # MFA: scrape press releases priamo z mfa.gov.dz
+    logger.info("\n[MFA] Scraping mfa.gov.dz press releases...")
+    mfa_items: list[dict] = []
+    try:
+        mfa_items = scrape_mfa(args.when, SLOVAKIA_TERMS, logger)
+        logger.info("[MFA] Found %s matching press releases", len(mfa_items))
+    except Exception:
+        logger.exception("[MFA] Scraping failed, pokračujeme bez MFA výsledkov")
+
+    mfa_response = {"news_results": mfa_items} if mfa_items else None
+    if mfa_items:
+        combined = rank_news_results(combined + mfa_items)
+        save_json(mfa_response, run_dir / "news_mfa.json")
+
     window_start, window_end = compute_window(args.when)
 
     fetched_at = datetime.fromtimestamp(ts)
@@ -631,10 +646,11 @@ def main() -> None:
             "gl": gl,
             "sort": "date",
             "fallback_triggered": q3_raw is not None,
+            "mfa_results": len(mfa_items),
         },
         "queries": {"q1": q1, "q2": q2, "q3": q3},
-        "responses_raw": {"q1": q1_raw, "q2": q2_raw, "q3": q3_raw},
-        "responses_clean": {"q1": q1_clean, "q2": q2_clean, "q3": q3_clean},
+        "responses_raw": {"q1": q1_raw, "q2": q2_raw, "q3": q3_raw, "mfa": mfa_response},
+        "responses_clean": {"q1": q1_clean, "q2": q2_clean, "q3": q3_clean, "mfa": mfa_response},
     }
 
     save_json(bundle, run_dir / "news_bundle.json")

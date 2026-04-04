@@ -65,6 +65,15 @@ app.config["SECRET_KEY"] = require(settings.flask_secret_key, "FLASK_SECRET_KEY"
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 configure_logging(app, settings)
 
+
+@app.template_filter("ts_human")
+def ts_human(ts):
+    """Unix timestamp → 'YYYY-MM-DD HH:MM'."""
+    try:
+        return datetime.fromtimestamp(int(ts)).strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return str(ts) if ts else "-"
+
 # ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
@@ -229,7 +238,19 @@ def highlight_terms_html(s: str) -> str:
 
 
 def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str, include_deleted: bool, include_avoided: bool):
-    """extraction: 'ok' | 'unextracted' | 'all'"""
+    """
+    Zostaví WHERE klauzulu pre browse/export.
+
+    extraction:      'ok' | 'unextracted' | 'all'
+    relevance:       'all' | '1' | '0' | 'null' | '1_or_null' | '0_or_null'
+    include_deleted: True  → zahrnie záznamy so soft-delete (deleted_at IS NOT NULL)
+    include_avoided: True  → zahrnie záznamy zo zdrojov s is_avoided=1
+
+    Tlačítká na browse.html:
+      Reset        — days=0, extraction=all, rel=1_or_null, del=0, av=0  (default pri /browse)
+      Všetky v DB  — days=0, extraction=all, rel=all,       del=1, av=1
+      Skryté       — days=0, extraction=all, rel=0_or_null, del=1, av=1
+    """
     where = []
     params = {}
 
@@ -256,6 +277,8 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
         where.append("a.relevance IS NULL")
     elif relevance == "1_or_null":
         where.append("(a.relevance = 1 OR a.relevance IS NULL)")
+    elif relevance == "0_or_null":
+        where.append("(a.relevance = 0 OR a.relevance IS NULL)")
 
     # Slovak context filter:
     # If extracted text exists -> search there; else fall back to title/snippet.
@@ -1295,11 +1318,27 @@ def search_run():
     return render_template("search.html", latest_bundle=lb, last_log=out, last_rc=code, bundle_articles=arts)
 
 
+@app.post("/search/mfa-run")
+@user_required
+def search_mfa_run():
+    when = request.form.get("when", "").strip() or "30d"
+    code, out = run_script([PYTHON_BIN, "search_mfa_gov.py", "--when", when])
+    lb = latest_bundle_path()
+    mfa_articles = []
+    if code == 0:
+        mfa_articles = _bundle_articles(lb)
+        flash(f"OK: MFA prehľadávanie dokončené. Nájdených: {len(mfa_articles)}", "ok")
+    else:
+        flash("CHYBA: MFA prehľadávanie zlyhalo (pozri log).", "bad")
+    return render_template("search.html", latest_bundle=lb, last_log=out, last_rc=code,
+                           mfa_articles=mfa_articles, mfa_when=when)
+
+
 def _list_runs() -> list[dict]:
     """Vráti zoznam runov zoradených od najnovšieho."""
     import json as _json
     runs = []
-    for run_dir in sorted(paths.runs_dir.iterdir(), reverse=True):
+    for run_dir in sorted(paths.runs_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
         bundle = run_dir / "news_bundle.json"
         if not bundle.exists():
             continue

@@ -10,9 +10,12 @@ from pathlib import Path
 from typing import Any, Iterable
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+import urllib3
 import requests
 import trafilatura
 import fitz  # pymupdf
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from config.config import get_settings, configure_root_logging
 
@@ -167,7 +170,11 @@ def is_js_shell(html: str) -> bool:
 def resolve_and_fetch(url: str, timeout: tuple[int, int] = (10, 25)) -> tuple[str, int, str, str, bytes]:
     sess = requests.Session()
     sess.headers.update(REQUEST_HEADERS)
-    resp = sess.get(url, allow_redirects=True, timeout=timeout)
+    try:
+        resp = sess.get(url, allow_redirects=True, timeout=timeout)
+    except requests.exceptions.SSLError:
+        log.warning("SSL verify failed, retrying without verify: %s", url)
+        resp = sess.get(url, allow_redirects=True, timeout=timeout, verify=False)
     resp.raise_for_status()
     content_type = resp.headers.get("Content-Type", "")
     return resp.url, resp.status_code, resp.text, content_type, resp.content

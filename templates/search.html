@@ -49,11 +49,53 @@
     </details>
   {% endif %}
 
-  {% if bundle_articles %}
+  <div class="hr"></div>
+  <h1>Search (mfa.gov.dz)</h1>
+  <div class="sub">Prehľadá press releases MFA priamo — bez SerpAPI.</div>
+  <div class="actions" style="margin-top:12px">
+    <form method="post" action="/search/mfa-run" class="actions" style="margin-top:0">
+      <input class="mono" type="text" name="when" value="{{ mfa_when | default('') }}" placeholder="when (30d)" style="max-width:120px" title="Časové okno: 7d, 30d, 90d…">
+      <button type="submit">Prehľadať MFA</button>
+    </form>
+  </div>
+
+  {% if mfa_articles %}
     <div class="hr"></div>
     <details class="box" open>
       <summary style="cursor:pointer;font-weight:600;user-select:none">
-        Nájdené články ({{ bundle_articles|length }})
+        Nájdené press releases MFA ({{ mfa_articles|length }})
+      </summary>
+      <table class="table" style="margin-top:8px">
+        <thead>
+          <tr>
+            <th>Titulok</th>
+            <th style="width:140px">Dátum</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in mfa_articles %}
+            <tr class="trow">
+              <td>
+                <a href="{{ a.link }}" target="_blank" rel="noopener" style="font-weight:600">
+                  {{ a.title or "(bez názvu)" }}
+                </a>
+                {% if a.snippet %}
+                  <div class="small" style="margin-top:4px">{{ a.snippet }}</div>
+                {% endif %}
+              </td>
+              <td><div class="small">{{ a.date or "-" }}</div></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  {% endif %}
+
+  {% if bundle_articles %}
+    <div class="hr"></div>
+    <details class="box" {% if not mfa_articles %}open{% endif %}>
+      <summary style="cursor:pointer;font-weight:600;user-select:none">
+        Nájdené články SerpAPI ({{ bundle_articles|length }})
       </summary>
       <table class="table" style="margin-top:8px">
         <thead>

@@ -105,7 +105,7 @@
                   {% if loop.first %}<span class="pill ok">latest</span>{% endif %}
                   {% if r.bundle_path == ingested_bundle|default('') %}<span class="pill ok">práve ingested</span>{% endif %}
                 </td>
-                <td><div class="small">{{ r.timestamp|string|truncate(16, killwords=true, end='') if r.timestamp else "-" }}</div></td>
+                <td><div class="small">{{ r.timestamp|ts_human if r.timestamp else "-" }}</div></td>
                 <td><div class="small">{{ r.hl or "-" }} / {{ r.gl or "-" }}</div></td>
                 <td><span class="pill">{{ r.articles }}</span></td>
               </tr>

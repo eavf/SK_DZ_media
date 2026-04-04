@@ -49,7 +49,7 @@
   {% if days > 0 %}<span class="pill ok">{{ days }}d</span>{% endif %}
   {% if extraction == 'ok' %}<span class="pill ok">extrahované</span>{% elif extraction == 'unextracted' %}<span class="pill warn">bez textu</span>{% endif %}
   {% if only_slovak %}<span class="pill ok">SK: áno</span>{% endif %}
-  {% if relevance != 'all' %}<span class="pill {% if relevance == '1' or relevance == '1_or_null' %}ok{% else %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '1_or_null' %}rel + neoznačené{% elif relevance == '0' %}nerelevantné{% elif relevance == 'null' %}rel: neoznačené{% endif %}</span>{% endif %}
+  {% if relevance != 'all' %}<span class="pill {% if relevance == '1' or relevance == '1_or_null' %}ok{% else %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '1_or_null' %}rel + neoznačené{% elif relevance == '0' %}nerelevantné{% elif relevance == '0_or_null' %}irel + neoznačené{% elif relevance == 'null' %}neoznačené{% endif %}</span>{% endif %}
   {% if include_deleted %}<span class="pill warn">+ zmazané</span>{% endif %}
   {% if include_avoided %}<span class="pill warn">+ skryté</span>{% endif %}
 {% endblock %}
@@ -94,6 +94,7 @@
               <option value="all" {% if relevance == "all" %}selected{% endif %}>všetky</option>
               <option value="1_or_null" {% if relevance == "1_or_null" %}selected{% endif %}>relevantné + neoznačené</option>
               <option value="1" {% if relevance == "1" %}selected{% endif %}>relevantné</option>
+              <option value="0_or_null" {% if relevance == "0_or_null" %}selected{% endif %}>nerelevantné + neoznačené</option>
               <option value="0" {% if relevance == "0" %}selected{% endif %}>nerelevantné</option>
               <option value="null" {% if relevance == "null" %}selected{% endif %}>neoznačené</option>
             </select>
@@ -120,8 +121,8 @@
         <div class="actions" style="margin-top:0;flex-wrap:wrap">
           <button type="submit">Použiť</button>
           <a class="pill pill-btn" href="/browse">Reset</a>
-          <a class="pill pill-btn" href="/browse?extraction=all&days=0&rel=all&del=0&av=0&sk=0">Všetky v DB</a>
-          <a class="pill pill-btn warn" href="/browse?extraction=all&days=0&rel=all&del=0&av=1&sk=0">Skryté (avoided)</a>
+          <a class="pill pill-btn" href="/browse?extraction=all&days=0&rel=all&del=1&av=1&sk=0">Všetky v DB</a>
+          <a class="pill pill-btn warn" href="/browse?extraction=all&days=0&rel=0_or_null&del=1&av=1&sk=0">Skryté</a>
         </div>
       </form>
 

@@ -21,6 +21,7 @@
 ### Features
 
 - Automated daily news search via **SerpAPI** (Google News)
+- Direct scraping of **MFA Algeria** press releases (no SerpAPI required)
 - Full-text extraction via **trafilatura** (HTML) and **pymupdf** (PDF)
 - Arabic → French translation via **DeepL API**
 - Relevance labeling and soft-delete workflow
@@ -32,8 +33,9 @@
 ### Architecture
 
 ```
-SerpAPI (Google News)
+SerpAPI (Google News)  +  MFA Algeria (mfa.gov.dz)
     ↓  search_flow_news.py       — search & save JSON bundles
+    ↓  search_mfa_gov.py         — scrape MFA press releases (integrated or standalone)
 bundle/news_bundle_*.json
     ↓  ingest_to_dz_news_reworked.py  — parse & insert into DB
 MySQL / MariaDB
@@ -97,8 +99,11 @@ Static config files in `config/`:
 **Run the data pipeline manually:**
 
 ```bash
-# Step 1 – search for articles
+# Step 1 – search for articles (SerpAPI + MFA Algeria combined)
 python search_flow_news.py
+
+# Step 1b – scrape MFA Algeria press releases only (standalone)
+python search_mfa_gov.py --when 30d
 
 # Step 2 – ingest into database
 python ingest_to_dz_news_reworked.py
@@ -194,6 +199,25 @@ When a search result links directly to a PDF (detected by `Content-Type: applica
 | `PDF_EXTRACTION_EMPTY` | pymupdf returned no text (e.g. image-only PDF) |
 | `PDF_LEGACY_ENCODING` | Garbled legacy Arabic font encoding — content not stored |
 
+### MFA Algeria scraper
+
+`search_mfa_gov.py` scrapes press releases directly from the Algerian Ministry of Foreign Affairs website (`mfa.gov.dz`) without using SerpAPI.
+
+**How it works:** The MFA site is built with Next.js. The scraper fetches the `buildId` from the page source and then paginates through the `/_next/data/{buildId}/...` JSON endpoint, filtering results by the configured Slovakia search terms.
+
+**Integration:** `search_flow_news.py` calls the scraper automatically and merges its results into the standard bundle alongside SerpAPI results. The domain `mfa.gov.dz` is excluded from SerpAPI queries to avoid duplicates.
+
+**Standalone use:**
+
+```bash
+python search_mfa_gov.py --when 30d   # last 30 days (default)
+python search_mfa_gov.py --when 7d    # last 7 days
+```
+
+Results are saved to a dedicated `mfa_<timestamp>` run directory inside `bundle/runs/` in the same format as `search_flow_news.py`, and can be ingested with the standard `ingest_to_dz_news_reworked.py`.
+
+**SSL note:** `mfa.gov.dz` uses an unverifiable SSL certificate. The scraper bypasses verification (`verify=False`) and suppresses the resulting warnings — this is expected and intentional.
+
 ### Docker
 
 ```bash
@@ -219,6 +243,7 @@ docker pull eavfeavf/dz-news:latest
 ### Funkcie
 
 - Automatické denné vyhľadávanie cez **SerpAPI** (Google News)
+- Priame prehľadávanie press releases **MFA Alžírsko** (bez SerpAPI)
 - Extrakcia plného textu cez **trafilatura** (HTML) a **pymupdf** (PDF)
 - Preklad arabčiny do francúzštiny cez **DeepL API**
 - Označovanie relevancie a soft-delete workflow
@@ -230,8 +255,9 @@ docker pull eavfeavf/dz-news:latest
 ### Architektúra
 
 ```
-SerpAPI (Google News)
+SerpAPI (Google News)  +  MFA Alžírsko (mfa.gov.dz)
     ↓  search_flow_news.py       — vyhľadávanie a uloženie JSON súborov
+    ↓  search_mfa_gov.py         — scraping MFA press releases (integrovaný alebo samostatný)
 bundle/news_bundle_*.json
     ↓  ingest_to_dz_news_reworked.py  — spracovanie a vloženie do DB
 MySQL / MariaDB
@@ -285,8 +311,11 @@ Kľúčové premenné v `.env`:
 **Manuálne spustenie pipeline:**
 
 ```bash
-# Krok 1 – vyhľadanie článkov
+# Krok 1 – vyhľadanie článkov (SerpAPI + MFA Alžírsko spolu)
 python search_flow_news.py
+
+# Krok 1b – len MFA Alžírsko press releases (samostatný režim)
+python search_mfa_gov.py --when 30d
 
 # Krok 2 – ingest do databázy
 python ingest_to_dz_news_reworked.py
@@ -382,6 +411,25 @@ Ak výsledok vyhľadávania odkazuje priamo na PDF (detekcia podľa `Content-Typ
 | `PDF_EXTRACTION_EMPTY` | pymupdf nevrátil žiadny text (napr. PDF tvorené len obrázkami) |
 | `PDF_LEGACY_ENCODING` | Staré arabské kódovanie fontov — obsah sa neuloží |
 
+### MFA Alžírsko scraper
+
+`search_mfa_gov.py` prehľadáva press releases priamo z webu Ministerstva zahraničných vecí Alžírska (`mfa.gov.dz`) bez SerpAPI.
+
+**Ako to funguje:** Web MFA je postavený na Next.js. Skript načíta `buildId` zo zdrojového kódu stránky a potom stránkuje cez endpoint `/_next/data/{buildId}/...`, pričom filtruje výsledky podľa nakonfigurovaných slovenských termínov.
+
+**Integrácia:** `search_flow_news.py` volá scraper automaticky a zlúči jeho výsledky do štandardného bundle spolu s výsledkami SerpAPI. Doména `mfa.gov.dz` je vylúčená z SerpAPI dopytov, aby nedochádzalo k duplikátom.
+
+**Samostatné spustenie:**
+
+```bash
+python search_mfa_gov.py --when 30d   # posledných 30 dní (default)
+python search_mfa_gov.py --when 7d    # posledných 7 dní
+```
+
+Výsledky sa uložia do dedikovaného adresára `mfa_<timestamp>` v `bundle/runs/` v rovnakom formáte ako `search_flow_news.py` a možno ich ingestovať štandardným `ingest_to_dz_news_reworked.py`.
+
+**Poznámka k SSL:** `mfa.gov.dz` používa neoveriteľný SSL certifikát. Skript obchádza overenie (`verify=False`) a potláča príslušné varovania — je to zámerné.
+
 ### Docker
 
 ```bash
@@ -407,6 +455,7 @@ docker pull eavfeavf/dz-news:latest
 ### Fonctionnalités
 
 - Recherche automatique quotidienne via **SerpAPI** (Google Actualités)
+- Collecte directe des communiqués de presse du **MAE Algérie** (sans SerpAPI)
 - Extraction du texte intégral via **trafilatura** (HTML) et **pymupdf** (PDF)
 - Traduction arabe → français via **l'API DeepL**
 - Étiquetage de pertinence et workflow de suppression douce
@@ -418,8 +467,9 @@ docker pull eavfeavf/dz-news:latest
 ### Architecture
 
 ```
-SerpAPI (Google Actualités)
+SerpAPI (Google Actualités)  +  MAE Algérie (mfa.gov.dz)
     ↓  search_flow_news.py       — recherche et sauvegarde des bundles JSON
+    ↓  search_mfa_gov.py         — collecte MAE (intégré ou autonome)
 bundle/news_bundle_*.json
     ↓  ingest_to_dz_news_reworked.py  — traitement et insertion en base
 MySQL / MariaDB
@@ -473,8 +523,11 @@ Variables clés dans `.env` :
 **Exécution manuelle du pipeline :**
 
 ```bash
-# Étape 1 – recherche des articles
+# Étape 1 – recherche des articles (SerpAPI + MAE Algérie combinés)
 python search_flow_news.py
+
+# Étape 1b – collecte MAE Algérie uniquement (mode autonome)
+python search_mfa_gov.py --when 30d
 
 # Étape 2 – ingestion en base de données
 python ingest_to_dz_news_reworked.py
@@ -569,6 +622,25 @@ Lorsqu'un résultat de recherche pointe directement vers un PDF (détecté par `
 |---|---|
 | `PDF_EXTRACTION_EMPTY` | pymupdf n'a retourné aucun texte (ex. PDF composé uniquement d'images) |
 | `PDF_LEGACY_ENCODING` | Encodage de police arabe hérité — le contenu n'est pas stocké |
+
+### Collecteur MAE Algérie
+
+`search_mfa_gov.py` collecte les communiqués de presse directement depuis le site du Ministère algérien des Affaires étrangères (`mfa.gov.dz`), sans SerpAPI.
+
+**Fonctionnement :** Le site MAE est développé avec Next.js. Le script récupère le `buildId` depuis le code source de la page, puis pagine à travers l'endpoint `/_next/data/{buildId}/...`, en filtrant les résultats selon les termes de recherche Slovaquie configurés.
+
+**Intégration :** `search_flow_news.py` appelle le collecteur automatiquement et fusionne ses résultats dans le bundle standard avec ceux de SerpAPI. Le domaine `mfa.gov.dz` est exclu des requêtes SerpAPI pour éviter les doublons.
+
+**Utilisation autonome :**
+
+```bash
+python search_mfa_gov.py --when 30d   # 30 derniers jours (défaut)
+python search_mfa_gov.py --when 7d    # 7 derniers jours
+```
+
+Les résultats sont sauvegardés dans un répertoire dédié `mfa_<timestamp>` sous `bundle/runs/`, au même format que `search_flow_news.py`, et peuvent être ingérés avec `ingest_to_dz_news_reworked.py`.
+
+**Note SSL :** `mfa.gov.dz` utilise un certificat SSL non vérifiable. Le script contourne la vérification (`verify=False`) et supprime les avertissements correspondants — c'est intentionnel.
 
 ### Docker
 

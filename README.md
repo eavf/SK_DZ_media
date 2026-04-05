@@ -140,20 +140,19 @@ The app uses session-based authentication with four access levels:
 
 Roles are hierarchical — each level includes everything below it.
 
-**Initial setup** (run once after DB is created):
+**Initial setup** (run once on a new server):
 
 ```bash
-# 1. Create the users table
-mysql -u root dz_news < migrations/001_add_users.sql
+# 1. Create database and all tables
+mysql -u root -p < migrations/000_init_schema.sql
 
-# 2. Apply role constraints
-mysql -u root dz_news < migrations/002_user_roles.sql
-
-# 3. Create accounts
+# 2. Create accounts
 python create_admin.py                 # admin (default)
 python create_admin.py --role power    # power user
 python create_admin.py --role user     # regular user
 ```
+
+> **Existing installations:** migrations `001_add_users.sql` and `002_user_roles.sql` remain available for upgrading older deployments that predate `000_init_schema.sql`.
 
 ### Article date resolution
 
@@ -354,20 +353,19 @@ Aplikácia používa session-based autentifikáciu so štyrmi úrovňami prístu
 
 Roly sú hierarchické — každá úroveň zahŕňa všetko z nižších úrovní.
 
-**Prvotné nastavenie** (spustiť raz po vytvorení DB):
+**Prvotné nastavenie** (spustiť raz na novom serveri):
 
 ```bash
-# 1. Vytvorenie tabuľky users
-mysql -u root dz_news < migrations/001_add_users.sql
+# 1. Vytvorenie databázy a všetkých tabuliek
+mysql -u root -p < migrations/000_init_schema.sql
 
-# 2. Pridanie CHECK constraintu pre role
-mysql -u root dz_news < migrations/002_user_roles.sql
-
-# 3. Vytvorenie účtov
+# 2. Vytvorenie účtov
 python create_admin.py                 # admin (default)
 python create_admin.py --role power    # power user
 python create_admin.py --role user     # bežný používateľ
 ```
+
+> **Existujúce inštalácie:** migrácie `001_add_users.sql` a `002_user_roles.sql` sú naďalej k dispozícii pre upgrade starších nasadení, ktoré predchádzajú `000_init_schema.sql`.
 
 ### Určovanie dátumu článku
 
@@ -568,20 +566,19 @@ L'application utilise une authentification par session avec quatre niveaux d'acc
 
 Les rôles sont hiérarchiques — chaque niveau inclut tout ce qui est en dessous.
 
-**Configuration initiale** (à exécuter une fois après la création de la base) :
+**Configuration initiale** (à exécuter une fois sur un nouveau serveur) :
 
 ```bash
-# 1. Créer la table users
-mysql -u root dz_news < migrations/001_add_users.sql
+# 1. Créer la base de données et toutes les tables
+mysql -u root -p < migrations/000_init_schema.sql
 
-# 2. Ajouter la contrainte CHECK pour les rôles
-mysql -u root dz_news < migrations/002_user_roles.sql
-
-# 3. Créer les comptes
+# 2. Créer les comptes
 python create_admin.py                 # admin (défaut)
 python create_admin.py --role power    # power user
 python create_admin.py --role user     # utilisateur standard
 ```
+
+> **Installations existantes :** les migrations `001_add_users.sql` et `002_user_roles.sql` restent disponibles pour mettre à niveau les déploiements antérieurs à `000_init_schema.sql`.
 
 ### Résolution de la date des articles
 

@@ -98,8 +98,8 @@
           <label class="field-label">relevance</label>
           <select name="relevance" style="width:100%">
             <option value="null" {% if r.relevance is none %}selected{% endif %}>— (neoznačené)</option>
-            <option value="1"    {% if r.relevance == 1 %}selected{% endif %}>1 – relevantné</option>
-            <option value="0"    {% if r.relevance == 0 %}selected{% endif %}>0 – nerelevantné</option>
+            <option value="1"    {% if r.relevance == 1 %}selected{% endif %}>relevantné</option>
+            <option value="0"    {% if r.relevance == 0 %}selected{% endif %}>nerelevantné</option>
           </select>
         </div>
         <div>

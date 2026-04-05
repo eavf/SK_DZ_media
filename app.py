@@ -432,6 +432,8 @@ def browse():
             a.fetch_error,
             LEFT(a.content_text, 4000) AS preview,
             LEFT(a.content_text_fr, 4000) AS preview_fr,
+            a.snippet,
+            a.snippet_fr,
             a.relevance,
             a.relevance_note,
             a.deleted_at,
@@ -454,16 +456,17 @@ def browse():
         preview = r.preview_fr or r.preview or ""
         ctx = extract_context_sentences(preview, max_sentences=3)
         ctx_hl = [highlight_terms_html(c) for c in ctx]
-        enriched.append((r, ctx_hl))
+        snippet_display = (r.snippet_fr or r.snippet or "") if not ctx_hl and not preview else ""
+        enriched.append((r, ctx_hl, snippet_display))
 
     # Kompozícia výsledkov
     stats = {
-        "extracted": sum(1 for r, _ in enriched if r.extraction_ok),
-        "unextracted": sum(1 for r, _ in enriched if not r.extraction_ok),
-        "rel_1": sum(1 for r, _ in enriched if r.relevance == 1),
-        "rel_0": sum(1 for r, _ in enriched if r.relevance == 0),
-        "rel_null": sum(1 for r, _ in enriched if r.relevance is None),
-        "deleted": sum(1 for r, _ in enriched if r.deleted_at),
+        "extracted": sum(1 for r, *_ in enriched if r.extraction_ok),
+        "unextracted": sum(1 for r, *_ in enriched if not r.extraction_ok),
+        "rel_1": sum(1 for r, *_ in enriched if r.relevance == 1),
+        "rel_0": sum(1 for r, *_ in enriched if r.relevance == 0),
+        "rel_null": sum(1 for r, *_ in enriched if r.relevance is None),
+        "deleted": sum(1 for r, *_ in enriched if r.deleted_at),
     }
 
     return render_template(
@@ -1225,7 +1228,21 @@ def article_translate(article_id: int):
         conn.execute(text(f"UPDATE articles SET {set_clause} WHERE id = :id"), updates)
 
     logger.info("Article translated AR→FR: id=%s", article_id)
-    flash("Preklad AR→FR uložený.", "ok")
+    from translate import get_deepl_usage
+    usage = get_deepl_usage(api_key)
+    if usage:
+        from datetime import date
+        today = date.today()
+        reset_day = 6
+        if today.day < reset_day:
+            reset_date = today.replace(day=reset_day)
+        else:
+            next_month = today.replace(day=1).replace(month=today.month % 12 + 1) if today.month < 12 else today.replace(year=today.year + 1, month=1, day=1)
+            reset_date = next_month.replace(day=reset_day)
+        remaining = usage["limit"] - usage["used"]
+        flash(f"Preklad AR→FR uložený. DeepL: minuté {usage['used']:,} / zostatok {remaining:,} / limit {usage['limit']:,} znakov. Obnova: {reset_date.strftime('%-d.%-m.%Y')}.", "ok")
+    else:
+        flash("Preklad AR→FR uložený.", "ok")
     return redirect(url_for("article_detail", article_id=article_id))
 
 

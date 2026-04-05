@@ -42,7 +42,7 @@ def _to_mysql_dt(iso: str | None) -> str | None:
 def fetch_pending(conn, limit: int) -> list[dict]:
     rows = conn.execute(text("""
         SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
-               a.title_fr, a.snippet_fr
+               a.title_fr, a.snippet_fr, a.language
         FROM articles a
         JOIN sources s ON s.id = a.source_id
         WHERE a.content_text IS NULL
@@ -57,7 +57,8 @@ def fetch_pending(conn, limit: int) -> list[dict]:
 def translate_after_extraction(article_id: int, result, row: dict) -> None:
     """Preloží content_text (a title/snippet ak chýbajú) pre arabský článok."""
     api_key = s.deepl_api_key
-    if not api_key or result.lang_detected != "ar":
+    lang = row.get("language") or result.lang_detected
+    if not api_key or lang != "ar":
         return
 
     texts, keys = [], []
@@ -178,8 +179,7 @@ def translate_missing_titles(limit: int, dry_run: bool) -> int:
         rows = conn.execute(text("""
             SELECT id, title, snippet, title_fr, snippet_fr
             FROM articles
-            WHERE lang_detected = 'ar'
-              AND extraction_ok = 1
+            WHERE (lang_detected = 'ar' OR language = 'ar')
               AND title_fr IS NULL
               AND deleted_at IS NULL
             ORDER BY id

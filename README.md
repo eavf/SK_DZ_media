@@ -23,10 +23,11 @@
 - Automated daily news search via **SerpAPI** (Google News)
 - Direct scraping of **MFA Algeria** press releases (no SerpAPI required)
 - Full-text extraction via **trafilatura** (HTML) and **pymupdf** (PDF)
-- Arabic → French translation via **DeepL API**
+- Language detection at search time via **langdetect** (title + snippet), refined by trafilatura during extraction
+- Arabic → French translation via **DeepL API**: `title` + `snippet` translated automatically (pipeline + backfill); `content_text` translated only during fresh extraction — articles extracted before DeepL was configured require manual translation via the article detail page
 - Relevance labeling and soft-delete workflow
 - Export to **Word** and **CSV**
-- Scheduled pipeline with **email notifications**
+- Scheduled pipeline with **email notifications** (new/re-seen articles, translation status, DeepL usage)
 - **Authentication** — admin/read-only access control (session-based, `users` table in DB)
 - Dockerized deployment
 
@@ -34,17 +35,17 @@
 
 ```
 SerpAPI (Google News)  +  MFA Algeria (mfa.gov.dz)
-    ↓  search_flow_news.py       — search & save JSON bundles
+    ↓  search_flow_news.py       — search, save JSON bundles, detect language (langdetect)
     ↓  search_mfa_gov.py         — scrape MFA press releases (integrated or standalone)
 bundle/news_bundle_*.json
-    ↓  ingest_to_dz_news_reworked.py  — parse & insert into DB
+    ↓  ingest_to_dz_news_reworked.py  — parse & insert into DB (with language field)
 MySQL / MariaDB
-    ↓  extract_bulk.py           — fetch URLs, extract text, translate AR→FR
+    ↓  extract_bulk.py           — fetch URLs, extract text, refine lang_detected, translate AR→FR
     ↓  app.py (Flask)
 Web dashboard                    — browse, label, export
 ```
 
-A `scheduler.py` daemon runs the full pipeline daily and sends an email summary.
+A `scheduler.py` daemon runs the full pipeline daily and sends a detailed email summary (new articles with titles/snippets, re-seen articles, DeepL credit usage).
 
 ### Requirements
 
@@ -52,6 +53,7 @@ A `scheduler.py` daemon runs the full pipeline daily and sends an email summary.
 - MySQL / MariaDB
 - [SerpAPI](https://serpapi.com/) key
 - [DeepL API](https://www.deepl.com/pro-api) key (optional, for Arabic translation)
+- `langdetect` (installed via `requirements.txt`)
 - Docker (for containerized deployment)
 
 ### Installation
@@ -245,10 +247,11 @@ docker pull eavfeavf/dz-news:latest
 - Automatické denné vyhľadávanie cez **SerpAPI** (Google News)
 - Priame prehľadávanie press releases **MFA Alžírsko** (bez SerpAPI)
 - Extrakcia plného textu cez **trafilatura** (HTML) a **pymupdf** (PDF)
-- Preklad arabčiny do francúzštiny cez **DeepL API**
+- Detekcia jazyka pri vyhľadávaní cez **langdetect** (title + snippet), upresnená trafilaturou pri extrakcii
+- Preklad arabčiny do francúzštiny cez **DeepL API**: `title` + `snippet` sa prekladajú automaticky (pipeline + backfill); `content_text` iba pri čerstvej extrakcii — články extrahované pred konfiguráciou DeepL vyžadujú manuálny preklad cez stránku článku
 - Označovanie relevancie a soft-delete workflow
 - Export do **Word** a **CSV**
-- Automatická pipeline s **emailovými notifikáciami**
+- Automatická pipeline s **emailovými notifikáciami** (nové/znovu videné články, stav prekladu, využitie DeepL kreditov)
 - **Autentifikácia** — prístupové práva admin / len čítanie (session-based, tabuľka `users` v DB)
 - Dockerizované nasadenie
 
@@ -256,17 +259,17 @@ docker pull eavfeavf/dz-news:latest
 
 ```
 SerpAPI (Google News)  +  MFA Alžírsko (mfa.gov.dz)
-    ↓  search_flow_news.py       — vyhľadávanie a uloženie JSON súborov
+    ↓  search_flow_news.py       — vyhľadávanie, uloženie JSON súborov, detekcia jazyka (langdetect)
     ↓  search_mfa_gov.py         — scraping MFA press releases (integrovaný alebo samostatný)
 bundle/news_bundle_*.json
-    ↓  ingest_to_dz_news_reworked.py  — spracovanie a vloženie do DB
+    ↓  ingest_to_dz_news_reworked.py  — spracovanie a vloženie do DB (vrátane poľa language)
 MySQL / MariaDB
-    ↓  extract_bulk.py           — stiahnutie URL, extrakcia textu, preklad AR→FR
+    ↓  extract_bulk.py           — stiahnutie URL, extrakcia textu, upresnenie lang_detected, preklad AR→FR
     ↓  app.py (Flask)
 Webový dashboard                 — prehľad, označovanie, export
 ```
 
-`scheduler.py` spúšťa celú pipeline denne a posiela emailový súhrn.
+`scheduler.py` spúšťa celú pipeline denne a posiela podrobný emailový súhrn (nové/znovu videné články s titulmi a snippetmi, stav prekladu, využitie DeepL kreditov).
 
 ### Požiadavky
 
@@ -274,6 +277,7 @@ Webový dashboard                 — prehľad, označovanie, export
 - MySQL / MariaDB
 - Kľúč [SerpAPI](https://serpapi.com/)
 - Kľúč [DeepL API](https://www.deepl.com/pro-api) (voliteľné, pre preklad arabčiny)
+- `langdetect` (inštaluje sa cez `requirements.txt`)
 - Docker (pre kontajnerizované nasadenie)
 
 ### Inštalácia
@@ -457,10 +461,11 @@ docker pull eavfeavf/dz-news:latest
 - Recherche automatique quotidienne via **SerpAPI** (Google Actualités)
 - Collecte directe des communiqués de presse du **MAE Algérie** (sans SerpAPI)
 - Extraction du texte intégral via **trafilatura** (HTML) et **pymupdf** (PDF)
-- Traduction arabe → français via **l'API DeepL**
+- Détection de la langue dès la recherche via **langdetect** (titre + extrait), affinée par trafilatura à l'extraction
+- Traduction arabe → français via **l'API DeepL** : `title` + `snippet` traduits automatiquement (pipeline + remplissage) ; `content_text` uniquement lors d'une extraction fraîche — les articles extraits avant la configuration de DeepL nécessitent une traduction manuelle via la page de détail
 - Étiquetage de pertinence et workflow de suppression douce
 - Export en **Word** et **CSV**
-- Pipeline planifié avec **notifications par e-mail**
+- Pipeline planifié avec **notifications e-mail détaillées** (articles nouveaux/revus, état de traduction, utilisation des crédits DeepL)
 - **Authentification** — contrôle d'accès admin / lecture seule (session Flask, table `users` en base)
 - Déploiement dockerisé
 
@@ -468,17 +473,17 @@ docker pull eavfeavf/dz-news:latest
 
 ```
 SerpAPI (Google Actualités)  +  MAE Algérie (mfa.gov.dz)
-    ↓  search_flow_news.py       — recherche et sauvegarde des bundles JSON
+    ↓  search_flow_news.py       — recherche, bundles JSON, détection langue (langdetect)
     ↓  search_mfa_gov.py         — collecte MAE (intégré ou autonome)
 bundle/news_bundle_*.json
-    ↓  ingest_to_dz_news_reworked.py  — traitement et insertion en base
+    ↓  ingest_to_dz_news_reworked.py  — traitement et insertion en base (champ language inclus)
 MySQL / MariaDB
-    ↓  extract_bulk.py           — récupération des URL, extraction, traduction AR→FR
+    ↓  extract_bulk.py           — récupération des URL, extraction, affinage lang_detected, traduction AR→FR
     ↓  app.py (Flask)
 Tableau de bord web              — navigation, étiquetage, export
 ```
 
-Le démon `scheduler.py` exécute le pipeline quotidiennement et envoie un résumé par e-mail.
+Le démon `scheduler.py` exécute le pipeline quotidiennement et envoie un e-mail détaillé (articles nouveaux/revus avec titres et extraits, état des traductions, utilisation des crédits DeepL).
 
 ### Prérequis
 
@@ -486,6 +491,7 @@ Le démon `scheduler.py` exécute le pipeline quotidiennement et envoie un résu
 - MySQL / MariaDB
 - Clé [SerpAPI](https://serpapi.com/)
 - Clé [API DeepL](https://www.deepl.com/pro-api) (optionnel, pour la traduction de l'arabe)
+- `langdetect` (installé via `requirements.txt`)
 - Docker (pour le déploiement conteneurisé)
 
 ### Installation

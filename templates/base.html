@@ -43,8 +43,10 @@
         <a class="pill {% if request.path == '/stats' %}ok{% endif %}" href="/stats">Stats</a>
         {% if current_user.is_authenticated and current_user.is_admin %}
           <a class="pill {% if request.path == '/users' %}ok{% endif %}" href="/users">Používatelia</a>
-          <a class="pill {% if request.path == '/admin/search-terms' %}ok{% endif %}" href="/admin/search-terms">Search Terms</a>
-          <a class="pill {% if request.path == '/admin/queries' %}ok{% endif %}" href="/admin/queries">Queries</a>
+          {% if request.path in ['/', '/search', '/stats'] %}
+            <a class="pill {% if request.path == '/admin/search-terms' %}ok{% endif %}" href="/admin/search-terms">Search Terms</a>
+            <a class="pill {% if request.path == '/admin/queries' %}ok{% endif %}" href="/admin/queries">Queries</a>
+          {% endif %}
         {% endif %}
       </div>
     </div>

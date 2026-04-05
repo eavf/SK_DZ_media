@@ -40,7 +40,7 @@ def fetch_article_url(article_id: int) -> dict | None:
     with engine.begin() as conn:
         row = conn.execute(text("""
             SELECT COALESCE(final_url, url) AS fetch_url, title, snippet,
-                   title_fr, snippet_fr
+                   title_fr, snippet_fr, language
             FROM articles
             WHERE id = :id
         """), {"id": article_id}).mappings().fetchone()
@@ -126,7 +126,8 @@ def main() -> int:
 def _translate_if_arabic(article_id: int, result, row: dict) -> None:
     """Preloží content_text (a title/snippet ak chýbajú) pre arabský článok."""
     api_key = s.deepl_api_key
-    if not api_key or result.lang_detected != "ar":
+    lang = row.get("language") or result.lang_detected
+    if not api_key or lang != "ar":
         return
 
     texts, keys = [], []

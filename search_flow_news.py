@@ -248,6 +248,24 @@ def _enrich_dates(items: list[dict], fetched_at: datetime) -> None:
                 item["published_at"] = iso
 
 
+def _enrich_language(items: list[dict]) -> None:
+    """Doplní pole 'language' pre každý item kde chýba — detekuje z title+snippet."""
+    try:
+        from langdetect import detect, LangDetectException
+    except ImportError:
+        return
+    for item in items:
+        if item.get("language"):
+            continue
+        text = f"{item.get('title', '')} {item.get('snippet', '')}".strip()
+        if not text or len(text) < 10:
+            continue
+        try:
+            item["language"] = detect(text)
+        except Exception:
+            pass
+
+
 def domain_of(url: str) -> str:
     host = urlparse(url).netloc.lower()
     if host.startswith("www."):
@@ -644,9 +662,11 @@ def main() -> None:
     window_start, window_end = compute_window(args.when)
 
     fetched_at = datetime.fromtimestamp(ts)
-    for results in [q1_clean, q2_clean, q3_clean]:
+    for results in [q1_clean, q2_clean, q3_clean, mfa_response]:
         if results:
-            _enrich_dates(results.get("news_results") or [], fetched_at)
+            items = results.get("news_results") or []
+            _enrich_dates(items, fetched_at)
+            _enrich_language(items)
 
     bundle = {
         "run": {

@@ -55,8 +55,6 @@
   <div class="sub" style="border-top:1px solid var(--line);padding-top:8px;margin-top:4px">
     Zdroj: <strong>{{ r["domain"] }}</strong>
     {% if published_display %} • Publikované: <strong>{{ published_display }}</strong>{% endif %}
-    {% if r["language"] %} • language: <strong>{{ r["language"] }}</strong>{% endif %}
-    {% if r["lang_detected"] %} • detected: <strong>{{ r["lang_detected"] }}</strong>{% endif %}
   </div>
 
   <div class="meta">
@@ -65,9 +63,23 @@
     <div class="row"><div class="k">First seen</div><div class="v">{{ r["first_seen_at"] or "-" }}</div></div>
     <div class="row"><div class="k">HTTP status</div><div class="v">{{ r["http_status"] or "-" }}</div></div>
 
+    <div class="row"><div class="k">Jazyk</div>
+      <div class="v">
+        {{ r["language"] or "?" }}
+      </div>
+    </div>
+    <div class="row"><div class="k">Jazyk detected</div>
+      <div class="v">
+        {{ r["lang_detected"] or "?" }}
+      </div>
+    </div>
+
     <div class="row"><div class="k">Relevancia</div>
       <div class="v">
-        {% if r["relevance"] is none %}—{% else %}{{ r["relevance"] }}{% endif %}
+        {% if r["relevance"] is none %}—
+        {% elif r["relevance"] == 1 %}relevantné
+        {% else %}nerelevantné
+        {% endif %}
         {% if r["relevance_note"] %}<span class="pill">pozn.: {{ r["relevance_note"] }}</span>{% endif %}
       </div>
     </div>

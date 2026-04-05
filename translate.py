@@ -21,6 +21,22 @@ def _deepl_url(api_key: str) -> str:
     )
 
 
+def get_deepl_usage(api_key: str) -> dict | None:
+    """Vráti {'used': int, 'limit': int} alebo None pri chybe."""
+    base = _deepl_url(api_key).replace("/translate", "/usage")
+    try:
+        resp = requests.get(
+            base,
+            headers={"Authorization": f"DeepL-Auth-Key {api_key}"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return {"used": data["character_count"], "limit": data["character_limit"]}
+    except Exception:
+        return None
+
+
 def translate_ar_fr(api_key: str, texts: list[str]) -> list[str]:
     """
     Preloží zoznam textov z AR do FR cez DeepL.

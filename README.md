@@ -143,16 +143,20 @@ Roles are hierarchical — each level includes everything below it.
 **Initial setup** (run once on a new server):
 
 ```bash
-# 1. Create database and all tables
-mysql -u root -p < migrations/000_init_schema.sql
+python setup_db.py
+```
 
-# 2. Create accounts
+This script creates the database, all tables, and prompts you to create the first admin account interactively.
+
+To add more users afterwards:
+
+```bash
 python create_admin.py                 # admin (default)
 python create_admin.py --role power    # power user
 python create_admin.py --role user     # regular user
 ```
 
-> **Existing installations:** migrations `001_add_users.sql` and `002_user_roles.sql` remain available for upgrading older deployments that predate `000_init_schema.sql`.
+> **Existing installations:** `migrations/000_init_schema.sql` and the individual migration files (`001_add_users.sql`, `002_user_roles.sql`) remain available for manual use or upgrading older deployments.
 
 ### Article date resolution
 
@@ -356,16 +360,20 @@ Roly sú hierarchické — každá úroveň zahŕňa všetko z nižších úrovn
 **Prvotné nastavenie** (spustiť raz na novom serveri):
 
 ```bash
-# 1. Vytvorenie databázy a všetkých tabuliek
-mysql -u root -p < migrations/000_init_schema.sql
+python setup_db.py
+```
 
-# 2. Vytvorenie účtov
+Skript vytvorí databázu, všetky tabuľky a interaktívne vytvorí prvého admin používateľa.
+
+Pre pridanie ďalších používateľov:
+
+```bash
 python create_admin.py                 # admin (default)
 python create_admin.py --role power    # power user
 python create_admin.py --role user     # bežný používateľ
 ```
 
-> **Existujúce inštalácie:** migrácie `001_add_users.sql` a `002_user_roles.sql` sú naďalej k dispozícii pre upgrade starších nasadení, ktoré predchádzajú `000_init_schema.sql`.
+> **Existujúce inštalácie:** `migrations/000_init_schema.sql` a jednotlivé migrácie (`001_add_users.sql`, `002_user_roles.sql`) sú naďalej k dispozícii pre manuálne použitie alebo upgrade starších nasadení.
 
 ### Určovanie dátumu článku
 
@@ -569,16 +577,20 @@ Les rôles sont hiérarchiques — chaque niveau inclut tout ce qui est en desso
 **Configuration initiale** (à exécuter une fois sur un nouveau serveur) :
 
 ```bash
-# 1. Créer la base de données et toutes les tables
-mysql -u root -p < migrations/000_init_schema.sql
+python setup_db.py
+```
 
-# 2. Créer les comptes
+Ce script crée la base de données, toutes les tables et vous invite à créer le premier compte administrateur de manière interactive.
+
+Pour ajouter d'autres utilisateurs ensuite :
+
+```bash
 python create_admin.py                 # admin (défaut)
 python create_admin.py --role power    # power user
 python create_admin.py --role user     # utilisateur standard
 ```
 
-> **Installations existantes :** les migrations `001_add_users.sql` et `002_user_roles.sql` restent disponibles pour mettre à niveau les déploiements antérieurs à `000_init_schema.sql`.
+> **Installations existantes :** `migrations/000_init_schema.sql` et les fichiers de migration individuels (`001_add_users.sql`, `002_user_roles.sql`) restent disponibles pour une utilisation manuelle ou la mise à niveau d'anciens déploiements.
 
 ### Résolution de la date des articles
 

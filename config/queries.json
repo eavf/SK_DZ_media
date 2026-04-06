@@ -1,6 +1,6 @@
 {
   "active": {
-    "q1": "default",
+    "q1": "default_a_murin",
     "q2": "default",
     "q3": "default"
   },
@@ -9,6 +9,11 @@
       "id": "default",
       "label": "Default (generovaný z terms + preferred domains)",
       "query": null
+    },
+    {
+      "id": "default_a_murin",
+      "label": "Default a Murin",
+      "query": "(site:afrik.com OR site:algerie360.com OR site:aps.dz OR site:echoroukonline.com OR site:elbilad.net OR site:elmoudjahid.dz OR site:elwatan.com OR site:horizons.dz OR site:lalgerieaujourdhui.dz OR site:observationalgerie.com OR site:radioalgerie.dz OR site:tsa-algerie.com) (Slovaquie OR slovaque OR Slovak OR Bratislava OR سلوفاكيا OR سلوفاكي OR \"Marek Moran\" OR بلانار) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page"
     }
   ],
   "q2_presets": [

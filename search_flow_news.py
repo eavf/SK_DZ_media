@@ -98,6 +98,27 @@ def build_query_global() -> str:
     """Q3 fallback: globálne hľadanie článkov spomínajúcich oba štáty (bez site: obmedzenia)."""
     return f"{slovakia_terms()} {algeria_terms()}"
 
+
+_QUERY_WARN_LEN = 1500   # varovanie pri prekročení
+_QUERY_MAX_LEN  = 2048   # Google hard limit
+
+def check_query_length(query: str, qtype: str) -> None:
+    """Skontroluje dĺžku query a zaloguje varovanie / chybu ak sa blíži k limitu Googlu."""
+    n = len(query)
+    if n >= _QUERY_MAX_LEN:
+        logger.error(
+            "QUERY LIMIT EXCEEDED: %s má %d znakov (limit Googlu je ~%d). "
+            "Výsledky môžu byť neúplné alebo query môže byť ignorovaný. "
+            "Skráť zoznam preferovaných domén alebo použij vlastný preset v Admin → Queries.",
+            qtype.upper(), n, _QUERY_MAX_LEN,
+        )
+    elif n >= _QUERY_WARN_LEN:
+        logger.warning(
+            "QUERY TOO LONG: %s má %d znakov (varovanie pri %d, limit ~%d). "
+            "Zváž skrátenie zoznamu preferovaných domén.",
+            qtype.upper(), n, _QUERY_WARN_LEN, _QUERY_MAX_LEN,
+        )
+
 def compute_window(when: str) -> tuple[str, str]:
     """Vypočíta časové okno podľa when (napr. '7d', '70d', '2h').
     Returns ISO strings (start, end)."""
@@ -201,6 +222,16 @@ def _parse_serp_date(date_str: str | None, fetched_at: datetime) -> tuple[str | 
 
     if re.match(r"\d{4}-\d{2}-\d{2}", s):
         return s[:10], True
+
+    # DD.MM.YYYY alebo D.M.YYYY (európsky formát)
+    m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})\.(\d{4})", s)
+    if m:
+        try:
+            from datetime import date
+            d = date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+            return d.isoformat(), True
+        except ValueError:
+            pass
 
     m = _FR_REL.match(s)
     if m:
@@ -526,6 +557,7 @@ def main() -> None:
 
     # Q1: preferred media whitelist
     q1 = _load_active_query("q1") or build_query(PREFERRED_DOMAINS)
+    check_query_length(q1, "q1")
     logger.info("[1/2] Q1 (PREFERRED): %s", q1)
     try:
         q1_raw = serpapi_google_news_search(
@@ -545,6 +577,7 @@ def main() -> None:
 
     # Q2: broad Algerian web/context query
     q2 = _load_active_query("q2") or build_query()
+    check_query_length(q2, "q2")
     logger.info("[2/2] Q2 (CONTEXT): %s", q2)
     try:
         q2_raw = serpapi_google_news_search(
@@ -617,6 +650,7 @@ def main() -> None:
     if should_run_preferred_fallback(q1_raw, q2_raw, combined, num=num):
         time.sleep(1.0)
         q3 = _load_active_query("q3") or build_query_global()
+        check_query_length(q3, "q3")
         logger.info("\n[+fallback] Q3 (DZ BROAD): %s", q3)
         try:
             q3_raw = serpapi_google_news_search(

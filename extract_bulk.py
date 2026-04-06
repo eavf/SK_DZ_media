@@ -42,7 +42,8 @@ def _to_mysql_dt(iso: str | None) -> str | None:
 def fetch_pending(conn, limit: int) -> list[dict]:
     rows = conn.execute(text("""
         SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
-               a.title_fr, a.snippet_fr, a.language
+               a.title_fr, a.snippet_fr, a.language,
+               a.published_at_real
         FROM articles a
         JOIN sources s ON s.id = a.source_id
         WHERE a.content_text IS NULL
@@ -85,9 +86,25 @@ def translate_after_extraction(article_id: int, result, row: dict) -> None:
         logger.warning("DeepL zlyhal pre id=%s: %s", article_id, e)
 
 
-def save_result(conn, article_id: int, result) -> str:
-    """Uloží výsledok extrakcie. Vracia: 'ok', 'soft_deleted', 'commercial', 'failed'."""
-    published_at_real = _to_mysql_dt(result.published_at_real)
+def save_result(conn, article_id: int, result, existing_published_at_real: str | None = None) -> str:
+    """Uloží výsledok extrakcie. Vracia: 'ok', 'soft_deleted', 'commercial', 'failed'.
+
+    existing_published_at_real: hodnota published_at_real z DB pred extrakciou (zo SerpAPI ingesta).
+    Ak HTML dátum je novší ako SerpAPI dátum, SerpAPI dátum má prednosť — HTML môže obsahovať
+    'last modified' namiesto 'published'.
+    """
+    html_date = _to_mysql_dt(result.published_at_real)
+
+    if html_date and existing_published_at_real and html_date > str(existing_published_at_real):
+        published_at_real = str(existing_published_at_real)
+        published_conf_val = "search"
+        logger.debug(
+            "id=%s: HTML dátum (%s) je novší ako SerpAPI dátum (%s) — použijem SerpAPI dátum",
+            article_id, html_date, existing_published_at_real,
+        )
+    else:
+        published_at_real = html_date
+        published_conf_val = "absolute" if html_date else None
 
     if result.extraction_ok and result.no_slovak_context:
         conn.execute(text("""
@@ -115,7 +132,7 @@ def save_result(conn, article_id: int, result) -> str:
             "content_text": result.content_text,
             "content_hash": result.content_hash,
             "published_at_real": published_at_real,
-            "published_conf": "absolute" if published_at_real else None,
+            "published_conf": published_conf_val,
             "lang_detected": result.lang_detected,
             "id": article_id,
         })
@@ -145,7 +162,7 @@ def save_result(conn, article_id: int, result) -> str:
             "content_text": result.content_text,
             "content_hash": result.content_hash,
             "published_at_real": published_at_real,
-            "published_conf": "absolute" if published_at_real else None,
+            "published_conf": published_conf_val,
             "lang_detected": result.lang_detected,
             "id": article_id,
         })
@@ -275,7 +292,7 @@ def main() -> int:
             continue
 
         with engine.begin() as conn:
-            status = save_result(conn, article_id, result)
+            status = save_result(conn, article_id, result, row.get("published_at_real"))
 
         translate_after_extraction(article_id, result, row)
         counts[status] += 1

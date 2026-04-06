@@ -284,6 +284,21 @@ class TestParseSerp:
         assert iso is None
         assert is_abs is False
 
+    def test_dd_mm_yyyy_is_absolute(self):
+        iso, is_abs = _parse_serp_date("9.12.2025", self._NOW)
+        assert iso == "2025-12-09"
+        assert is_abs is True
+
+    def test_dd_mm_yyyy_zero_padded(self):
+        iso, is_abs = _parse_serp_date("09.01.2026", self._NOW)
+        assert iso == "2026-01-09"
+        assert is_abs is True
+
+    def test_dd_mm_yyyy_invalid_date_returns_none(self):
+        iso, is_abs = _parse_serp_date("32.13.2025", self._NOW)
+        assert iso is None
+        assert is_abs is False
+
 
 # ── _enrich_dates ─────────────────────────────────────────────────────────────
 

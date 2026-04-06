@@ -127,6 +127,60 @@ python app.py
 python scheduler.py
 ```
 
+### Search query configuration
+
+`search_flow_news.py` accepts four parameters that control each search run:
+
+| Parameter | Default | Description |
+|---|---|---|
+| `--hl` | `fr` | Result language passed to SerpAPI (e.g. `fr`, `ar`, `en`) |
+| `--gl` | `dz` | Search country passed to SerpAPI (e.g. `dz`, `fr`) |
+| `--num` | `20` | Maximum results per query |
+| `--when` | `7d` | Time window: `1d`, `7d`, `30d`, `2h`, etc. |
+
+**Manual run from the web UI** (`/search`): all four parameters are editable in the form before each run. Leaving a field empty uses the default.
+
+**Scheduled run** (`scheduler.py`): always uses the default values above — the scheduler passes no arguments to the script.
+
+#### Query strategy (Q1 / Q2 / Q3)
+
+Each run executes up to three SerpAPI queries:
+
+| Query | Scope | Trigger |
+|---|---|---|
+| Q1 | Preferred domains only (`site:domain1 OR site:domain2 …`) + Slovakia terms | Always |
+| Q2 | Broad Algerian web (`site:.dz`) + Slovakia terms | Always |
+| Q3 | Global fallback — Slovakia terms + Algeria terms, no `site:` restriction | Only if Q1+Q2 return too few results or no preferred-domain articles |
+
+**How query strings are assembled:**
+
+- **Q1:** `(site:aps.dz OR site:elmoudjahid.com OR …) (Slovaquie OR Slovak OR …) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page`
+- **Q2:** `site:.dz (Slovaquie OR Slovak OR …) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page`
+- **Q3:** `(Slovaquie OR Slovak OR …) (Algérie OR Algeria OR …)`
+
+Multi-word Algeria terms are automatically quoted (e.g. `"El Mouradia"`). URL filters are omitted from Q3 to maximise recall.
+
+**Effect of the `gl` parameter on each query:**
+
+- **Q1** — minimal impact. Results are already fixed to specific domains by the `site:` list.
+- **Q2** — partial. `site:.dz` already restricts to Algerian domains; `gl=dz` may affect ranking within those results.
+- **Q3** — most significant. With no `site:` restriction, `gl=dz` acts as a soft geographic filter: Google returns results as seen from Algeria, naturally prioritising Algerian and Francophone sources. Changing to `gl=fr` shifts the mix toward French sources; `gl=sk` would surface Slovak websites — neither is the intended behaviour.
+
+#### Query length limits
+
+Google enforces a hard limit of approximately **2 048 characters** per query string. At around **1 500 characters** the script emits a warning in the log; at or above 2 048 it logs an error indicating that results may be incomplete or the query may be silently truncated.
+
+The risk is highest for **Q1**: each preferred domain adds roughly 20–25 characters to the `site:` OR chain. With a large `sources.json` list, Q1 can approach the limit. Q2 and Q3 are unaffected in practice.
+
+If the warning appears, options are:
+- Remove lower-priority domains from `config/sources.json`
+- Save a shorter hand-crafted query as a Q1 preset via **Admin → Queries**
+
+#### Configuring queries and search terms
+
+- **Search terms** (Slovakia / Algeria keyword lists) — edit via **Admin → Search Terms** (`/admin/search-terms`) or directly in `config/search_terms.json`. Changes take effect immediately without restart.
+- **Query presets** — save custom query strings and switch between them via **Admin → Queries** (`/admin/queries`). The active preset overrides the auto-generated query for Q1, Q2, or Q3 independently. Setting a preset back to `default` restores dynamic generation from the current search terms.
+
 ### Authentication
 
 The app uses session-based authentication with four access levels:
@@ -344,6 +398,60 @@ python app.py
 python scheduler.py
 ```
 
+### Konfigurácia vyhľadávacích dopytov
+
+`search_flow_news.py` prijíma štyri parametre, ktoré riadia každé vyhľadávanie:
+
+| Parameter | Default | Popis |
+|---|---|---|
+| `--hl` | `fr` | Jazyk výsledkov pre SerpAPI (napr. `fr`, `ar`, `en`) |
+| `--gl` | `dz` | Krajina vyhľadávania pre SerpAPI (napr. `dz`, `fr`) |
+| `--num` | `20` | Maximálny počet výsledkov na dopyt |
+| `--when` | `7d` | Časové okno: `1d`, `7d`, `30d`, `2h` atď. |
+
+**Manuálne spustenie cez web UI** (`/search`): všetky štyri parametre sú editovateľné vo formulári pred každým spustením. Prázdne pole použije default.
+
+**Automatické spustenie** (`scheduler.py`): vždy používa vyššie uvedené defaulty — scheduler neodovzdáva skriptu žiadne argumenty.
+
+#### Stratégia dopytov (Q1 / Q2 / Q3)
+
+Každý beh vykonáva až tri SerpAPI dopyty:
+
+| Dopyt | Rozsah | Spustenie |
+|---|---|---|
+| Q1 | Len preferované domény (`site:domena1 OR site:domena2 …`) + slovenské termíny | Vždy |
+| Q2 | Široký alžírsky web (`site:.dz`) + slovenské termíny | Vždy |
+| Q3 | Globálny fallback — slovenské termíny + alžírske termíny, bez obmedzenia `site:` | Len ak Q1+Q2 vrátia málo výsledkov alebo žiadne z preferovaných domén |
+
+**Skladba query reťazcov:**
+
+- **Q1:** `(site:aps.dz OR site:elmoudjahid.com OR …) (Slovaquie OR Slovak OR …) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page`
+- **Q2:** `site:.dz (Slovaquie OR Slovak OR …) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page`
+- **Q3:** `(Slovaquie OR Slovak OR …) (Algérie OR Algeria OR …)`
+
+Viacslovné alžírske termíny sa automaticky dávajú do úvodzoviek (napr. `"El Mouradia"`). URL filtre sa v Q3 vynechávajú, aby sa maximalizoval záber.
+
+**Vplyv parametra `gl` na jednotlivé dopyty:**
+
+- **Q1** — minimálny. Výsledky sú fixované na konkrétne domény cez `site:` zoznam.
+- **Q2** — čiastočný. `site:.dz` už obmedzuje na alžírske domény; `gl=dz` môže ovplyvniť zoradenie výsledkov v ich rámci.
+- **Q3** — **najvýraznejší**. Bez `site:` obmedzenia `gl=dz` funguje ako soft geografický filter: Google vracia výsledky akoby používateľ hľadal z Alžírska, čím prirodzene uprednostňuje alžírske a frankofónne zdroje. Zmena na `gl=fr` posunie mix smerom k francúzskym zdrojom; `gl=sk` by vracal slovenské weby — žiadna z týchto alternatív nie je žiaduca.
+
+#### Limity dĺžky query
+
+Google má hard limit približne **2 048 znakov** na jeden query reťazec. Pri **1 500 znakoch** skript vypíše varovanie do logu; pri 2 048 a viac zaloguje chybu s upozornením, že výsledky môžu byť neúplné alebo query môže byť potichu skrátený.
+
+Riziko sa týka hlavne **Q1**: každá preferovaná doména pridá ~20–25 znakov do `site:` OR reťazca. Pri rozsiahlom zozname `sources.json` sa Q1 môže priblížiť k limitu. Q2 a Q3 sú v praxi bezpečné.
+
+Ak sa varovanie objaví, možnosti sú:
+- Odstrán menej dôležité domény z `config/sources.json`
+- Ulož kratší ručne zostavený query ako Q1 preset cez **Admin → Queries**
+
+#### Nastavenie dopytov a vyhľadávacích termínov
+
+- **Vyhľadávacie termíny** (zoznamy kľúčových slov pre Slovensko / Alžírsko) — upraviť cez **Admin → Search Terms** (`/admin/search-terms`) alebo priamo v `config/search_terms.json`. Zmeny sa prejavia okamžite bez reštartu.
+- **Presety dopytov** — uložiť vlastné query reťazce a prepínať medzi nimi cez **Admin → Queries** (`/admin/queries`). Aktívny preset nahradí automaticky generovaný dopyt pre Q1, Q2 alebo Q3 nezávisle. Nastavením presetu späť na `default` sa obnoví dynamické generovanie z aktuálnych termínov.
+
 ### Autentifikácia
 
 Aplikácia používa session-based autentifikáciu so štyrmi úrovňami prístupu:
@@ -560,6 +668,60 @@ python app.py
 ```bash
 python scheduler.py
 ```
+
+### Configuration des requêtes de recherche
+
+`search_flow_news.py` accepte quatre paramètres qui contrôlent chaque exécution de recherche :
+
+| Paramètre | Défaut | Description |
+|---|---|---|
+| `--hl` | `fr` | Langue des résultats transmise à SerpAPI (ex. `fr`, `ar`, `en`) |
+| `--gl` | `dz` | Pays de recherche transmis à SerpAPI (ex. `dz`, `fr`) |
+| `--num` | `20` | Nombre maximum de résultats par requête |
+| `--when` | `7d` | Fenêtre temporelle : `1d`, `7d`, `30d`, `2h`, etc. |
+
+**Exécution manuelle depuis l'interface web** (`/search`) : les quatre paramètres sont modifiables dans le formulaire avant chaque exécution. Laisser un champ vide utilise la valeur par défaut.
+
+**Exécution planifiée** (`scheduler.py`) : utilise toujours les valeurs par défaut ci-dessus — le planificateur ne transmet aucun argument au script.
+
+#### Stratégie des requêtes (Q1 / Q2 / Q3)
+
+Chaque exécution lance jusqu'à trois requêtes SerpAPI :
+
+| Requête | Périmètre | Déclenchement |
+|---|---|---|
+| Q1 | Domaines préférés uniquement (`site:domaine1 OR site:domaine2 …`) + termes Slovaquie | Toujours |
+| Q2 | Web algérien large (`site:.dz`) + termes Slovaquie | Toujours |
+| Q3 | Repli global — termes Slovaquie + termes Algérie, sans restriction `site:` | Uniquement si Q1+Q2 retournent trop peu de résultats ou aucun article de domaine préféré |
+
+**Composition des chaînes de requête :**
+
+- **Q1 :** `(site:aps.dz OR site:elmoudjahid.com OR …) (Slovaquie OR Slovak OR …) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page`
+- **Q2 :** `site:.dz (Slovaquie OR Slovak OR …) -inurl:recherche -inurl:search -inurl:tag -inurl:tags -inurl:page`
+- **Q3 :** `(Slovaquie OR Slovak OR …) (Algérie OR Algeria OR …)`
+
+Les termes algériens composés de plusieurs mots sont automatiquement mis entre guillemets (ex. `"El Mouradia"`). Les filtres d'URL sont omis de Q3 pour maximiser le rappel.
+
+**Effet du paramètre `gl` sur chaque requête :**
+
+- **Q1** — impact minimal. Les résultats sont déjà fixés à des domaines spécifiques par la liste `site:`.
+- **Q2** — partiel. `site:.dz` restreint déjà aux domaines algériens ; `gl=dz` peut influencer le classement au sein de ces résultats.
+- **Q3** — **le plus significatif**. Sans restriction `site:`, `gl=dz` joue le rôle de filtre géographique doux : Google retourne les résultats comme si l'utilisateur cherchait depuis l'Algérie, favorisant naturellement les sources algériennes et francophones. Passer à `gl=fr` déplace le mix vers les sources françaises ; `gl=sk` ferait remonter des sites slovaques — aucune de ces alternatives n'est souhaitable.
+
+#### Limites de longueur des requêtes
+
+Google impose une limite stricte d'environ **2 048 caractères** par chaîne de requête. À partir de **1 500 caractères**, le script émet un avertissement dans le journal ; à 2 048 caractères ou plus, il enregistre une erreur indiquant que les résultats peuvent être incomplets ou que la requête peut être tronquée silencieusement.
+
+Le risque est le plus élevé pour **Q1** : chaque domaine préféré ajoute environ 20–25 caractères à la chaîne `site:` OR. Avec une liste `sources.json` étendue, Q1 peut approcher la limite. Q2 et Q3 ne sont pas concernés en pratique.
+
+Si l'avertissement apparaît, les options sont :
+- Supprimer les domaines moins prioritaires de `config/sources.json`
+- Enregistrer une requête plus courte comme préréglage Q1 via **Admin → Queries**
+
+#### Configuration des requêtes et des termes de recherche
+
+- **Termes de recherche** (listes de mots-clés Slovaquie / Algérie) — à modifier via **Admin → Search Terms** (`/admin/search-terms`) ou directement dans `config/search_terms.json`. Les modifications prennent effet immédiatement sans redémarrage.
+- **Préréglages de requêtes** — enregistrez des chaînes de requête personnalisées et basculez entre elles via **Admin → Queries** (`/admin/queries`). Le préréglage actif remplace la requête générée automatiquement pour Q1, Q2 ou Q3 indépendamment. Remettre un préréglage sur `default` restaure la génération dynamique à partir des termes de recherche courants.
 
 ### Authentification
 

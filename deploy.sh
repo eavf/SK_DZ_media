@@ -46,7 +46,7 @@ fi
 if [[ $MODE == "no-rebuild" ]]; then
   echo "--> Kopírujem config a static (bez rebuildu)..."
   tar -czf - --exclude='__pycache__' --exclude='*.pyc' -C "${LOCAL_DIR}" config | \
-    ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR}"
+    ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR} && chmod 666 ${REMOTE_DIR}/config/*.json"
   ${SCP} -r "${LOCAL_DIR}/static"    "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
   echo "--> Rešartujem kontajner..."
   ${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose restart"
@@ -87,7 +87,7 @@ ${SCP} \
 
 ${SCP} -r "${LOCAL_DIR}/templates" "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
 tar -czf - --exclude='__pycache__' --exclude='*.pyc' -C "${LOCAL_DIR}" config | \
-  ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR}"
+  ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR} && chmod 666 ${REMOTE_DIR}/config/*.json"
 ${SCP} -r "${LOCAL_DIR}/static"    "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
 
 # ── 4. Nastav práva na zapisovateľné adresáre ─────────────────────────────────

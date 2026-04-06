@@ -5,7 +5,7 @@ import json
 import hashlib
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
@@ -141,6 +141,74 @@ _ABSOLUTE_PATTERNS = [
     r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b.*\b20\d{2}\b",
     r"\b\d{1,2}\s+\w+\.\s+20\d{2}\b",
 ]
+
+
+_FR_REL = re.compile(
+    r"il\s+y\s+a\s+(\d+)\s+(minute|minutes|heure|heures|jour|jours|semaine|semaines|mois)",
+    re.IGNORECASE,
+)
+_EN_REL = re.compile(
+    r"(\d+)\s+(minute|minutes|hour|hours|day|days|week|weeks)\s+ago",
+    re.IGNORECASE,
+)
+
+
+def _resolve_raw_date(date_str: Optional[str], fetched_at: Optional[datetime]) -> Optional[str]:
+    """Normalizuje surový SerpAPI dátum na ISO reťazec (YYYY-MM-DD).
+    Relatívne reťazce ("Il y a 6 jours") sa prepočítajú podľa fetched_at.
+    Výsledok sa ukladá do published_at_text — published_at_real ostáva NULL.
+    Ak sa nedá parsovať, vráti pôvodný reťazec."""
+    if not date_str:
+        return date_str
+    s = date_str.strip()
+
+    # ISO YYYY-MM-DD
+    if re.match(r"\d{4}-\d{2}-\d{2}", s):
+        return s[:10]
+
+    # DD.MM.YYYY
+    m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})\.(\d{4})", s)
+    if m:
+        try:
+            return date(int(m.group(3)), int(m.group(2)), int(m.group(1))).isoformat()
+        except ValueError:
+            pass
+
+    if not fetched_at:
+        return date_str
+
+    m = _FR_REL.match(s)
+    if m:
+        n, unit = int(m.group(1)), m.group(2).lower()
+        if unit.startswith("minute"):
+            delta = timedelta(minutes=n)
+        elif unit.startswith("heure"):
+            delta = timedelta(hours=n)
+        elif unit.startswith("jour"):
+            delta = timedelta(days=n)
+        elif unit.startswith("semaine"):
+            delta = timedelta(weeks=n)
+        else:  # mois
+            delta = timedelta(days=n * 30)
+        return (fetched_at - delta).date().isoformat()
+
+    m = _EN_REL.match(s)
+    if m:
+        n, unit = int(m.group(1)), m.group(2).lower()
+        if unit.startswith("minute"):
+            delta = timedelta(minutes=n)
+        elif unit.startswith("hour"):
+            delta = timedelta(hours=n)
+        elif unit.startswith("day"):
+            delta = timedelta(days=n)
+        else:  # week
+            delta = timedelta(weeks=n)
+        return (fetched_at - delta).date().isoformat()
+
+    if re.match(r"(yesterday|hier)$", s, re.IGNORECASE):
+        return (fetched_at - timedelta(days=1)).date().isoformat()
+
+    return date_str  # neznámy formát, vrátime pôvodný
 
 
 def classify_published_at(date_str: Optional[str]) -> str:
@@ -288,7 +356,7 @@ def _engine_from_payload(payload: dict) -> str:
     return "google_news"
 
 
-def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, preferred_domains: set[str]) -> Optional[ArticleCandidate]:
+def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, preferred_domains: set[str], fetched_at: Optional[datetime] = None) -> Optional[ArticleCandidate]:
     url = item.get("link") or ""
     if not url:
         return None
@@ -301,9 +369,9 @@ def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, pr
     if not dom:
         return None
 
-    published_raw = item.get("date")
+    published_raw = _resolve_raw_date(item.get("date"), fetched_at)
     published_iso = item.get("published_at")  # ISO date added by search_flow_news enrichment
-    conf = classify_published_at(str(published_raw) if published_raw is not None else None)
+    conf = classify_published_at(published_raw)
 
     title = item.get("title")
     normalized_title = normalize_title(title)
@@ -343,8 +411,11 @@ def build_candidates(payload: dict, *, preferred_domains: set[str], default_quer
     engine_name = _engine_from_payload(payload)
     out: list[ArticleCandidate] = []
 
+    ts = (payload.get("run") or {}).get("timestamp")
+    fetched_at = datetime.fromtimestamp(ts) if ts else None
+
     for qid, rank, item in _extract_news_results(payload, default_query_id=default_query_id):
-        cand = news_item_to_candidate(item, qid, rank, engine_name, preferred_domains)
+        cand = news_item_to_candidate(item, qid, rank, engine_name, preferred_domains, fetched_at)
         if cand:
             out.append(cand)
 

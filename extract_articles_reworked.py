@@ -432,7 +432,8 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
             result.is_commercial = True
 
         slovakia_terms = s.search_terms.get("slovakia", [])
-        if not any(t.lower() in text_out.lower() for t in slovakia_terms):
+        combined_sk = "\n".join(filter(None, [item.title or "", item.snippet or "", text_out])).lower()
+        if not any(t.lower() in combined_sk for t in slovakia_terms):
             result.no_slovak_context = True
 
         result.extraction_ok = True

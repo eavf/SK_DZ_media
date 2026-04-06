@@ -1,8 +1,26 @@
 {% extends "base.html" %}
+{% block styles %}
+<style>
+  a.pill-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 10px;
+    font-size: 13px;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
 {% block content %}
 <div class="card">
   <h1>Chyby</h1>
   <div class="sub">Posledných {{ days }} dní, max 300.</div>
+
+  <div class="actions" style="margin-top:10px">
+    <a class="pill pill-btn" href="/export/csv?errors_only=1&days={{ days }}&extraction=all&av=1">Export CSV</a>
+    <a class="pill pill-btn" href="/export/word?errors_only=1&days={{ days }}&extraction=all&av=1">Export Word</a>
+  </div>
 
   <table class="table">
     <thead>

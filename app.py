@@ -284,12 +284,15 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
     # Slovak context filter:
     # If extracted text exists -> search there; else fall back to title/snippet.
     if only_slovak:
-        # Use LOWER + LIKE for portability
         like_terms = []
         for i, term in enumerate(SLOVAK_TERMS):
             key = f"t{i}"
             params[key] = f"%{term.lower()}%"
-            like_terms.append(f"LOWER(COALESCE(a.content_text, a.title, a.snippet, '')) LIKE :{key}")
+            like_terms.append(
+                f"(LOWER(COALESCE(a.content_text,'')) LIKE :{key}"
+                f" OR LOWER(COALESCE(a.title,'')) LIKE :{key}"
+                f" OR LOWER(COALESCE(a.snippet,'')) LIKE :{key})"
+            )
         where.append("(" + " OR ".join(like_terms) + ")")
 
     return (" AND ".join(where) if where else "1=1"), params
@@ -427,6 +430,7 @@ def browse():
             COALESCE(a.title_fr, a.title) AS title,
             s.domain,
             COALESCE(DATE_FORMAT(a.published_at_real, '%Y-%m-%d %H:%i:%s'), a.published_at_text) AS published,
+            (a.published_at_real IS NULL) AS published_estimated,
             COALESCE(a.final_url, a.url) AS url,
             COALESCE(a.extraction_ok, 0) = 1 AS extraction_ok,
             a.fetch_error,
@@ -443,7 +447,7 @@ def browse():
         FROM articles a
         JOIN sources s ON s.id = a.source_id
         WHERE {where_sql}
-        ORDER BY a.published_at_real IS NULL, a.published_at_real DESC
+        ORDER BY a.published_at_real IS NULL, a.published_at_real DESC, a.first_seen_at DESC
         LIMIT {limit}
     """
 
@@ -585,20 +589,114 @@ def bulk_exclude_domains():
 
 @app.get("/stats")
 def stats():
-    """
-    Štatistika umlčaných domén:
-    - koľko článkov by sa defaultne skrylo (t.j. ušetrilo)
-    - koľko z nich je soft-deleted
-    - posledný výskyt
-    + filter domain priamo v /stats
-    + top 10 umlčaných podľa "saved"
-    + (optional) články pre vybranú doménu
-    """
     domain = (request.args.get("domain") or "").strip().lower()
-    days = int(request.args.get("days", 0))
+    days = int(request.args.get("days", 30))
     cutoff = datetime(2000, 1, 1) if days == 0 else datetime.now() - timedelta(days=days)
 
     engine = get_db_engine()
+
+    # --- Celkové štatistiky ---
+    with engine.begin() as conn:
+        g = conn.execute(text("""
+            SELECT
+                COUNT(*) AS total,
+                SUM(a.extraction_ok) AS extracted,
+                SUM(CASE WHEN a.fetch_error IS NOT NULL AND TRIM(a.fetch_error) <> '' THEN 1 ELSE 0 END) AS with_errors,
+                SUM(CASE WHEN a.relevance = 1 THEN 1 ELSE 0 END) AS rel_pos,
+                SUM(CASE WHEN a.relevance = 0 THEN 1 ELSE 0 END) AS rel_neg,
+                SUM(CASE WHEN a.relevance IS NULL THEN 1 ELSE 0 END) AS rel_null,
+                SUM(CASE WHEN a.deleted_at IS NOT NULL THEN 1 ELSE 0 END) AS deleted,
+                COUNT(DISTINCT a.source_id) AS source_count
+            FROM articles a
+            JOIN sources s ON s.id = a.source_id
+            WHERE a.last_seen_at >= :cutoff
+        """), {"cutoff": cutoff}).mappings().one()
+    general = dict(g)
+
+    # --- Rozloženie chýb ---
+    with engine.begin() as conn:
+        err_raw = conn.execute(text("""
+            SELECT fetch_error, COUNT(*) AS cnt
+            FROM articles
+            WHERE fetch_error IS NOT NULL AND TRIM(fetch_error) <> ''
+              AND deleted_at IS NULL
+              AND last_seen_at >= :cutoff
+            GROUP BY fetch_error
+            ORDER BY cnt DESC
+        """), {"cutoff": cutoff}).mappings().all()
+
+    from collections import defaultdict
+    agg: dict = defaultdict(int)
+    for r in err_raw:
+        fe = r["fetch_error"] or ""
+        m = re.search(r"(\d{3})", fe)
+        if fe.startswith("HTTPError") and m:
+            label_key = f"HTTP {m.group(1)}"
+        else:
+            label_key = fe.split(":")[0].strip() or fe[:40]
+        agg[label_key] += int(r["cnt"])
+    error_dist = sorted([{"label": k, "cnt": v} for k, v in agg.items()], key=lambda x: -x["cnt"])
+
+    # --- SK timeline ---
+    # LIKE podmienky z SLOVAK_TERMS (rovnaká logika ako browse SK filter)
+    sk_likes = []
+    sk_params = {}
+    for i, term in enumerate(SLOVAK_TERMS):
+        k = f"sk{i}"
+        sk_params[k] = f"%{term.lower()}%"
+        sk_likes.append(
+            f"(LOWER(COALESCE(a.content_text,'')) LIKE :{k}"
+            f" OR LOWER(COALESCE(a.title,'')) LIKE :{k}"
+            f" OR LOWER(COALESCE(a.snippet,'')) LIKE :{k})"
+        )
+    sk_condition = "(" + " OR ".join(sk_likes) + ")" if sk_likes else "1=0"
+
+    chart_cutoff = cutoff if days > 0 else datetime.now() - timedelta(days=365)
+    group_by_week = days == 0 or days > 90
+
+    # Dátum publikácie: published_at_real, fallback na published_at_text (ISO)
+    pub_date = "COALESCE(DATE(a.published_at_real), DATE(STR_TO_DATE(a.published_at_text, '%Y-%m-%d')))"
+
+    if group_by_week:
+        date_expr = f"YEARWEEK({pub_date}, 1)"
+        date_label_expr = f"MIN({pub_date})"
+    else:
+        date_expr = pub_date
+        date_label_expr = pub_date
+
+    tl_params = {**sk_params, "chart_cutoff": chart_cutoff}
+
+    with engine.begin() as conn:
+        tl_rows = conn.execute(text(f"""
+            SELECT
+                {date_label_expr} AS day,
+                COUNT(*) AS sk_count,
+                SUM(CASE WHEN a.relevance = 1 THEN 1 ELSE 0 END) AS sk_rel
+            FROM articles a
+            JOIN sources s ON s.id = a.source_id
+            WHERE {sk_condition}
+              AND a.deleted_at IS NULL
+              AND COALESCE(a.published_at_real, STR_TO_DATE(a.published_at_text, '%Y-%m-%d')) >= :chart_cutoff
+            GROUP BY {date_expr}
+            ORDER BY day
+        """), tl_params).mappings().all()
+
+    max_sk = max((int(r["sk_count"]) for r in tl_rows), default=1)
+    sk_timeline = []
+    for i, r in enumerate(tl_rows):
+        day_str = str(r["day"])
+        sk_count = int(r["sk_count"])
+        sk_rel = int(r["sk_rel"])
+        show_label = (group_by_week or len(tl_rows) <= 31 or i % 7 == 0)
+        sk_timeline.append({
+            "day": day_str,
+            "label": day_str[5:] if len(day_str) >= 7 else day_str,
+            "show_label": show_label,
+            "sk_count": sk_count,
+            "sk_rel": sk_rel,
+            "sk_pct": round(sk_count / max_sk * 100),
+            "rel_pct": round(sk_rel / max_sk * 100),
+        })
 
     # 1) TOP 10 (vždy, bez domain filtra)
     with engine.begin() as conn:
@@ -704,6 +802,10 @@ def stats():
         domain=domain,
         total_saved=total_saved,
         total_saved_all=int(total_saved_all),
+        general=general,
+        error_dist=error_dist,
+        sk_timeline=sk_timeline,
+        group_by_week=group_by_week,
     )
 
 
@@ -764,7 +866,10 @@ def export_csv():
     relevance = request.args.get("rel", "all")
     include_deleted = request.args.get("del", "0") == "1"
     include_avoided = request.args.get("av", "0") == "1"
+    errors_only = request.args.get("errors_only", "0") == "1"
     where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided)
+
+    errors_clause = " AND (a.fetch_error IS NOT NULL AND TRIM(a.fetch_error) <> '')" if errors_only else ""
 
     sql = f"""
         SELECT
@@ -774,11 +879,12 @@ def export_csv():
             COALESCE(a.final_url, a.url) AS url,
             a.title,
             a.snippet,
+            a.fetch_error,
             a.relevance,
             a.relevance_note
         FROM articles a
         JOIN sources s ON s.id = a.source_id
-        WHERE {where_sql}
+        WHERE {where_sql}{errors_clause}
         ORDER BY a.last_seen_at DESC
     """
 
@@ -788,15 +894,16 @@ def export_csv():
 
     out = io.StringIO()
     writer = csv.writer(out, delimiter=";")
-    writer.writerow(["id", "domain", "published", "url", "title", "snippet", "relevance", "note"])
+    writer.writerow(["id", "domain", "published", "url", "title", "snippet", "fetch_error", "relevance", "note"])
 
     if not rows:
-        writer.writerow(["", "", "", "", "Žiadne nové správy", "", "", ""])
+        writer.writerow(["", "", "", "", "Žiadne nové správy", "", "", "", ""])
     else:
         for r in rows:
             writer.writerow([
                 r.id, r.domain, r.published or "", r.url,
                 r.title or "", r.snippet or "",
+                r.fetch_error or "",
                 "" if r.relevance is None else int(r.relevance),
                 r.relevance_note or ""
             ])
@@ -816,8 +923,11 @@ def export_word():
     relevance = request.args.get("rel", "all")
     include_deleted = request.args.get("del", "0") == "1"
     include_avoided = request.args.get("av", "0") == "1"
+    errors_only = request.args.get("errors_only", "0") == "1"
 
     where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided)
+
+    errors_clause = " AND (a.fetch_error IS NOT NULL AND TRIM(a.fetch_error) <> '')" if errors_only else ""
 
     sql = f"""
         SELECT
@@ -827,12 +937,13 @@ def export_word():
             COALESCE(a.final_url, a.url) AS url,
             a.title,
             a.snippet,
+            a.fetch_error,
             a.content_text,
             a.relevance,
             a.relevance_note
         FROM articles a
         JOIN sources s ON s.id = a.source_id
-        WHERE {where_sql}
+        WHERE {where_sql}{errors_clause}
         ORDER BY a.last_seen_at DESC
         LIMIT 200
     """
@@ -1938,6 +2049,118 @@ def search_terms_delete():
         _reload_search_terms()
         flash(f"Odstránený termín: {term}", "ok")
     return redirect(url_for("search_terms_page"))
+
+
+# ---------------------------------------------------------------------------
+# Admin – Maintenance
+# ---------------------------------------------------------------------------
+
+@app.get("/admin/maintenance")
+@admin_required
+def maintenance_page():
+    from fix_serp_dates import fix_relative_dates
+    from config.config import get_db_engine
+    stats = fix_relative_dates(apply=False, engine=get_db_engine())
+    return render_template("admin_maintenance.html", stats=stats)
+
+
+@app.post("/admin/maintenance/fix-dates")
+@admin_required
+def maintenance_fix_dates():
+    from fix_serp_dates import fix_relative_dates
+    from config.config import get_db_engine
+    stats = fix_relative_dates(apply=True, engine=get_db_engine())
+    flash(f"Opravených záznamov: {stats['updated']} z {stats['to_fix']}", "ok")
+    return redirect(url_for("maintenance_page"))
+
+
+@app.get("/admin/maintenance/backup")
+@admin_required
+def maintenance_backup():
+    s = get_settings()
+    env = {**os.environ, "MYSQL_PWD": s.db_pass}
+    cmd = [
+        "mysqldump",
+        "-u", s.db_user,
+        "-h", s.db_host,
+        f"--port={s.db_port}",
+        "--no-tablespaces",
+        "--single-transaction",
+        "--routines",
+        "--triggers",
+        s.db_name,
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, env=env, timeout=120)
+    except FileNotFoundError:
+        flash("mysqldump nie je dostupný na serveri.", "bad")
+        return redirect(url_for("maintenance_page"))
+    except subprocess.TimeoutExpired:
+        flash("mysqldump vypršal časový limit (120s).", "bad")
+        return redirect(url_for("maintenance_page"))
+
+    if result.returncode != 0:
+        err = result.stderr.decode(errors="replace")[:300]
+        flash(f"mysqldump zlyhalo: {err}", "bad")
+        return redirect(url_for("maintenance_page"))
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"dz_news_backup_{ts}.sql"
+    mem = io.BytesIO(result.stdout)
+    return send_file(mem, as_attachment=True, download_name=filename, mimetype="application/sql")
+
+
+@app.post("/admin/maintenance/restore")
+@admin_required
+def maintenance_restore():
+    f = request.files.get("backup_file")
+    if not f or not f.filename:
+        flash("Žiadny súbor nebol nahraný.", "bad")
+        return redirect(url_for("maintenance_page"))
+    if not f.filename.endswith(".sql"):
+        flash("Nahraj .sql súbor.", "bad")
+        return redirect(url_for("maintenance_page"))
+
+    s = get_settings()
+    env = {**os.environ, "MYSQL_PWD": s.db_pass}
+    base_cmd = ["mysql", "-u", s.db_user, "-h", s.db_host, f"--port={s.db_port}"]
+
+    # 1. Ensure schema exists (CREATE IF NOT EXISTS)
+    init_sql = Path(__file__).parent / "migrations" / "000_init_schema.sql"
+    if init_sql.exists():
+        try:
+            r = subprocess.run(
+                base_cmd,
+                input=init_sql.read_bytes(),
+                capture_output=True, env=env, timeout=30,
+            )
+            if r.returncode != 0:
+                err = r.stderr.decode(errors="replace")[:300]
+                flash(f"Inicializácia schémy zlyhala: {err}", "bad")
+                return redirect(url_for("maintenance_page"))
+        except subprocess.TimeoutExpired:
+            flash("Inicializácia schémy vypršala.", "bad")
+            return redirect(url_for("maintenance_page"))
+
+    # 2. Apply uploaded dump
+    dump_bytes = f.read()
+    try:
+        r = subprocess.run(
+            base_cmd + [s.db_name],
+            input=dump_bytes,
+            capture_output=True, env=env, timeout=300,
+        )
+    except subprocess.TimeoutExpired:
+        flash("Obnova vypršala časový limit (300s).", "bad")
+        return redirect(url_for("maintenance_page"))
+
+    if r.returncode != 0:
+        err = r.stderr.decode(errors="replace")[:300]
+        flash(f"Obnova zlyhala: {err}", "bad")
+        return redirect(url_for("maintenance_page"))
+
+    flash("Záloha bola úspešne obnovená.", "ok")
+    return redirect(url_for("maintenance_page"))
 
 
 if __name__ == "__main__":

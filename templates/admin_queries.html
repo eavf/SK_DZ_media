@@ -35,10 +35,46 @@
 
 <div class="card">
   <h1>SerpAPI Query Presety</h1>
-  <div class="sub">
+  <div class="sub" style="margin-top:6px">
     Zmeny sa uložia do <code>config/queries.json</code> a použijú sa pri ďalšom spustení search_flow_news.py.<br>
     <code>null</code> query = generuje sa dynamicky z <a href="/admin/search-terms">Search Terms</a> + preferred domains.
   </div>
+
+  <details class="box" style="margin-top:14px">
+    <summary style="cursor:pointer;font-weight:600;user-select:none">Nápoveda — ako fungujú Q1 / Q2 / Q3</summary>
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:18px">
+
+      <table class="table">
+        <thead><tr><th>Query</th><th>Rozsah</th><th>Spustenie</th></tr></thead>
+        <tbody>
+          <tr class="trow"><td><strong>Q1</strong></td><td><code>(site:domena1 OR site:domena2 …) (SK terms) -inurl:…</code></td><td>Vždy</td></tr>
+          <tr class="trow"><td><strong>Q2</strong></td><td><code>site:.dz (SK terms) -inurl:…</code></td><td>Vždy</td></tr>
+          <tr class="trow"><td><strong>Q3</strong></td><td><code>(SK terms) (DZ terms)</code> — bez site: obmedzenia</td><td>Fallback: ak Q1+Q2 vrátia málo výsledkov alebo žiadne z preferovaných domén</td></tr>
+        </tbody>
+      </table>
+
+      <div class="small">
+        <strong>Operátory:</strong> medzi termínmi v zátvorkách je implicitné <code>OR</code> — stačí jedno slovo.<br>
+        Bloky vedľa seba (Q3) sú implicitné <code>AND</code> — stránka musí obsahovať aspoň jeden SK aj jeden DZ termín.<br>
+        Viacslovné termíny dostanú úvodzovky automaticky (<code>"El Mouradia"</code>). URL filtre (<code>-inurl:tag</code>…) sa v Q3 vynechávajú.
+      </div>
+
+      <div class="small">
+        <strong>Vplyv parametra <code>gl</code>:</strong><br>
+        Q1 — minimálny (výsledky fixuje <code>site:</code> zoznam).<br>
+        Q2 — čiastočný (môže ovplyvniť zoradenie v rámci .dz).<br>
+        Q3 — <strong>najvýraznejší</strong>: bez <code>site:</code> obmedzenia <code>gl=dz</code> funguje ako soft geografický filter a uprednostňuje alžírske a frankofónne zdroje.
+      </div>
+
+      <div class="small">
+        <strong>Limit dĺžky:</strong> Google má hard limit ~<strong>2 048 znakov</strong>.<br>
+        Riziko je pri Q1 — každá doména pridá ~20–25 znakov do <code>site:</code> reťazca.<br>
+        Pri ≥ 1 500 zn. skript zaloguje varovanie, pri ≥ 2 048 zn. chybu.<br>
+        Riešenie: skráť zoznam domén alebo ulož kratší vlastný preset pre Q1.
+      </div>
+
+    </div>
+  </details>
 
   {% set qtypes = [
     ("q1", "Q1 — Preferované domény", "Preferred whitelist: (site:domain1 OR ...) (SK terms) -inurl:..."),

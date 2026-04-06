@@ -41,15 +41,33 @@
         <a class="pill {% if request.path == '/' %}ok{% endif %}" href="/">Dashboard</a>
         <a class="pill {% if request.path == '/browse' %}ok{% endif %}" href="/browse">Browse</a>
         <a class="pill {% if request.path == '/stats' %}ok{% endif %}" href="/stats">Stats</a>
-        {% if current_user.is_authenticated and current_user.is_admin %}
-          <a class="pill {% if request.path == '/users' %}ok{% endif %}" href="/users">Používatelia</a>
-          {% if request.path in ['/', '/search', '/stats'] %}
-            <a class="pill {% if request.path == '/admin/search-terms' %}ok{% endif %}" href="/admin/search-terms">Search Terms</a>
-            <a class="pill {% if request.path == '/admin/queries' %}ok{% endif %}" href="/admin/queries">Queries</a>
-          {% endif %}
-        {% endif %}
       </div>
     </div>
+
+    {% if current_user.is_authenticated and current_user.has_role('user') %}
+    <div class="adminbar">
+      {% if current_user.is_admin %}
+        <span class="pill admin" style="opacity:.7;font-size:11px">Admin</span>
+        <a class="pill {% if request.path == '/sources' %}ok{% endif %}" href="/sources">Zdroje</a>
+        <a class="pill {% if request.path == '/users' %}ok{% endif %}" href="/users">Používatelia</a>
+        <a class="pill {% if request.path == '/admin/search-terms' %}ok{% endif %}" href="/admin/search-terms">Search Terms</a>
+        <a class="pill {% if request.path == '/admin/queries' %}ok{% endif %}" href="/admin/queries">Queries</a>
+        <a class="pill {% if request.path == '/admin/maintenance' %}ok{% endif %}" href="/admin/maintenance">Údržba</a>
+        <span class="topbar-sep"></span>
+      {% elif current_user.has_role('power') %}
+        <span class="pill" style="opacity:.7;font-size:11px">Power</span>
+        <span class="topbar-sep"></span>
+      {% else %}
+        <span class="pill" style="opacity:.7;font-size:11px">User</span>
+        <span class="topbar-sep"></span>
+      {% endif %}
+      <a class="pill {% if request.path == '/search' %}ok{% endif %}" href="/search">Search</a>
+      <a class="pill {% if request.path == '/process' %}ok{% endif %}" href="/process">Process</a>
+      {% if current_user.has_role('power') %}
+        <a class="pill {% if request.path == '/errors' %}ok{% endif %}" href="/errors">Errors</a>
+      {% endif %}
+    </div>
+    {% endif %}
 
     {% block content %}{% endblock %}
 

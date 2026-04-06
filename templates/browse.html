@@ -128,7 +128,7 @@
 
       <div class="hr" style="width:100%;flex-basis:100%"></div>
 
-      <div class="small" style="margin-top:10px;line-height:1.8">
+      <div class="small" style="margin-top:10px">
         <strong>Vrátených:</strong> {{ total }} (limit {{ limit }}) &nbsp;|&nbsp;
         extrahované: <strong>{{ stats.extracted }}</strong> &nbsp;
         bez textu: <strong>{{ stats.unextracted }}</strong> &nbsp;|&nbsp;
@@ -162,13 +162,8 @@
 
         <div class="hr" style="width:100%;margin:12px 0 8px"></div>
 
-        <form method="post" action="/export/csv">
-          <button type="submit">Export CSV</button>
-        </form>
-
-        <form method="post" action="/export/word">
-          <button type="submit">Export Word</button>
-        </form>
+        <a class="pill pill-btn" href="/export/csv?days={{ days }}&extraction={{ extraction }}&sk={{ 1 if only_slovak else 0 }}&rel={{ relevance }}&del={{ 1 if include_deleted else 0 }}&av={{ 1 if include_avoided else 0 }}">Export CSV</a>
+        <a class="pill pill-btn" href="/export/word?days={{ days }}&extraction={{ extraction }}&sk={{ 1 if only_slovak else 0 }}&rel={{ relevance }}&del={{ 1 if include_deleted else 0 }}&av={{ 1 if include_avoided else 0 }}">Export Word</a>
       </div>
     </div>
   </div>
@@ -244,7 +239,10 @@
               <span class="pill">{{ r.domain }}</span>
               {% if r.is_avoided %}<span class="pill warn">excluded</span>{% endif %}
               {% if r.source_notes %}<div class="small">{{ r.source_notes }}</div>{% endif %}
-              <div class="small" style="opacity:.7">{{ r.published or "-" }}</div>
+              <div class="small" style="opacity:.7{% if r.published_estimated %};color:var(--warn){% endif %}"
+                   {% if r.published_estimated %}title="odhad — published_at_real nie je k dispozícii"{% endif %}>
+                {{ r.published or "-" }}{% if r.published_estimated %} ~{% endif %}
+              </div>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:4px">

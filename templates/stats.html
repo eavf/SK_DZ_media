@@ -1,194 +1,285 @@
 {% extends "base.html" %}
-{% block title %}DZ News – štatistiky umlčaných domén{% endblock %}
+{% block title %}DZ News – štatistiky{% endblock %}
 
 {% block styles %}
 <style>
   .grid-2 { display:grid; grid-template-columns: 1fr; gap:12px; }
   @media (min-width: 980px){ .grid-2{ grid-template-columns: 2fr 3fr; } }
-  .pills { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+  /* Stat cards */
+  .stat-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px; margin-top:10px; }
+  .stat-card { background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; padding:12px; text-align:center; }
+  .stat-card .num { font-size:1.8rem; font-weight:700; line-height:1.1; }
+  .stat-card .lbl { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  /* Period pills */
+  .period-pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+
+  /* Bar chart */
+  .chart-outer { overflow-x:auto; padding-bottom:4px; }
+  .bar-chart {
+    display:flex; align-items:flex-end; gap:3px;
+    min-width:100%;
+  }
+  .bar-group {
+    display:flex; flex-direction:column; align-items:center;
+    flex:1; min-width:8px; max-width:28px;
+  }
+  .bars {
+    position:relative; width:100%; height:130px;
+  }
+  .bar {
+    position:absolute; bottom:0; left:0; right:0;
+    border-radius:2px 2px 0 0;
+  }
+  .bar-sk  { background: rgba(100,160,255,.5); }
+  .bar-rel { background: rgba(69,212,131,.8); }
+  .bar-label {
+    font-size:9px; color:var(--muted); text-align:center;
+    white-space:nowrap; overflow:hidden; max-width:100%;
+    writing-mode:vertical-lr; transform:rotate(180deg);
+    height:34px; line-height:1; margin-top:2px;
+  }
+  .bar-label.hidden { visibility:hidden; }
+  .chart-legend { display:flex; gap:14px; margin-top:8px; }
+  .legend-dot { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; }
 </style>
 {% endblock %}
 
 {% block topbar_left %}
   <span class="pill">DZ News</span>
-  <span class="pill warn">umlčané domény</span>
+  <span class="pill ok">Štatistiky</span>
   <span class="pill">days={{ days }}</span>
-  {% if domain %}
-    <span class="pill ok">domain={{ domain }}</span>
-  {% endif %}
+  {% if domain %}<span class="pill warn">domain={{ domain }}</span>{% endif %}
 {% endblock %}
 
 {% block content %}
 <div class="card">
-  <h1>Štatistiky umlčaných domén</h1>
+  <h1>Štatistiky</h1>
 
-  <div class="sub" style="margin-bottom:12px">
-    <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center">
-      <span>Okno: posledných <strong>{{ days }}</strong> dní</span>
-      <span>•</span>
-      <span>„Ušetrené" = články z umlčaných domén, ktoré by sa inak zobrazili (a nie sú soft-deleted)</span>
-    </div>
+  <!-- Period selector -->
+  <div class="period-pills">
+    {% for d, lbl in [(7,"7 dní"),(30,"30 dní"),(90,"90 dní"),(365,"365 dní"),(0,"Všetky")] %}
+      <a class="pill {% if days == d %}ok{% endif %}"
+         href="/stats?days={{ d }}{% if domain %}&domain={{ domain|urlencode }}{% endif %}">
+        {{ lbl }}
+      </a>
+    {% endfor %}
+  </div>
 
-    <div class="pills" style="margin-top:10px">
-      <span class="pill">Súčet ušetrených (všetko): <span class="mono">{{ total_saved_all }}</span></span>
-
-      {% if domain %}
-        <span class="pill ok">Súčet ušetrených (filter): <span class="mono">{{ total_saved }}</span></span>
-      {% else %}
-        <span class="pill ok">Súčet ušetrených: <span class="mono">{{ total_saved }}</span></span>
-      {% endif %}
+  <!-- Celkové štatistiky -->
+  <div class="box">
+    <h2>Celkové štatistiky {% if days > 0 %}— posledných {{ days }} dní{% else %}— celá databáza{% endif %}</h2>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="num">{{ general.total or 0 }}</div>
+        <div class="lbl">Článkov celkom</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">{{ general.extracted or 0 }}</div>
+        <div class="lbl">Extrahovaných</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--bad)">{{ general.with_errors or 0 }}</div>
+        <div class="lbl">S chybou</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--ok)">{{ general.rel_pos or 0 }}</div>
+        <div class="lbl">Relevantné (1)</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--warn)">{{ general.rel_neg or 0 }}</div>
+        <div class="lbl">Nerelevantné (0)</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">{{ general.rel_null or 0 }}</div>
+        <div class="lbl">Neoznačené</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">{{ general.deleted or 0 }}</div>
+        <div class="lbl">Soft-deleted</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">{{ general.source_count or 0 }}</div>
+        <div class="lbl">Zdrojov</div>
+      </div>
     </div>
   </div>
 
-  <div class="grid-2">
+  <div class="hr"></div>
 
-    <div class="box">
-      <h2>Filter v štatistikách</h2>
-      <form method="get" action="/stats" class="actions" style="margin-top:0">
-        <input type="text" name="domain" placeholder="domain (napr. msn.com)" value="{{ domain or '' }}" class="mono">
-        <input type="text" name="days" placeholder="days" value="{{ days }}" style="max-width:120px">
-        <button type="submit">Použiť</button>
-        <a class="pill" href="/stats?days={{ days }}">Reset domain</a>
-      </form>
-      <div class="small" style="margin-top:10px">
-        Tip: klik na doménu v tabuľke nižšie automaticky nastaví </br> <code>?domain=...</code> priamo v /stats.
+  <!-- SK timeline -->
+  <div class="box">
+    <h2>Publikácie so SK kontextom v čase
+      {% if group_by_week %}<span class="pill" style="vertical-align:middle">per týždeň</span>
+      {% else %}<span class="pill" style="vertical-align:middle">per deň</span>{% endif %}
+    </h2>
+    <div class="small" style="margin-bottom:10px">
+      Všetky články kde title, snippet alebo obsah obsahuje SK termíny.
+    </div>
+    {% if sk_timeline %}
+      <div class="chart-outer">
+        <div class="bar-chart">
+          {% for d in sk_timeline %}
+            <div class="bar-group">
+              <div class="bars" title="{{ d.day }}: SK={{ d.sk_count }}, SK+rel={{ d.sk_rel }}">
+                <div class="bar bar-sk"  style="height:{{ d.sk_pct  }}%"></div>
+                <div class="bar bar-rel" style="height:{{ d.rel_pct }}%"></div>
+              </div>
+              <div class="bar-label {% if not d.show_label %}hidden{% endif %}">{{ d.label }}</div>
+            </div>
+          {% endfor %}
+        </div>
       </div>
+      <div class="chart-legend small">
+        <span><span class="legend-dot" style="background:rgba(100,160,255,.55)"></span>SK mention</span>
+        <span><span class="legend-dot" style="background:rgba(69,212,131,.75)"></span>SK mention + relevancia 1</span>
+      </div>
+    {% else %}
+      <div class="small">Žiadne dáta pre zvolené obdobie.</div>
+    {% endif %}
+  </div>
+
+  <div class="hr"></div>
+
+  <!-- Rozloženie chýb -->
+  <div class="box">
+    <h2>Rozloženie chýb</h2>
+    {% if error_dist %}
+      {% set max_err = error_dist[0].cnt %}
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px">
+        {% for e in error_dist %}
+          <div style="display:flex; align-items:center; gap:10px">
+            <div class="mono small" style="min-width:160px; color:var(--text)">{{ e.label }}</div>
+            <div style="flex:1; background:rgba(255,255,255,.04); border-radius:6px; overflow:hidden; height:16px">
+              <div style="width:{{ (e.cnt / max_err * 100)|round }}%; background:rgba(255,107,107,.45); height:100%; border-radius:6px; transition:width .3s"></div>
+            </div>
+            <div class="mono small" style="min-width:36px; text-align:right">{{ e.cnt }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="small">Žiadne chyby v zvolenom období.</div>
+    {% endif %}
+  </div>
+
+  <div class="hr"></div>
+
+  <!-- Umlčané domény -->
+  <div class="box">
+    <h2>Umlčané domény</h2>
+    <div class="small" style="margin-bottom:10px">
+      „Ušetrené" = články z umlčaných domén, ktoré by sa inak zobrazili (a nie sú soft-deleted).
+      Celkovo ušetrených: <strong>{{ total_saved_all }}</strong>
     </div>
 
-    <div class="box">
-      <h2>Top 10 najviac umlčaných (podľa "ušetrené")</h2>
-      <div class="pills" style="margin-top:6px">
-        {% if top10 and top10|length > 0 %}
+    <div class="grid-2" style="margin-bottom:14px">
+      <div>
+        <h2>Filter</h2>
+        <form method="get" action="/stats" class="actions" style="margin-top:0">
+          <input type="hidden" name="days" value="{{ days }}">
+          <input type="text" name="domain" placeholder="domain (napr. msn.com)" value="{{ domain or '' }}" class="mono">
+          <button type="submit">Použiť</button>
+          <a class="pill" href="/stats?days={{ days }}">Reset</a>
+        </form>
+      </div>
+      <div>
+        <h2>Top 10 umlčaných</h2>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px">
           {% for t in top10 %}
             <a class="pill" href="/stats?days={{ days }}&domain={{ t.domain|urlencode }}">
               {{ t.domain }} <span class="mono">({{ t.visible_if_unmuted }})</span>
             </a>
           {% endfor %}
-        {% else %}
-          <span class="small">Zatiaľ nič.</span>
-        {% endif %}
-      </div>
-      <div class="small" style="margin-top:10px">
-        Číslo v zátvorke = koľko článkov by sa zobrazilo, keby doména nebola umlčaná (a zároveň nie sú soft-deleted).
+        </div>
       </div>
     </div>
 
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Doména</th>
+          <th>Dôvod umlčania</th>
+          <th>Ušetrené</th>
+          <th>Celkom</th>
+          <th>Soft-del.</th>
+          <th>Posledný výskyt</th>
+          <th>Akcie</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in rows %}
+        <tr class="trow">
+          <td>
+            <a href="/stats?days={{ days }}&domain={{ r.domain|urlencode }}" style="font-weight:700">{{ r.domain }}</a>
+          </td>
+          <td>
+            <form method="post" action="/source/note/{{ r.id }}" class="actions">
+              <input type="text" name="note" value="{{ r.notes }}" placeholder="napr. e-shop / clickbait">
+              <button type="submit">Uložiť</button>
+            </form>
+          </td>
+          <td><span class="pill ok">{{ r.saved }}</span></td>
+          <td>{{ r.total_articles }}</td>
+          <td>{{ r.soft_deleted }}</td>
+          <td class="small">{{ r.last_seen }}</td>
+          <td>
+            <form method="post" action="/source/unavoid/{{ r.id }}"
+                  onsubmit="return confirm('Zrušiť umlčanie domény {{ r.domain }}?');">
+              <button type="submit">Unmute</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
 
-  <div class="hr"></div>
-
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Doména</th>
-        <th>Dôvod umlčania</th>
-        <th>Ušetrené</th>
-        <th>Celkom</th>
-        <th>Soft-deleted</th>
-        <th>Posledný výskyt</th>
-        <th>Akcie</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for r in rows %}
-      <tr class="trow">
-        <td>
-          <a href="/stats?days={{ days }}&domain={{ r.domain|urlencode }}" style="font-weight:700">
-            {{ r.domain }}
-          </a>
-        </td>
-
-        <td>
-          <form method="post" action="/source/note/{{ r.id }}" class="actions">
-            <input
-              type="text"
-              name="note"
-              value="{{ r.notes }}"
-              placeholder="napr. e-shop / katalóg / duplicity / clickbait"
-            >
-            <button type="submit">Uložiť</button>
-          </form>
-        </td>
-
-        <td>
-          <span class="pill ok">{{ r.saved }}</span>
-        </td>
-
-        <td>{{ r.total_articles }}</td>
-        <td>{{ r.soft_deleted }}</td>
-        <td class="small">{{ r.last_seen }}</td>
-
-        <td>
-          <form method="post"
-                action="/source/unavoid/{{ r.id }}"
-                onsubmit="return confirm('Zrušiť umlčanie domény {{ r.domain }}?');">
-            <button type="submit">Unmute</button>
-          </form>
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-
+  <!-- Články pre vybranú doménu -->
   {% if domain %}
     <div class="hr"></div>
-
     <div class="box">
       <h2>Články pre doménu: <span class="mono">{{ domain }}</span></h2>
-      <div class="sub">
-        Zobrazené max 200 posledných článkov z okna days={{ days }}.
-      </div>
-
-      {% if articles and articles|length > 0 %}
-        <table class="table" style="margin-top:10px">
+      <div class="small" style="margin-bottom:10px">Max 200 posledných v okne days={{ days }}.</div>
+      {% if articles %}
+        <table class="table">
           <thead>
             <tr>
-              <th style="width:90px">ID</th>
+              <th style="width:70px">ID</th>
               <th>Titulok</th>
-              <th style="width:170px">Publikované</th>
-              <th style="width:150px">Stav</th>
+              <th style="width:160px">Publikované</th>
+              <th style="width:130px">Stav</th>
             </tr>
           </thead>
           <tbody>
-            {% for a in articles %}
-              <tr class="trow">
-                <td class="mono">{{ a.id }}</td>
-                <td>
-                  <div style="display:flex; flex-direction:column; gap:6px">
-                    <a href="/article/{{ a.id }}" style="font-weight:650">
-                      {{ a.title or "(bez názvu)" }}
-                    </a>
-                    {% if a.url %}
-                      <div class="small">
-                        <a href="{{ a.url }}" target="_blank" rel="noopener">online ↗</a>
-                        <span class="mono">• last_seen: {{ a.last_seen_at }}</span>
-                      </div>
-                    {% endif %}
-                    {% if a.fetch_error %}
-                      <div class="small">err: {{ a.fetch_error }}</div>
-                    {% endif %}
-                  </div>
-                </td>
-                <td class="small">{{ a.published or "-" }}</td>
-                <td>
-                  <div class="badge">
-                    {% if a.extraction_ok == 1 %}
-                      <span class="pill ok">OK</span>
-                    {% else %}
-                      <span class="pill bad">no text</span>
-                    {% endif %}
-                    {% if a.deleted_at %}
-                      <span class="pill warn">deleted</span>
-                    {% endif %}
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
+          {% for a in articles %}
+            <tr class="trow">
+              <td class="mono">{{ a.id }}</td>
+              <td>
+                <div style="display:flex; flex-direction:column; gap:4px">
+                  <a href="/article/{{ a.id }}" style="font-weight:650">{{ a.title or "(bez názvu)" }}</a>
+                  {% if a.url %}
+                    <div class="small"><a href="{{ a.url }}" target="_blank" rel="noopener">online ↗</a>
+                    <span class="mono">• {{ a.last_seen_at }}</span></div>
+                  {% endif %}
+                  {% if a.fetch_error %}<div class="small" style="color:var(--bad)">{{ a.fetch_error }}</div>{% endif %}
+                </div>
+              </td>
+              <td class="small">{{ a.published or "-" }}</td>
+              <td>
+                <div class="badge">
+                  {% if a.extraction_ok == 1 %}<span class="pill ok">OK</span>
+                  {% else %}<span class="pill bad">no text</span>{% endif %}
+                  {% if a.deleted_at %}<span class="pill warn">deleted</span>{% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
           </tbody>
         </table>
       {% else %}
-        <div class="small" style="margin-top:10px">Žiadne články pre túto doménu v danom okne.</div>
+        <div class="small">Žiadne články pre túto doménu v danom okne.</div>
       {% endif %}
     </div>
   {% endif %}

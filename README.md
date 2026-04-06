@@ -277,6 +277,16 @@ Results are saved to a dedicated `mfa_<timestamp>` run directory inside `bundle/
 
 **SSL note:** `mfa.gov.dz` uses an unverifiable SSL certificate. The scraper bypasses verification (`verify=False`) and suppresses the resulting warnings — this is expected and intentional.
 
+### Database backup and restore
+
+The admin maintenance page (`/admin/maintenance`) provides a browser-based backup and restore interface. It requires `mysqldump` and `mysql` to be available on the server.
+
+**Backup** — downloads a full `mysqldump` of the database as a `.sql` file (filename includes timestamp).
+
+**Restore** — uploads a `.sql` dump file. Before importing, the application automatically runs `migrations/000_init_schema.sql` (uses `CREATE TABLE IF NOT EXISTS`) to ensure all tables exist. This means restore works on a completely empty database as well.
+
+> **Note:** restore is destructive — existing rows may be overwritten. A confirmation dialog is shown before proceeding.
+
 ### Docker
 
 ```bash
@@ -548,6 +558,16 @@ Výsledky sa uložia do dedikovaného adresára `mfa_<timestamp>` v `bundle/runs
 
 **Poznámka k SSL:** `mfa.gov.dz` používa neoveriteľný SSL certifikát. Skript obchádza overenie (`verify=False`) a potláča príslušné varovania — je to zámerné.
 
+### Záloha a obnova databázy
+
+Stránka správy (`/admin/maintenance`) poskytuje zálohu a obnovu priamo z prehliadača. Vyžaduje prítomnosť `mysqldump` a `mysql` na serveri.
+
+**Záloha** — stiahne úplný `mysqldump` databázy ako `.sql` súbor (názov obsahuje časovú pečiatku).
+
+**Obnova** — nahrá `.sql` dump. Pred importom aplikácia automaticky spustí `migrations/000_init_schema.sql` (`CREATE TABLE IF NOT EXISTS`), čím zabezpečí existenciu všetkých tabuliek. Obnova teda funguje aj na úplne prázdnej databáze.
+
+> **Pozor:** obnova je deštruktívna — existujúce záznamy môžu byť prepísané. Pred spustením sa zobrazí potvrdzovací dialóg.
+
 ### Docker
 
 ```bash
@@ -818,6 +838,16 @@ python search_mfa_gov.py --when 7d    # 7 derniers jours
 Les résultats sont sauvegardés dans un répertoire dédié `mfa_<timestamp>` sous `bundle/runs/`, au même format que `search_flow_news.py`, et peuvent être ingérés avec `ingest_to_dz_news_reworked.py`.
 
 **Note SSL :** `mfa.gov.dz` utilise un certificat SSL non vérifiable. Le script contourne la vérification (`verify=False`) et supprime les avertissements correspondants — c'est intentionnel.
+
+### Sauvegarde et restauration de la base de données
+
+La page de maintenance (`/admin/maintenance`) offre une interface de sauvegarde et de restauration directement depuis le navigateur. Elle nécessite la présence de `mysqldump` et `mysql` sur le serveur.
+
+**Sauvegarde** — télécharge un dump complet `mysqldump` de la base de données sous forme de fichier `.sql` (le nom inclut un horodatage).
+
+**Restauration** — importe un fichier dump `.sql`. Avant l'import, l'application exécute automatiquement `migrations/000_init_schema.sql` (`CREATE TABLE IF NOT EXISTS`) pour s'assurer que toutes les tables existent. La restauration fonctionne donc également sur une base de données entièrement vide.
+
+> **Attention :** la restauration est destructive — les enregistrements existants peuvent être écrasés. Une boîte de dialogue de confirmation s'affiche avant de procéder.
 
 ### Docker
 

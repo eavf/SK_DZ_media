@@ -44,10 +44,9 @@
       <h2>Rýchle akcie</h2>
       <div class="actions" style="margin-top:0">
         <a href="/browse"><button class="btn-primary" type="button">Otvoriť zoznam článkov</button></a>
-        <form method="post" action="/export/word"><button type="submit">Export Word</button></form>
-        <form method="post" action="/export/csv"><button type="submit">Export CSV</button></form>
+        <a href="/export/csv?days=0&extraction=all&sk=0&rel=all&del=0&av=0"><button type="button">Export CSV (celá DB)</button></a>
+        <a href="/export/word?days=0&extraction=all&sk=0&rel=all&del=0&av=0"><button type="button">Export Word (celá DB)</button></a>
       </div>
-      <div class="small" style="margin-top:10px">Pozn.: exporty používajú aktuálnu logiku backendu.</div>
     </div>
   </div>
 
@@ -66,7 +65,9 @@
       </div>
       <div class="hub-actions">
         <a href="/search"><button class="btn-primary" type="button">Vyhľadávanie</button></a>
-        <a href="/sources"><button type="button">Zdroje</button></a>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+          <a href="/sources"><button type="button">Zdroje</button></a>
+        {% endif %}
       </div>
     </div>
 
@@ -80,7 +81,9 @@
       </div>
       <div class="hub-actions">
         <a href="/process"><button class="btn-primary" type="button">Spracovanie</button></a>
-        <a href="/errors"><button type="button">Chyby</button></a>
+        {% if current_user.is_authenticated and current_user.has_role('power') %}
+          <a href="/errors"><button type="button">Chyby</button></a>
+        {% endif %}
       </div>
     </div>
 

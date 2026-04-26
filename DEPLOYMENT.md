@@ -5,11 +5,28 @@ Image je uložený na Docker Hub: `eavfeavf/dz-news:latest`.
 
 ## Požiadavky
 
-- Docker nainštalovaný lokálne
+- Docker nainštalovaný lokálne (vrátane buildx pluginu)
 - Prístup na Docker Hub účet `eavfeavf`
-- SSH prístup na Synology cez alias `synology` v `~/.ssh/config` (port 22222, kľúč `~/.ssh/synology_key`)
+- SSH prístup na Synology cez alias `synology` v `~/.ssh/config`:
 
-> Synology DSM nemá `rsync` — deploy skript používa `scp`.
+```
+Host synology
+    HostName 192.168.0.202
+    Port 22222
+    User vovo
+    IdentityFile ~/.ssh/id_rsa
+```
+
+> Synology DSM nemá `rsync` — deploy skript používa `scp -O` (legacy protokol).
+
+## Prvé nastavenie deploy skriptu
+
+`deploy.sh` je gitignored (obsahuje server-špecifickú konfiguráciu). Vytvor ho z example:
+
+```bash
+cp deploy.sh.example deploy.sh
+# Uprav DOCKER_IMAGE, SYNOLOGY_HOST, REMOTE_DIR podľa potreby
+```
 
 ## Štruktúra na Synology
 
@@ -25,7 +42,7 @@ Image je uložený na Docker Hub: `eavfeavf/dz-news:latest`.
 └── .env                ← environment premenné (DB, API kľúče)
 ```
 
-> `.env` sa nikdy nesynchronizuje skriptom – musí byť nastavený manuálne na Synology.
+> `.env` sa kopíruje automaticky pri `./deploy.sh` a `./deploy.sh --no-rebuild`. Pri prvom nasadení ho treba vytvoriť manuálne podľa `.env.example`.
 
 ## Prvé spustenie – prihlásenie na Docker Hub
 
@@ -46,7 +63,7 @@ Prihlási na Docker Hub účet `eavfeavf`. Pri ďalších deployoch nie je potre
 Skript automaticky:
 1. Zbuilduje nový Docker image lokálne
 2. Pushne image na Docker Hub (`eavfeavf/dz-news:latest`)
-3. Skopíruje `docker-compose.yml`, `templates/`, `config/`, `static/` na Synology cez SCP
+3. Skopíruje `docker-compose.yml`, `.env`, `templates/`, `config/`, `static/` na Synology cez SCP
 4. Nastaví práva na `logs/`, `data/`, `templates/`
 5. Pullne nový image na Synology a reštartuje kontajner
 
@@ -56,8 +73,8 @@ Skript automaticky:
 ./deploy.sh --no-rebuild
 ```
 
-Skopíruje `templates/`, `config/` a `static/` na Synology a reštartuje kontajner.
-Vhodné pre zmeny v `config/*.json`, `config/*.py`, šablónach alebo statickom obsahu.
+Skopíruje `.env`, `templates/`, `config/` a `static/` na Synology a reštartuje kontajner.
+Vhodné pre zmeny v `.env`, `config/*.json`, šablónach alebo statickom obsahu.
 **Reštart je nutný** – Python moduly sa načítajú len raz pri štarte.
 
 ## Rýchly deploy (zmeny iba v šablónach)

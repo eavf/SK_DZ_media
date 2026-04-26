@@ -65,7 +65,7 @@ def translate_after_extraction(article_id: int, result, row: dict) -> None:
     """Preloží content_text (a title/snippet ak chýbajú) pre arabský článok."""
     api_key = s.deepl_api_key
     lang = row.get("language") or result.lang_detected
-    if not api_key or lang != "ar":
+    if lang != "ar":
         return
 
     texts, keys = [], []
@@ -80,7 +80,7 @@ def translate_after_extraction(article_id: int, result, row: dict) -> None:
         return
 
     try:
-        translated = translate_ar_fr(api_key, texts)
+        translated = translate_ar_fr(texts, api_key=api_key)
         updates = dict(zip(keys, translated))
         updates["id"] = article_id
         set_clause = ", ".join(f"{k} = :{k}" for k in keys)
@@ -89,7 +89,7 @@ def translate_after_extraction(article_id: int, result, row: dict) -> None:
             conn.execute(text(f"UPDATE articles SET {set_clause} WHERE id = :id"), updates)
         logger.info("Preložené AR→FR: id=%s, polia=%s", article_id, keys)
     except Exception as e:
-        logger.warning("DeepL zlyhal pre id=%s: %s", article_id, e)
+        logger.warning("Preklad zlyhal pre id=%s: %s", article_id, e)
 
 
 def save_result(
@@ -215,9 +215,6 @@ def save_result(
 def translate_missing_titles(limit: int, dry_run: bool) -> int:
     """Preloží title/snippet pre arabské články s extraction_ok=1 a chýbajúcim title_fr."""
     api_key = s.deepl_api_key
-    if not api_key:
-        logger.info("translate_missing_titles: DeepL API key chýba, preskakujem.")
-        return 0
 
     engine = get_db_engine()
     with engine.begin() as conn:
@@ -253,7 +250,7 @@ def translate_missing_titles(limit: int, dry_run: bool) -> int:
             continue
 
         try:
-            translated = translate_ar_fr(api_key, texts)
+            translated = translate_ar_fr(texts, api_key=api_key)
             updates = dict(zip(keys, translated))
             updates["id"] = row["id"]
             set_clause = ", ".join(f"{k} = :{k}" for k in keys)
@@ -262,7 +259,7 @@ def translate_missing_titles(limit: int, dry_run: bool) -> int:
             logger.info("Preložené AR→FR nadpis: id=%s, polia=%s", row["id"], keys)
             count += 1
         except Exception as e:
-            logger.warning("DeepL zlyhal pre id=%s: %s", row["id"], e)
+            logger.warning("Preklad zlyhal pre id=%s: %s", row["id"], e)
 
     return count
 

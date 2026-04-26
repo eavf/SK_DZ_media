@@ -24,10 +24,10 @@
 - Direct scraping of **MFA Algeria** press releases (no SerpAPI required)
 - Full-text extraction via **trafilatura** (HTML) and **pymupdf** (PDF)
 - Language detection at search time via **langdetect** (title + snippet), refined by trafilatura during extraction
-- Arabic → French translation via **DeepL API**: `title` + `snippet` translated automatically (pipeline + backfill); `content_text` translated only during fresh extraction — articles extracted before DeepL was configured require manual translation via the article detail page
+- Arabic → French translation via a **configurable backend** — choose between local [MarianMT](https://huggingface.co/Helsinki-NLP) service, **DeepL API**, or **Azure Cognitive Translator** via `TRANSLATOR_BACKEND`; `title` + `snippet` translated automatically (pipeline + backfill); `content_text` translated only during fresh extraction or manually via the article detail page
 - Relevance labeling and soft-delete workflow
 - Export to **Word** and **CSV**
-- Scheduled pipeline with **email notifications** (new/re-seen articles, translation status, DeepL usage)
+- Scheduled pipeline with **email notifications** (new/re-seen articles, translation status)
 - **Authentication** — admin/read-only access control (session-based, `users` table in DB)
 - Dockerized deployment
 
@@ -52,7 +52,10 @@ A `scheduler.py` daemon runs the full pipeline daily and sends a detailed email 
 - Python 3.12+
 - MySQL / MariaDB
 - [SerpAPI](https://serpapi.com/) key
-- [DeepL API](https://www.deepl.com/pro-api) key (optional, for Arabic translation)
+- Translation backend (one of, optional):
+  - Local MarianMT service (`TRANSLATOR_BACKEND=local`, default)
+  - [DeepL API](https://www.deepl.com/pro-api) key (`TRANSLATOR_BACKEND=deepl`)
+  - [Azure Cognitive Translator](https://azure.microsoft.com/en-us/products/ai-services/translator) key (`TRANSLATOR_BACKEND=azure`)
 - `langdetect` (installed via `requirements.txt`)
 - Docker (for containerized deployment)
 
@@ -81,7 +84,11 @@ Key `.env` variables:
 |---|---|
 | `SERPAPI_KEY` | SerpAPI key for Google News search |
 | `DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASS` | MySQL connection |
-| `DEEPL_API_KEY` | DeepL API key (optional) |
+| `TRANSLATOR_BACKEND` | Translation backend: `local` (default), `deepl`, or `azure` |
+| `TRANSLATOR_URL` | URL of the local MarianMT service (default: `https://translate.eavf1621.synology.me`) |
+| `DEEPL_API_KEY` | DeepL API key (required when `TRANSLATOR_BACKEND=deepl`) |
+| `AZURE_TRANSLATOR_KEY` | Azure Cognitive Translator key (required when `TRANSLATOR_BACKEND=azure`) |
+| `AZURE_TRANSLATOR_REGION` | Azure region (default: `westeurope`) |
 | `FLASK_SECRET_KEY` | Flask session secret |
 | `FLASK_PORT` | Web server port (default: `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Email notifications (optional) |
@@ -315,10 +322,10 @@ docker pull eavfeavf/dz-news:latest
 - Priame prehľadávanie press releases **MFA Alžírsko** (bez SerpAPI)
 - Extrakcia plného textu cez **trafilatura** (HTML) a **pymupdf** (PDF)
 - Detekcia jazyka pri vyhľadávaní cez **langdetect** (title + snippet), upresnená trafilaturou pri extrakcii
-- Preklad arabčiny do francúzštiny cez **DeepL API**: `title` + `snippet` sa prekladajú automaticky (pipeline + backfill); `content_text` iba pri čerstvej extrakcii — články extrahované pred konfiguráciou DeepL vyžadujú manuálny preklad cez stránku článku
+- Preklad arabčiny do francúzštiny cez **konfigurovateľný backend** — výber medzi lokálnou službou [MarianMT](https://huggingface.co/Helsinki-NLP), **DeepL API** alebo **Azure Cognitive Translator** cez `TRANSLATOR_BACKEND`; `title` + `snippet` sa prekladajú automaticky (pipeline + backfill); `content_text` iba pri čerstvej extrakcii alebo manuálne cez stránku článku
 - Označovanie relevancie a soft-delete workflow
 - Export do **Word** a **CSV**
-- Automatická pipeline s **emailovými notifikáciami** (nové/znovu videné články, stav prekladu, využitie DeepL kreditov)
+- Automatická pipeline s **emailovými notifikáciami** (nové/znovu videné články, stav prekladu)
 - **Autentifikácia** — prístupové práva admin / len čítanie (session-based, tabuľka `users` v DB)
 - Dockerizované nasadenie
 
@@ -343,7 +350,10 @@ Webový dashboard                 — prehľad, označovanie, export
 - Python 3.12+
 - MySQL / MariaDB
 - Kľúč [SerpAPI](https://serpapi.com/)
-- Kľúč [DeepL API](https://www.deepl.com/pro-api) (voliteľné, pre preklad arabčiny)
+- Prekladový backend (jeden z, voliteľné):
+  - Lokálna MarianMT služba (`TRANSLATOR_BACKEND=local`, default)
+  - Kľúč [DeepL API](https://www.deepl.com/pro-api) (`TRANSLATOR_BACKEND=deepl`)
+  - Kľúč [Azure Cognitive Translator](https://azure.microsoft.com/en-us/products/ai-services/translator) (`TRANSLATOR_BACKEND=azure`)
 - `langdetect` (inštaluje sa cez `requirements.txt`)
 - Docker (pre kontajnerizované nasadenie)
 
@@ -372,7 +382,11 @@ Kľúčové premenné v `.env`:
 |---|---|
 | `SERPAPI_KEY` | Kľúč SerpAPI pre Google News |
 | `DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASS` | MySQL pripojenie |
-| `DEEPL_API_KEY` | Kľúč DeepL (voliteľné) |
+| `TRANSLATOR_BACKEND` | Prekladový backend: `local` (default), `deepl` alebo `azure` |
+| `TRANSLATOR_URL` | URL lokálnej MarianMT služby (default: `https://translate.eavf1621.synology.me`) |
+| `DEEPL_API_KEY` | Kľúč DeepL (vyžadované pri `TRANSLATOR_BACKEND=deepl`) |
+| `AZURE_TRANSLATOR_KEY` | Kľúč Azure Cognitive Translator (vyžadované pri `TRANSLATOR_BACKEND=azure`) |
+| `AZURE_TRANSLATOR_REGION` | Azure región (default: `westeurope`) |
 | `FLASK_SECRET_KEY` | Secret pre Flask session |
 | `FLASK_PORT` | Port webservera (default: `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Emailové notifikácie (voliteľné) |
@@ -596,10 +610,10 @@ docker pull eavfeavf/dz-news:latest
 - Collecte directe des communiqués de presse du **MAE Algérie** (sans SerpAPI)
 - Extraction du texte intégral via **trafilatura** (HTML) et **pymupdf** (PDF)
 - Détection de la langue dès la recherche via **langdetect** (titre + extrait), affinée par trafilatura à l'extraction
-- Traduction arabe → français via **l'API DeepL** : `title` + `snippet` traduits automatiquement (pipeline + remplissage) ; `content_text` uniquement lors d'une extraction fraîche — les articles extraits avant la configuration de DeepL nécessitent une traduction manuelle via la page de détail
+- Traduction arabe → français via un **backend configurable** — choix entre service local [MarianMT](https://huggingface.co/Helsinki-NLP), **API DeepL** ou **Azure Cognitive Translator** via `TRANSLATOR_BACKEND` ; `title` + `snippet` traduits automatiquement (pipeline + remplissage) ; `content_text` uniquement lors d'une extraction fraîche ou manuellement via la page de détail
 - Étiquetage de pertinence et workflow de suppression douce
 - Export en **Word** et **CSV**
-- Pipeline planifié avec **notifications e-mail détaillées** (articles nouveaux/revus, état de traduction, utilisation des crédits DeepL)
+- Pipeline planifié avec **notifications e-mail détaillées** (articles nouveaux/revus, état de traduction)
 - **Authentification** — contrôle d'accès admin / lecture seule (session Flask, table `users` en base)
 - Déploiement dockerisé
 
@@ -624,7 +638,10 @@ Le démon `scheduler.py` exécute le pipeline quotidiennement et envoie un e-mai
 - Python 3.12+
 - MySQL / MariaDB
 - Clé [SerpAPI](https://serpapi.com/)
-- Clé [API DeepL](https://www.deepl.com/pro-api) (optionnel, pour la traduction de l'arabe)
+- Backend de traduction (un parmi, optionnel) :
+  - Service local MarianMT (`TRANSLATOR_BACKEND=local`, défaut)
+  - Clé [API DeepL](https://www.deepl.com/pro-api) (`TRANSLATOR_BACKEND=deepl`)
+  - Clé [Azure Cognitive Translator](https://azure.microsoft.com/fr-fr/products/ai-services/translator) (`TRANSLATOR_BACKEND=azure`)
 - `langdetect` (installé via `requirements.txt`)
 - Docker (pour le déploiement conteneurisé)
 
@@ -653,7 +670,11 @@ Variables clés dans `.env` :
 |---|---|
 | `SERPAPI_KEY` | Clé SerpAPI pour Google Actualités |
 | `DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASS` | Connexion MySQL |
-| `DEEPL_API_KEY` | Clé DeepL (optionnel) |
+| `TRANSLATOR_BACKEND` | Backend de traduction : `local` (défaut), `deepl` ou `azure` |
+| `TRANSLATOR_URL` | URL du service local MarianMT (défaut : `https://translate.eavf1621.synology.me`) |
+| `DEEPL_API_KEY` | Clé DeepL (requis si `TRANSLATOR_BACKEND=deepl`) |
+| `AZURE_TRANSLATOR_KEY` | Clé Azure Cognitive Translator (requis si `TRANSLATOR_BACKEND=azure`) |
+| `AZURE_TRANSLATOR_REGION` | Région Azure (défaut : `westeurope`) |
 | `FLASK_SECRET_KEY` | Secret de session Flask |
 | `FLASK_PORT` | Port du serveur web (défaut : `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Notifications e-mail (optionnel) |

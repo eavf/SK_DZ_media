@@ -1,5 +1,6 @@
 .env
 .env.local
+deploy.sh
 __pycache__/
 *.pyc
 .git/

@@ -63,8 +63,6 @@ def _detect_lang(text: str | None) -> str:
 def _translate_missing_for_email(engine, rows) -> dict[int, dict]:
     """Preloží title/snippet pre arabské články bez title_fr. Uloží do DB. Vracia {id: {title_fr, snippet_fr}}."""
     api_key = s.deepl_api_key
-    if not api_key:
-        return {}
 
     from translate import translate_ar_fr
     from sqlalchemy import text
@@ -91,7 +89,7 @@ def _translate_missing_for_email(engine, rows) -> dict[int, dict]:
         if not texts:
             continue
         try:
-            translated = translate_ar_fr(api_key, texts)
+            translated = translate_ar_fr(texts, api_key=api_key)
             updates = dict(zip(keys, translated))
             updates["id"] = article_id
             set_clause = ", ".join(f"{k} = :{k}" for k in keys)

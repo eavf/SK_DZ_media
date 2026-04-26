@@ -142,10 +142,16 @@
     </form>
 
     <form method="post" action="/article/{{ r['id'] }}/translate">
-      <button type="submit" onclick="return confirm('Preložiť obsah AR→FR cez DeepL? Spotrebuje kredity.');">
+      <button type="submit" onclick="return confirm('Preložiť obsah AR→FR? Spotrebuje kredity.');">
         {{ 'Preložiť znova (AR-FR)' if r['content_text_fr'] else 'Preložiť (AR-FR)' }}
       </button>
     </form>
+    {% if r['content_text_fr'] or r['snippet_fr'] or r['title_fr'] %}
+    <form method="post" action="/article/{{ r['id'] }}/delete_translation"
+          onsubmit="return confirm('Zmazať preklad (title_fr, snippet_fr, content_text_fr)?');">
+      <button type="submit" class="pill bad" style="border:none;cursor:pointer">Zmazať preklad</button>
+    </form>
+    {% endif %}
     <div class="hr" style="width:100%;margin:12px 0 8px"></div>
 
     <form method="post" action="/article/{{ r['id'] }}/set_content" style="width:100%">

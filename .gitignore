@@ -1,8 +1,9 @@
 .env
+deploy.sh
 .env.local
 __pycache__/
 *.pyc
 bundle/
 logs/
 .idea/
-Archive/
+Archive/config/translator_backend

@@ -747,8 +747,6 @@ def process_file(bundle_path: Path, *, use_clean: bool = True) -> tuple[int, int
 def _translate_pending_titles(article_ids) -> None:
     """Preloží title + snippet pre arabské články bez title_fr."""
     api_key = s.deepl_api_key
-    if not api_key:
-        return
 
     ids = list(article_ids)
     if not ids:
@@ -782,7 +780,7 @@ def _translate_pending_titles(article_ids) -> None:
         if not texts:
             continue
         try:
-            translated = translate_ar_fr(api_key, texts)
+            translated = translate_ar_fr(texts, api_key=api_key)
             updates = dict(zip(keys, translated))
             updates["id"] = row["id"]
             set_clause = ", ".join(f"{k} = :{k}" for k in keys)
@@ -790,7 +788,7 @@ def _translate_pending_titles(article_ids) -> None:
                 conn.execute(text(f"UPDATE articles SET {set_clause} WHERE id = :id"), updates)
             logger.info("Preložené title/snippet: id=%s", row["id"])
         except Exception as e:
-            logger.warning("DeepL zlyhal pre id=%s: %s", row["id"], e)
+            logger.warning("Preklad zlyhal pre id=%s: %s", row["id"], e)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:

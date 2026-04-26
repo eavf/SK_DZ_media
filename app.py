@@ -1308,9 +1308,6 @@ def article_translate(article_id: int):
         return redirect(url_for("article_detail", article_id=article_id))
 
     api_key = settings.deepl_api_key
-    if not api_key:
-        flash("DEEPL_API_KEY nie je nastavený v .env.", "bad")
-        return redirect(url_for("article_detail", article_id=article_id))
 
     texts, keys = [], []
     if not row[3]:  # content_text_fr
@@ -1326,11 +1323,11 @@ def article_translate(article_id: int):
 
     try:
         from translate import translate_ar_fr
-        translated = translate_ar_fr(api_key, texts)
+        translated = translate_ar_fr(texts, api_key=api_key)
         updates = dict(zip(keys, translated))
         updates["id"] = article_id
     except Exception as e:
-        logger.error("DeepL translation failed: id=%s, error=%s", article_id, e)
+        logger.error("Translation failed: id=%s, error=%s", article_id, e)
         flash(f"Preklad zlyhal: {e}", "bad")
         return redirect(url_for("article_detail", article_id=article_id))
 
@@ -1339,7 +1336,7 @@ def article_translate(article_id: int):
         conn.execute(text(f"UPDATE articles SET {set_clause} WHERE id = :id"), updates)
 
     logger.info("Article translated AR→FR: id=%s", article_id)
-    from translate import get_deepl_usage
+    from translate import get_deepl_usage, get_translator_backend
     usage = get_deepl_usage(api_key)
     if usage:
         from datetime import date
@@ -1353,7 +1350,21 @@ def article_translate(article_id: int):
         remaining = usage["limit"] - usage["used"]
         flash(f"Preklad AR→FR uložený. DeepL: minuté {usage['used']:,} / zostatok {remaining:,} / limit {usage['limit']:,} znakov. Obnova: {reset_date.strftime('%-d.%-m.%Y')}.", "ok")
     else:
-        flash("Preklad AR→FR uložený.", "ok")
+        flash(f"Preklad AR→FR uložený (backend: {get_translator_backend()}).", "ok")
+    return redirect(url_for("article_detail", article_id=article_id))
+
+
+@app.post("/article/<int:article_id>/delete_translation")
+@user_required
+def article_delete_translation(article_id: int):
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        conn.execute(
+            text("UPDATE articles SET content_text_fr = NULL, snippet_fr = NULL, title_fr = NULL WHERE id = :id"),
+            {"id": article_id},
+        )
+    logger.info("Translation deleted: id=%s", article_id)
+    flash("Preklad zmazaný (content_text_fr, snippet_fr, title_fr).", "ok")
     return redirect(url_for("article_detail", article_id=article_id))
 
 
@@ -2060,8 +2071,50 @@ def search_terms_delete():
 def maintenance_page():
     from fix_serp_dates import fix_relative_dates
     from config.config import get_db_engine
+    from translate import (
+        TRANSLATOR_URL, TRANSLATOR_BACKEND,
+        get_deepl_usage, get_local_status,
+        get_translator_backend_with_source,
+    )
     stats = fix_relative_dates(apply=False, engine=get_db_engine())
-    return render_template("admin_maintenance.html", stats=stats)
+
+    tr_backend, tr_source = get_translator_backend_with_source()
+    tr_info: dict = {"backend": tr_backend, "source": tr_source, "env_backend": TRANSLATOR_BACKEND}
+    if tr_backend == "local":
+        tr_info["local"] = get_local_status()
+        tr_info["url"] = TRANSLATOR_URL
+    elif tr_backend == "azure":
+        tr_info["azure_region"] = os.getenv("AZURE_TRANSLATOR_REGION", "westeurope")
+    if settings.deepl_api_key:
+        tr_info["deepl"] = get_deepl_usage(settings.deepl_api_key)
+
+    return render_template("admin_maintenance.html", stats=stats, tr=tr_info)
+
+
+@app.post("/admin/maintenance/set-translator")
+@admin_required
+def maintenance_set_translator():
+    from translate import set_translator_backend
+    backend = request.form.get("backend", "").strip().lower()
+    try:
+        set_translator_backend(backend)
+        flash(f"Prekladač zmenený na: {backend} (uložené cez UI)", "ok")
+    except ValueError as e:
+        flash(str(e), "bad")
+    return redirect(url_for("maintenance_page"))
+
+
+@app.post("/admin/maintenance/reset-translator")
+@admin_required
+def maintenance_reset_translator():
+    from translate import _BACKEND_FILE
+    try:
+        _BACKEND_FILE.unlink(missing_ok=True)
+        from translate import TRANSLATOR_BACKEND
+        flash(f"UI override zmazaný — aktívny backend z .env: {TRANSLATOR_BACKEND}", "ok")
+    except Exception as e:
+        flash(str(e), "bad")
+    return redirect(url_for("maintenance_page"))
 
 
 @app.post("/admin/maintenance/fix-dates")

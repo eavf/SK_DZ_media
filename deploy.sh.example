@@ -1,21 +1,33 @@
 #!/usr/bin/env bash
-# deploy.sh — zbuilduje image, pushne na Docker Hub, nasadí na Synology
+# deploy.sh — zbuilduje image, pushne na Docker Hub, nasadí na server
 # Použitie:
-#   ./deploy.sh              — full deploy (build + push + scp + pull na Synology)
-#   ./deploy.sh --no-rebuild — skopíruje templates/config/static a reštartuje
+#   ./deploy.sh              — full deploy (build + push + scp + pull na server)
+#   ./deploy.sh --no-rebuild — skopíruje templates/config/.env/static a reštartuje
 #   ./deploy.sh --tpl-only   — len šablóny (bez reštartu, hneď aktívne)
-#   ./deploy.sh --restart    — len reštartuje kontajner na Synology
-#   ./deploy.sh --rebuild    — len build + push (bez deployu na Synology)
+#   ./deploy.sh --restart    — len reštartuje kontajner na serveri
+#   ./deploy.sh --rebuild    — len build + push (bez deployu na server)
+#
+# Nastavenie:
+#   1. Skopíruj ako deploy.sh: cp deploy.sh.example deploy.sh
+#   2. Uprav premenné nižšie podľa svojho prostredia
+#   3. Pridaj SSH alias do ~/.ssh/config:
+#      Host myserver
+#          HostName 192.168.1.100
+#          Port 22
+#          User myuser
+#          IdentityFile ~/.ssh/id_rsa
 
 set -euo pipefail
 
-DOCKER_IMAGE="eavfeavf/dz-news:latest"
-SYNOLOGY_HOST="synology"   # alias z ~/.ssh/config
-REMOTE_DIR="/volume1/docker/dz_news"
+# ── Konfigurácia — uprav podľa svojho prostredia ──────────────────────────────
+DOCKER_IMAGE="dockerhub-username/image-name:latest"
+SYNOLOGY_HOST="myserver"          # alias z ~/.ssh/config
+REMOTE_DIR="/path/to/remote/app"  # napr. /volume1/docker/dz_news
 LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCP="scp -O"
+SCP="scp -O"                      # -O = legacy SCP protokol (potrebné pre Synology)
 SSH="ssh -t ${SYNOLOGY_HOST}"
-DOCKER="sudo /usr/local/bin/docker"
+DOCKER="sudo /usr/local/bin/docker"  # cesta k docker na serveri
+# ──────────────────────────────────────────────────────────────────────────────
 
 MODE="full"
 case "${1:-}" in
@@ -26,11 +38,11 @@ case "${1:-}" in
   -h|--help)
     echo "Použitie: ./deploy.sh [MOŽNOSŤ]"
     echo ""
-    echo "  (bez možnosti)   Full deploy: build image → push Docker Hub → scp konfig → pull + restart na Synology"
-    echo "  --no-rebuild     Skopíruje config/static na Synology a reštartuje (bez buildu)"
-    echo "  --tpl-only       Len šablóny (templates/) na Synology, bez reštartu — zmeny sú hneď aktívne"
-    echo "  --restart        Len reštartuje kontajnery na Synology"
-    echo "  --rebuild        Len build + push na Docker Hub (bez nasadenia na Synology)"
+    echo "  (bez možnosti)   Full deploy: build image → push Docker Hub → scp konfig → pull + restart na serveri"
+    echo "  --no-rebuild     Skopíruje config/.env/static na server a reštartuje (bez buildu)"
+    echo "  --tpl-only       Len šablóny (templates/) na server, bez reštartu — zmeny sú hneď aktívne"
+    echo "  --restart        Len reštartuje kontajnery na serveri"
+    echo "  --rebuild        Len build + push na Docker Hub (bez nasadenia na server)"
     echo "  -h, --help       Zobrazí túto nápovedu"
     exit 0
     ;;
@@ -56,7 +68,7 @@ if [[ $MODE == "no-rebuild" ]]; then
 fi
 
 if [[ $MODE == "restart" ]]; then
-  echo "--> Rešartujem kontajner na Synology..."
+  echo "--> Rešartujem kontajner na serveri..."
   ${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose up --force-recreate -d"
   echo "==> Hotovo."
   exit 0
@@ -79,8 +91,8 @@ docker build -t "${DOCKER_IMAGE}" "${LOCAL_DIR}"
 echo "--> Pushnem na Docker Hub..."
 docker push "${DOCKER_IMAGE}"
 
-# ── 3. Skopíruj konfig a šablóny na Synology ──────────────────────────────────
-echo "--> Kopírujem konfig na Synology..."
+# ── 3. Skopíruj konfig, .env a šablóny na server ──────────────────────────────
+echo "--> Kopírujem konfig na server..."
 
 ${SCP} \
   "${LOCAL_DIR}/docker-compose.yml" \
@@ -104,6 +116,6 @@ ${SSH} "sudo /bin/mkdir -p ${REMOTE_DIR}/logs ${REMOTE_DIR}/data ${REMOTE_DIR}/b
   ${REMOTE_DIR}/static"
 
 # ── 5. Pull nový image a reštartuj ────────────────────────────────────────────
-echo "--> Pullnem nový image a reštartujem na Synology..."
+echo "--> Pullnem nový image a reštartujem na serveri..."
 ${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up --force-recreate -d && ${DOCKER} image prune -f"
 echo "==> Deploy hotový."

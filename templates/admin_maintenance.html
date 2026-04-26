@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}DZ News – Údržba{% endblock %}
+
+{% block topbar_left %}
+  <span class="pill">DZ News</span>
+  <span class="pill admin">Admin</span>
+  <span class="pill ok">Údržba</span>
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+  <h1>Administrácia — Údržba</h1>
+</div>
+
+{# ── Prekladač ──────────────────────────────────────────────────────────────── #}
+<div class="card" style="margin-top:12px">
+  <h2>Prekladač</h2>
+  <div class="sub" style="margin-bottom:14px">
+    Aktívny backend:
+    <span class="pill {% if tr.backend == 'local' %}ok{% elif tr.backend == 'deepl' %}{% else %}admin{% endif %}">
+      {{ tr.backend | upper }}
+    </span>
+    <span class="pill" style="opacity:.6;font-size:11px">
+      {% if tr.source == 'ui' %}nastavené cez UI{% else %}z .env{% endif %}
+    </span>
+    {% if tr.source == 'ui' and tr.env_backend != tr.backend %}
+      <span class="pill warn" style="font-size:11px" title=".env má TRANSLATOR_BACKEND={{ tr.env_backend }}">
+        .env: {{ tr.env_backend }}
+      </span>
+    {% endif %}
+  </div>
+
+  <form method="post" action="/admin/maintenance/set-translator" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+    {% for b, label in [('local', 'Local (MarianMT)'), ('deepl', 'DeepL'), ('azure', 'Azure')] %}
+      <button type="submit" name="backend" value="{{ b }}"
+        class="pill {% if tr.backend == b %}ok{% endif %}"
+        style="cursor:pointer;border:none">
+        {{ label }}{% if tr.backend == b %} ✓{% endif %}
+      </button>
+    {% endfor %}
+    {% if tr.source == 'ui' %}
+      <button type="submit" name="backend" value="{{ tr.env_backend }}"
+        formaction="/admin/maintenance/reset-translator"
+        class="pill" style="cursor:pointer;border:none;opacity:.6;font-size:11px">
+        ↺ reset na .env ({{ tr.env_backend }})
+      </button>
+    {% endif %}
+  </form>
+
+  {% if tr.backend == 'azure' %}
+    <div class="box">
+      <p style="margin:0 0 10px">
+        <strong>Azure Cognitive Translator</strong> neposkytuje usage API endpoint.
+        Využitie a zostatok kreditov sú dostupné iba v Azure Portáli.
+      </p>
+      <p style="margin:0 0 6px">Región: <code>{{ tr.azure_region }}</code></p>
+      <a class="pill ok"
+         href="https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesMenuBlade/~/overview"
+         target="_blank" rel="noopener">
+        Otvoriť Azure Portal →
+      </a>
+    </div>
+    <div class="small" style="margin-top:8px;opacity:.7">
+      Free tier: 2 000 000 znakov/mesiac. Pozri <em>Metrics → Characters Translated</em> v Azure Portáli.
+    </div>
+
+  {% elif tr.backend == 'local' %}
+    {% set loc = tr.local %}
+    {% if loc %}
+      <table class="table">
+        <thead><tr><th>Stav</th><th>URL</th><th>Podporované páry</th></tr></thead>
+        <tbody>
+          <tr class="trow">
+            <td><span class="pill ok">{{ loc.status }}</span></td>
+            <td><code>{{ loc.url }}</code></td>
+            <td>{{ loc.supported_pairs | join(', ') }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="small" style="margin-top:8px;opacity:.7">
+        Lokálna MarianMT služba — bez limitu znakov. Modely sa načítavajú lenivy pri prvom requeste.
+      </div>
+    {% else %}
+      <div class="box">
+        <span class="pill bad">Služba nedostupná</span>
+        — lokálny translator (<code>{{ tr.url }}</code>) neodpovedá
+      </div>
+    {% endif %}
+  {% endif %}
+
+  {# DeepL kredity — vždy ak je key nastavený #}
+  {% if tr.deepl is defined %}
+    <div class="hr" style="margin:16px 0"></div>
+    <h3 style="margin:0 0 10px">DeepL kredity</h3>
+    {% set u = tr.deepl %}
+    {% if u %}
+      {% set remaining = u.limit - u.used %}
+      {% set pct = ((u.used / u.limit) * 100) | round(1) if u.limit > 0 else 0 %}
+      <table class="table">
+        <thead><tr><th>Minuté znaky</th><th>Zostatok</th><th>Limit</th><th>Využitie</th></tr></thead>
+        <tbody>
+          <tr class="trow">
+            <td>{{ "{:,}".format(u.used) }}</td>
+            <td>{{ "{:,}".format(remaining) }}</td>
+            <td>{{ "{:,}".format(u.limit) }}</td>
+            <td>
+              <div style="background:var(--line);border-radius:4px;height:8px;width:160px;overflow:hidden">
+                <div style="background:{% if pct > 80 %}#e74c3c{% elif pct > 60 %}#f39c12{% else %}#27ae60{% endif %};height:100%;width:{{ pct }}%"></div>
+              </div>
+              <span class="small">{{ pct }}%</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="small" style="margin-top:8px;opacity:.7">
+        Obnova kreditov: každý mesiac (cca 6. deň). Free tier: 500 000 znakov/mesiac.
+      </div>
+    {% else %}
+      <span class="pill warn">Nepodarilo sa načítať DeepL usage</span>
+      — skontroluj <code>DEEPL_API_KEY</code> v <code>.env</code>
+    {% endif %}
+  {% endif %}
+
+</div>
+
+{# ── Oprava dátumov ─────────────────────────────────────────────────────────── #}
+<div class="card" style="margin-top:12px">
+  <h2>Oprava relatívnych dátumov (SerpAPI)</h2>
+  <div class="sub" style="margin-bottom:12px">
+    Články, ktorých <code>published_at_text</code> obsahuje relatívny dátum (napr. "il y a 3 jours", "yesterday"),
+    majú <code>published_at_real</code> nastavený nesprávne. Tento nástroj ich resetuje na NULL — dátum sa doplní pri ďalšej extrakcii.
+  </div>
+
+  <table class="table" style="margin-bottom:14px">
+    <thead><tr><th>Kandidáti celkom</th><th>Na opravu</th></tr></thead>
+    <tbody>
+      <tr class="trow">
+        <td>{{ stats.total_candidates }}</td>
+        <td>
+          {% if stats.to_fix > 0 %}
+            <span class="pill warn">{{ stats.to_fix }}</span>
+          {% else %}
+            <span class="pill ok">0</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if stats.preview %}
+    <details class="box" style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:600">Ukážka (prvých {{ stats.preview | length }})</summary>
+      <table class="table" style="margin-top:10px">
+        <thead><tr><th>ID</th><th>published_at_text</th><th>published_at_real</th></tr></thead>
+        <tbody>
+          {% for r in stats.preview %}
+            <tr class="trow">
+              <td><a href="/article/{{ r.id }}">{{ r.id }}</a></td>
+              <td>{{ r.published_at_text }}</td>
+              <td>{{ r.published_at_real }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  {% endif %}
+
+  {% if stats.to_fix > 0 %}
+    <form method="post" action="/admin/maintenance/fix-dates"
+          onsubmit="return confirm('Resetovať published_at_real pre {{ stats.to_fix }} článkov?')">
+      <button type="submit" class="pill warn">Opraviť {{ stats.to_fix }} záznamov</button>
+    </form>
+  {% else %}
+    <span class="pill ok">Všetky dátumy sú v poriadku</span>
+  {% endif %}
+</div>
+
+{# ── Záloha a obnova ────────────────────────────────────────────────────────── #}
+<div class="card" style="margin-top:12px">
+  <h2>Záloha a obnova databázy</h2>
+  <div class="sub" style="margin-bottom:14px">
+    Záloha stiahne kompletný <code>mysqldump</code>. Obnova nahrá <code>.sql</code> súbor a importuje ho do databázy.
+    <strong>Obnova je deštruktívna</strong> — existujúce záznamy môžu byť prepísané.
+  </div>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+    <div>
+      <h3 style="margin:0 0 8px">Záloha</h3>
+      <a class="pill ok" href="/admin/maintenance/backup">Stiahnuť zálohu (.sql)</a>
+    </div>
+
+    <div>
+      <h3 style="margin:0 0 8px">Obnova</h3>
+      <form method="post" action="/admin/maintenance/restore"
+            enctype="multipart/form-data"
+            onsubmit="return confirm('POZOR: Obnova môže prepísať existujúce dáta. Pokračovať?')">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="file" name="backup_file" accept=".sql" required>
+          <button type="submit" class="pill bad">Importovať</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

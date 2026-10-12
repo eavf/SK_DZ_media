@@ -6,4 +6,9 @@ __pycache__/
 bundle/
 logs/
 .idea/
-Archive/config/translator_backend
+Archive/
+config/translator_backend
+
+# DB dumps
+migrations/*backup*.sql
+templates/*.old

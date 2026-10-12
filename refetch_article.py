@@ -19,6 +19,7 @@ from sqlalchemy import text
 from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_context
 from translate import translate_ar_fr
+from classify_ai import classify_and_mark
 
 s, paths = init_context()
 logger = logging.getLogger("refetch_article")
@@ -115,6 +116,13 @@ def main() -> int:
     save_extraction(article_id, result)
 
     if result.extraction_ok:
+        # AI klasifikácia (len ak článok ešte nebol klasifikovaný ani ručne označený)
+        try:
+            if classify_and_mark(article_id, row.get("title"), result.content_text) == "sport":
+                logger.info("OK: id=%s, vyradený ako šport (AI)", article_id)
+                return 0
+        except Exception as e:
+            logger.warning("AI klasifikácia preskočená pre id=%s: %s", article_id, e)
         _translate_if_arabic(article_id, result, row)
         logger.info("OK: id=%s, chars=%s", article_id, result.extracted_chars)
         return 0

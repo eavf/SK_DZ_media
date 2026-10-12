@@ -207,10 +207,11 @@ def _parse_ingest_summary(out: str) -> dict | None:
 
 
 def _parse_extract_summary(out: str) -> dict | None:
-    m = re.search(r'ok=(\d+), soft_deleted=(\d+), commercial=(\d+), failed=(\d+)', out)
+    m = re.search(r'ok=(\d+), soft_deleted=(\d+), commercial=(\d+), failed=(\d+)(?:, ai_sport=(\d+))?', out)
     if m:
         return {"ok": int(m.group(1)), "soft_deleted": int(m.group(2)),
-                "commercial": int(m.group(3)), "failed": int(m.group(4))}
+                "commercial": int(m.group(3)), "failed": int(m.group(4)),
+                "ai_sport": int(m.group(5) or 0)}
     return None
 
 
@@ -238,7 +239,14 @@ def highlight_terms_html(s: str) -> str:
     return TERM_RE.sub(r"<mark>\1</mark>", s)
 
 
-def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str, include_deleted: bool, include_avoided: bool):
+def parse_del_mode(value: str) -> tuple[bool, bool]:
+    """Parameter `del`: '0' bez zmazaných | '1' aj zmazané | 'ai' len vyradené AI (šport).
+    Vracia (include_deleted, only_ai_sport)."""
+    return value in ("1", "ai"), value == "ai"
+
+
+def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str, include_deleted: bool, include_avoided: bool,
+                  only_ai_sport: bool = False):
     """
     Zostaví WHERE klauzulu pre browse/export.
 
@@ -246,6 +254,7 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
     relevance:       'all' | '1' | '0' | 'null' | '1_or_null' | '0_or_null'
     include_deleted: True  → zahrnie záznamy so soft-delete (deleted_at IS NOT NULL)
     include_avoided: True  → zahrnie záznamy zo zdrojov s is_avoided=1
+    only_ai_sport:   True  → len články vyradené AI ako šport (ai_label='sport')
 
     Tlačítká na browse.html:
       Reset        — days=0, extraction=all, rel=1_or_null, del=0, av=0  (default pri /browse)
@@ -265,6 +274,9 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
 
     if not include_avoided:
         where.append("s.is_avoided = 0")
+
+    if only_ai_sport:
+        where.append("a.ai_label = 'sport'")
 
     if extraction == "unextracted":
         where.append("a.content_text IS NULL")
@@ -418,10 +430,11 @@ def browse():
     extraction = request.args.get("extraction", "all")  # ok | unextracted | all
     only_slovak = request.args.get("sk", "0") == "1"
     relevance = request.args.get("rel", "1_or_null")  # all | 1 | 0 | null | 1_or_null
-    include_deleted = request.args.get("del", "0") == "1"
+    del_mode = request.args.get("del", "0")
+    include_deleted, only_ai_sport = parse_del_mode(del_mode)
     include_avoided = request.args.get("av", "0") == "1"
 
-    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided)
+    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided, only_ai_sport)
 
     limit = 300 if days > 0 or extraction == "all" else 100
     sql = f"""
@@ -441,6 +454,7 @@ def browse():
             a.relevance,
             a.relevance_note,
             a.deleted_at,
+            a.ai_label,
             s.id AS source_id,
             s.is_avoided,
             s.notes AS source_notes
@@ -481,6 +495,7 @@ def browse():
         only_slovak=only_slovak,
         relevance=relevance,
         include_deleted=include_deleted,
+        del_mode=del_mode,
         include_avoided=include_avoided,
         total=len(rows),
         limit=limit,
@@ -864,10 +879,11 @@ def export_csv():
     extraction = request.args.get("extraction", "ok")
     only_slovak = request.args.get("sk", "0") == "1"
     relevance = request.args.get("rel", "all")
-    include_deleted = request.args.get("del", "0") == "1"
+    del_mode = request.args.get("del", "0")
+    include_deleted, only_ai_sport = parse_del_mode(del_mode)
     include_avoided = request.args.get("av", "0") == "1"
     errors_only = request.args.get("errors_only", "0") == "1"
-    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided)
+    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided, only_ai_sport)
 
     errors_clause = " AND (a.fetch_error IS NOT NULL AND TRIM(a.fetch_error) <> '')" if errors_only else ""
 
@@ -921,11 +937,12 @@ def export_word():
     extraction = request.args.get("extraction", "ok")
     only_slovak = request.args.get("sk", "0") == "1"
     relevance = request.args.get("rel", "all")
-    include_deleted = request.args.get("del", "0") == "1"
+    del_mode = request.args.get("del", "0")
+    include_deleted, only_ai_sport = parse_del_mode(del_mode)
     include_avoided = request.args.get("av", "0") == "1"
     errors_only = request.args.get("errors_only", "0") == "1"
 
-    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided)
+    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided, only_ai_sport)
 
     errors_clause = " AND (a.fetch_error IS NOT NULL AND TRIM(a.fetch_error) <> '')" if errors_only else ""
 

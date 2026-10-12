@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS `articles` (
   `relevance_note`       varchar(255)  DEFAULT NULL,
   `deleted_at`           datetime      DEFAULT NULL,
   `content_text_fr`      longtext      DEFAULT NULL,
+  `ai_label`             varchar(20)   DEFAULT NULL,
+  `ai_checked_at`        datetime      DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_articles_url_hash` (`url_hash`),
   KEY `idx_articles_source`            (`source_id`),
@@ -73,6 +75,7 @@ CREATE TABLE IF NOT EXISTS `articles` (
   KEY `idx_articles_content_hash`      (`content_hash`),
   KEY `idx_articles_relevance`         (`relevance`),
   KEY `idx_articles_deleted_at`        (`deleted_at`),
+  KEY `idx_articles_ai_label`          (`ai_label`),
   KEY `idx_articles_title_hash`        (`title_hash`),
   KEY `idx_articles_source_title_hash` (`source_id`, `title_hash`),
   CONSTRAINT `fk_articles_source` FOREIGN KEY (`source_id`) REFERENCES `sources` (`id`)

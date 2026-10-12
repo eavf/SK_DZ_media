@@ -50,7 +50,7 @@
   {% if extraction == 'ok' %}<span class="pill ok">extrahované</span>{% elif extraction == 'unextracted' %}<span class="pill warn">bez textu</span>{% endif %}
   {% if only_slovak %}<span class="pill ok">SK: áno</span>{% endif %}
   {% if relevance != 'all' %}<span class="pill {% if relevance == '1' or relevance == '1_or_null' %}ok{% else %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '1_or_null' %}rel + neoznačené{% elif relevance == '0' %}nerelevantné{% elif relevance == '0_or_null' %}irel + neoznačené{% elif relevance == 'null' %}neoznačené{% endif %}</span>{% endif %}
-  {% if include_deleted %}<span class="pill warn">+ zmazané</span>{% endif %}
+  {% if del_mode == 'ai' %}<span class="pill warn">vyradené AI (šport)</span>{% elif include_deleted %}<span class="pill warn">+ zmazané</span>{% endif %}
   {% if include_avoided %}<span class="pill warn">+ skryté</span>{% endif %}
 {% endblock %}
 
@@ -104,7 +104,8 @@
             <label for="f-del">Zmazané</label>
             <select id="f-del" name="del">
               <option value="0" {% if not include_deleted %}selected{% endif %}>bez deleted</option>
-              <option value="1" {% if include_deleted %}selected{% endif %}>aj deleted</option>
+              <option value="1" {% if del_mode == '1' %}selected{% endif %}>aj deleted</option>
+              <option value="ai" {% if del_mode == 'ai' %}selected{% endif %}>len vyradené AI (šport)</option>
             </select>
           </div>
 
@@ -123,6 +124,7 @@
           <a class="pill pill-btn" href="/browse">Reset</a>
           <a class="pill pill-btn" href="/browse?extraction=all&days=0&rel=all&del=1&av=1&sk=0">Všetky v DB</a>
           <a class="pill pill-btn warn" href="/browse?extraction=all&days=0&rel=0_or_null&del=1&av=1&sk=0">Skryté</a>
+          <a class="pill pill-btn warn" href="/browse?extraction=all&days=0&rel=all&del=ai&av=1&sk=0">Vyradené AI</a>
         </div>
       </form>
 
@@ -162,8 +164,8 @@
 
         <div class="hr" style="width:100%;margin:12px 0 8px"></div>
 
-        <a class="pill pill-btn" href="/export/csv?days={{ days }}&extraction={{ extraction }}&sk={{ 1 if only_slovak else 0 }}&rel={{ relevance }}&del={{ 1 if include_deleted else 0 }}&av={{ 1 if include_avoided else 0 }}">Export CSV</a>
-        <a class="pill pill-btn" href="/export/word?days={{ days }}&extraction={{ extraction }}&sk={{ 1 if only_slovak else 0 }}&rel={{ relevance }}&del={{ 1 if include_deleted else 0 }}&av={{ 1 if include_avoided else 0 }}">Export Word</a>
+        <a class="pill pill-btn" href="/export/csv?days={{ days }}&extraction={{ extraction }}&sk={{ 1 if only_slovak else 0 }}&rel={{ relevance }}&del={{ del_mode }}&av={{ 1 if include_avoided else 0 }}">Export CSV</a>
+        <a class="pill pill-btn" href="/export/word?days={{ days }}&extraction={{ extraction }}&sk={{ 1 if only_slovak else 0 }}&rel={{ relevance }}&del={{ del_mode }}&av={{ 1 if include_avoided else 0 }}">Export Word</a>
       </div>
     </div>
   </div>
@@ -176,7 +178,7 @@
   <input type="hidden" name="extraction" value="{{ extraction }}">
   <input type="hidden" name="sk" value="{{ 1 if only_slovak else 0 }}">
   <input type="hidden" name="rel" value="{{ relevance }}">
-  <input type="hidden" name="del" value="{{ 1 if include_deleted else 0 }}">
+  <input type="hidden" name="del" value="{{ del_mode }}">
   <input type="hidden" name="av" value="{{ 1 if include_avoided else 0 }}">
 
   <table class="table">
@@ -212,11 +214,11 @@
                 <button type="button" class="pill ok quick-label" style="cursor:pointer;border:none;padding:2px 8px;font-size:11px"
                   data-id="{{ r.id }}" data-rel="1"
                   data-days="{{ days }}" data-extraction="{{ extraction }}" data-sk="{{ 1 if only_slovak else 0 }}"
-                  data-relfilter="{{ relevance }}" data-del="{{ 1 if include_deleted else 0 }}" data-av="{{ 1 if include_avoided else 0 }}">✓ rel</button>
+                  data-relfilter="{{ relevance }}" data-del="{{ del_mode }}" data-av="{{ 1 if include_avoided else 0 }}">✓ rel</button>
                 <button type="button" class="pill warn quick-label" style="cursor:pointer;border:none;padding:2px 8px;font-size:11px"
                   data-id="{{ r.id }}" data-rel="0"
                   data-days="{{ days }}" data-extraction="{{ extraction }}" data-sk="{{ 1 if only_slovak else 0 }}"
-                  data-relfilter="{{ relevance }}" data-del="{{ 1 if include_deleted else 0 }}" data-av="{{ 1 if include_avoided else 0 }}">✗ irel</button>
+                  data-relfilter="{{ relevance }}" data-del="{{ del_mode }}" data-av="{{ 1 if include_avoided else 0 }}">✗ irel</button>
               {% endif %}
             </div>
 
@@ -260,6 +262,9 @@
 
               {% if r.deleted_at %}
                 <span class="pill warn">deleted</span>
+              {% endif %}
+              {% if r.ai_label == 'sport' %}
+                <span class="pill purple" title="{{ r.relevance_note or '' }}">šport (AI)</span>
               {% endif %}
 
               {% set fe = (r.fetch_error or "") %}

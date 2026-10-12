@@ -5,6 +5,7 @@ Pre každý článok kde content_text IS NULL a deleted_at IS NULL:
   - fetchuje URL a extrahuje text
   - ak text neobsahuje slovenský kontext → soft delete
   - ak text je komerčný → relevance=0
+  - ak AI vyhodnotí článok ako šport → soft delete + relevance=0 (classify_ai.py)
   - ak extrakcia zlyhala → zapíše chybu, článok ostáva v DB
 
 Použitie:
@@ -30,6 +31,7 @@ from sqlalchemy import text
 from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_context
 from translate import translate_ar_fr
+from classify_ai import ClassificationStopped, classify_and_mark, classify_pending
 
 s, paths = init_context()
 logger = logging.getLogger("extract_bulk")
@@ -281,7 +283,8 @@ def main() -> int:
 
     logger.info("Pending: %s článkov (limit=%s)", len(pending), args.limit)
 
-    counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0}
+    counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0, "ai_sport": 0}
+    ai_stopped = False
     last_domain_fetch: dict[str, float] = {}
     DOMAIN_DELAY = 1.5  # min. sekúnd medzi requestmi na rovnakú doménu
 
@@ -319,14 +322,28 @@ def main() -> int:
         with engine.begin() as conn:
             status = save_result(conn, article_id, result, row.get("published_at_real"), row.get("published_at_text"))
 
-        translate_after_extraction(article_id, result, row)
+        # AI klasifikácia pred prekladom — športové články neprekladáme
+        if status == "ok" and not ai_stopped:
+            try:
+                if classify_and_mark(article_id, row.get("title"), result.content_text) == "sport":
+                    status = "ai_sport"
+            except ClassificationStopped as e:
+                ai_stopped = True
+                logger.warning("AI klasifikácia zastavená (%s) — dokončí sa pri ďalšom behu.", e)
+
+        if status != "ai_sport":
+            translate_after_extraction(article_id, result, row)
         counts[status] += 1
         logger.info("id=%s → %s", article_id, status)
         time.sleep(0.3)
 
+    # Dobehnutie AI klasifikácie pre články, kde predtým zlyhalo API
+    if not args.dry_run and not ai_stopped:
+        counts["ai_sport"] += classify_pending(limit=args.limit)["sport"]
+
     logger.info(
-        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s",
-        counts["ok"], counts["soft_deleted"], counts["commercial"], counts["failed"]
+        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, ai_sport=%s",
+        counts["ok"], counts["soft_deleted"], counts["commercial"], counts["failed"], counts["ai_sport"]
     )
 
     translated = translate_missing_titles(args.limit, args.dry_run)

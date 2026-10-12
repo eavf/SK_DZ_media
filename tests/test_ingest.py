@@ -301,6 +301,7 @@ def _make_candidate(url: str, domain: str, is_preferred: bool = False,
         snippet=None,
         published_at_raw=None,
         published_at_confidence=conf,
+        published_at_iso=None,
         source_label=None,
         language=None,
     )

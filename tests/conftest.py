@@ -54,6 +54,14 @@ _fake_settings.drop_query_keys = {"utm_source", "utm_medium", "fbclid"}
 _fake_settings.extract_max = 50
 _fake_settings.extract_only_missing = True
 _fake_settings.serpapi_key = "test-serpapi-key"
+_fake_settings.search_terms = {
+    "slovakia": ["Slovaquie", "slovaque", "Slovak", "Bratislava", "سلوفاكيا"],
+    "algeria": ["Algérie", "Algeria", "الجزائر"],
+}
+_fake_settings.blocklist_domains = {"mobilis.dz", "translate.google.dz"}
+_fake_settings.ecom_path_markers = {"/produit/", "/product/", "/shop/", "/cart/", "/promo"}
+_fake_settings.bad_path_markers = {"/recherche", "/search", "/tag/", "/tags/", "/page/"}
+_fake_settings.title_bad_words = {"promo", "promotion", "prix", "offre"}
 
 # Inject before test modules trigger app module imports
 _cfg._CACHED = _fake_settings

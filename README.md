@@ -26,6 +26,7 @@
 - Language detection at search time via **langdetect** (title + snippet), refined by trafilatura during extraction
 - Arabic → French translation via a **configurable backend** — choose between local [MarianMT](https://huggingface.co/Helsinki-NLP) service, **DeepL API**, or **Azure Cognitive Translator** via `TRANSLATOR_BACKEND`; `title` + `snippet` translated automatically (pipeline + backfill); `content_text` translated only during fresh extraction or manually via the article detail page
 - Relevance labeling and soft-delete workflow
+- **AI sports filter** — sports news is detected by an LLM (NVIDIA API, build.nvidia.com) and automatically excluded
 - Export to **Word** and **CSV**
 - Scheduled pipeline with **email notifications** (new/re-seen articles, translation status)
 - **Authentication** — admin/read-only access control (session-based, `users` table in DB)
@@ -92,6 +93,9 @@ Key `.env` variables:
 | `FLASK_SECRET_KEY` | Flask session secret |
 | `FLASK_PORT` | Web server port (default: `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Email notifications (optional) |
+| `NVIDIA_API_KEY` | NVIDIA API key for the AI sports filter (optional — filter is disabled without it) |
+| `NVIDIA_MODEL` | LLM model (default: `meta/llama-3.2-11b-vision-instruct`) |
+| `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Turn the AI filter off (`0`) / min. seconds between API calls (default `1.5`) |
 
 Static config files in `config/`:
 
@@ -117,7 +121,7 @@ python search_mfa_gov.py --when 30d
 # Step 2 – ingest into database
 python ingest_to_dz_news_reworked.py
 
-# Step 3 – extract full text (+ translate Arabic)
+# Step 3 – extract full text (+ AI sports filter + translate Arabic)
 python extract_bulk.py
 ```
 
@@ -284,6 +288,32 @@ Results are saved to a dedicated `mfa_<timestamp>` run directory inside `bundle/
 
 **SSL note:** `mfa.gov.dz` uses an unverifiable SSL certificate. The scraper bypasses verification (`verify=False`) and suppresses the resulting warnings — this is expected and intentional.
 
+### AI sports filter
+
+After a successful extraction, `extract_bulk.py` (and `refetch_article.py`) sends the title and the first 2000 characters of the article to an LLM via the **NVIDIA API** (build.nvidia.com, OpenAI-compatible) and asks whether the article is sports news. The check runs after the cheap keyword filters and **before translation**, so no translation credits are spent on sports articles.
+
+- **Sport** = match reports, results, rankings, qualifications, competitions, athletes, transfers.
+- **Not sport** = politics, diplomacy, economy, statements of ministers about sports policy or hosting events, sports diplomacy, articles mentioning sport only in passing.
+
+**What happens to a sports article:** soft delete (`deleted_at`), `relevance = 0`, `relevance_note = "auto: sport (AI) – <reason>"`, `ai_label = 'sport'`. The row is **not** hard-deleted — the `url_hash` dedup keeps it from being re-ingested and re-classified when the same URL shows up in a later search.
+
+**Safety rules:**
+- each article is classified only once (`ai_checked_at`); articles with a manually set `relevance` are never touched;
+- if the API fails, the article stays unclassified and is retried on the next run — an API outage never excludes anything;
+- on rate limit (HTTP 429) or after 3 consecutive failures (30 s timeout per call) the AI check stops for the current run, so the pipeline never waits on an unavailable API;
+- without `NVIDIA_API_KEY` the filter is disabled and the pipeline behaves as before.
+
+**Review in the dashboard:** `/browse` → button **"Vyradené AI"** (or filter *Deleted* → *len vyradené AI*) lists the excluded articles with a purple **šport (AI)** badge; the reason is in the tooltip. A false positive is restored with the standard undelete.
+
+**Backfill existing articles:**
+
+```bash
+python classify_existing.py --limit 20            # dry-run: calls the AI, prints results, writes nothing
+python classify_existing.py --apply --limit 500   # writes results
+```
+
+The free tier allows ~40 requests/minute; `AI_CLASSIFY_DELAY=1.5` keeps the backfill within that limit. Requires migration `migrations/003_ai_classification.sql` (columns `ai_label`, `ai_checked_at`).
+
 ### Database backup and restore
 
 The admin maintenance page (`/admin/maintenance`) provides a browser-based backup and restore interface. It requires `mysqldump` and `mysql` to be available on the server.
@@ -324,6 +354,7 @@ docker pull eavfeavf/dz-news:latest
 - Detekcia jazyka pri vyhľadávaní cez **langdetect** (title + snippet), upresnená trafilaturou pri extrakcii
 - Preklad arabčiny do francúzštiny cez **konfigurovateľný backend** — výber medzi lokálnou službou [MarianMT](https://huggingface.co/Helsinki-NLP), **DeepL API** alebo **Azure Cognitive Translator** cez `TRANSLATOR_BACKEND`; `title` + `snippet` sa prekladajú automaticky (pipeline + backfill); `content_text` iba pri čerstvej extrakcii alebo manuálne cez stránku článku
 - Označovanie relevancie a soft-delete workflow
+- **AI filter športu** — športové spravodajstvo rozpozná LLM (NVIDIA API, build.nvidia.com) a automaticky ho vyradí
 - Export do **Word** a **CSV**
 - Automatická pipeline s **emailovými notifikáciami** (nové/znovu videné články, stav prekladu)
 - **Autentifikácia** — prístupové práva admin / len čítanie (session-based, tabuľka `users` v DB)
@@ -390,6 +421,9 @@ Kľúčové premenné v `.env`:
 | `FLASK_SECRET_KEY` | Secret pre Flask session |
 | `FLASK_PORT` | Port webservera (default: `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Emailové notifikácie (voliteľné) |
+| `NVIDIA_API_KEY` | NVIDIA API kľúč pre AI filter športu (voliteľné — bez neho je filter vypnutý) |
+| `NVIDIA_MODEL` | LLM model (default: `meta/llama-3.2-11b-vision-instruct`) |
+| `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Vypnutie AI filtra (`0`) / min. sekúnd medzi volaniami API (default `1.5`) |
 
 ### Použitie
 
@@ -405,7 +439,7 @@ python search_mfa_gov.py --when 30d
 # Krok 2 – ingest do databázy
 python ingest_to_dz_news_reworked.py
 
-# Krok 3 – extrakcia textu (+ preklad arabčiny)
+# Krok 3 – extrakcia textu (+ AI filter športu + preklad arabčiny)
 python extract_bulk.py
 ```
 
@@ -572,6 +606,32 @@ Výsledky sa uložia do dedikovaného adresára `mfa_<timestamp>` v `bundle/runs
 
 **Poznámka k SSL:** `mfa.gov.dz` používa neoveriteľný SSL certifikát. Skript obchádza overenie (`verify=False`) a potláča príslušné varovania — je to zámerné.
 
+### AI filter športu
+
+Po úspešnej extrakcii `extract_bulk.py` (aj `refetch_article.py`) pošle nadpis a prvých 2000 znakov článku do LLM cez **NVIDIA API** (build.nvidia.com, OpenAI-kompatibilné) s otázkou, či ide o športové spravodajstvo. Kontrola beží po lacných filtroch kľúčových slov a **pred prekladom**, takže sa na športové články neminú kredity prekladača.
+
+- **Šport** = reportáže zo zápasov, výsledky, rebríčky, kvalifikácie, súťaže, športovci, prestupy.
+- **Nie šport** = politika, diplomacia, ekonomika, vyjadrenia ministrov o športovej politike či hosťovaní podujatí, športová diplomacia, články so športom len okrajovo.
+
+**Čo sa stane so športovým článkom:** soft delete (`deleted_at`), `relevance = 0`, `relevance_note = "auto: sport (AI) – <dôvod>"`, `ai_label = 'sport'`. Riadok sa **nemaže** natvrdo — dedup cez `url_hash` zabráni tomu, aby sa pri ďalšom searchi ingestoval a klasifikoval znova.
+
+**Bezpečnostné pravidlá:**
+- každý článok sa klasifikuje len raz (`ai_checked_at`); články s ručne nastavenou `relevance` AI nikdy nemení;
+- ak API zlyhá, článok ostane neklasifikovaný a skúsi sa pri ďalšom behu — výpadok API nikdy nič nevyradí;
+- pri rate limite (HTTP 429) alebo po 3 zlyhaniach za sebou (timeout 30 s na volanie) sa AI kontrola v danom behu zastaví, pipeline teda nečaká na nedostupné API;
+- bez `NVIDIA_API_KEY` je filter vypnutý a pipeline beží ako doteraz.
+
+**Kontrola v dashboarde:** `/browse` → tlačidlo **„Vyradené AI“** (alebo filter *Zmazané* → *len vyradené AI*) zobrazí vyradené články s fialovým štítkom **šport (AI)**; dôvod je v tooltipe. Omyl sa vráti štandardným undelete.
+
+**Spätná klasifikácia existujúcich článkov:**
+
+```bash
+python classify_existing.py --limit 20            # dry-run: zavolá AI, vypíše výsledky, nič nezapíše
+python classify_existing.py --apply --limit 500   # zapíše výsledky
+```
+
+Free tier povoľuje ~40 požiadaviek/minútu; `AI_CLASSIFY_DELAY=1.5` drží spätnú klasifikáciu v limite. Vyžaduje migráciu `migrations/003_ai_classification.sql` (stĺpce `ai_label`, `ai_checked_at`).
+
 ### Záloha a obnova databázy
 
 Stránka správy (`/admin/maintenance`) poskytuje zálohu a obnovu priamo z prehliadača. Vyžaduje prítomnosť `mysqldump` a `mysql` na serveri.
@@ -612,6 +672,7 @@ docker pull eavfeavf/dz-news:latest
 - Détection de la langue dès la recherche via **langdetect** (titre + extrait), affinée par trafilatura à l'extraction
 - Traduction arabe → français via un **backend configurable** — choix entre service local [MarianMT](https://huggingface.co/Helsinki-NLP), **API DeepL** ou **Azure Cognitive Translator** via `TRANSLATOR_BACKEND` ; `title` + `snippet` traduits automatiquement (pipeline + remplissage) ; `content_text` uniquement lors d'une extraction fraîche ou manuellement via la page de détail
 - Étiquetage de pertinence et workflow de suppression douce
+- **Filtre IA du sport** — l'actualité sportive est détectée par un LLM (API NVIDIA, build.nvidia.com) et exclue automatiquement
 - Export en **Word** et **CSV**
 - Pipeline planifié avec **notifications e-mail détaillées** (articles nouveaux/revus, état de traduction)
 - **Authentification** — contrôle d'accès admin / lecture seule (session Flask, table `users` en base)
@@ -678,6 +739,9 @@ Variables clés dans `.env` :
 | `FLASK_SECRET_KEY` | Secret de session Flask |
 | `FLASK_PORT` | Port du serveur web (défaut : `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Notifications e-mail (optionnel) |
+| `NVIDIA_API_KEY` | Clé API NVIDIA pour le filtre IA du sport (optionnel — filtre désactivé sans clé) |
+| `NVIDIA_MODEL` | Modèle LLM (par défaut : `meta/llama-3.2-11b-vision-instruct`) |
+| `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Désactiver le filtre IA (`0`) / secondes min. entre appels API (par défaut `1.5`) |
 
 ### Utilisation
 
@@ -693,7 +757,7 @@ python search_mfa_gov.py --when 30d
 # Étape 2 – ingestion en base de données
 python ingest_to_dz_news_reworked.py
 
-# Étape 3 – extraction du texte (+ traduction de l'arabe)
+# Étape 3 – extraction du texte (+ filtre IA du sport + traduction de l'arabe)
 python extract_bulk.py
 ```
 
@@ -859,6 +923,32 @@ python search_mfa_gov.py --when 7d    # 7 derniers jours
 Les résultats sont sauvegardés dans un répertoire dédié `mfa_<timestamp>` sous `bundle/runs/`, au même format que `search_flow_news.py`, et peuvent être ingérés avec `ingest_to_dz_news_reworked.py`.
 
 **Note SSL :** `mfa.gov.dz` utilise un certificat SSL non vérifiable. Le script contourne la vérification (`verify=False`) et supprime les avertissements correspondants — c'est intentionnel.
+
+### Filtre IA du sport
+
+Après une extraction réussie, `extract_bulk.py` (et `refetch_article.py`) envoie le titre et les 2000 premiers caractères de l'article à un LLM via l'**API NVIDIA** (build.nvidia.com, compatible OpenAI) pour savoir s'il s'agit d'actualité sportive. Le contrôle s'exécute après les filtres par mots-clés et **avant la traduction**, afin de ne pas consommer de crédits de traduction pour les articles sportifs.
+
+- **Sport** = comptes rendus de matchs, résultats, classements, qualifications, compétitions, athlètes, transferts.
+- **Pas sport** = politique, diplomatie, économie, déclarations de ministres sur la politique sportive ou l'accueil d'événements, diplomatie sportive, articles ne mentionnant le sport qu'en passant.
+
+**Sort d'un article sportif :** suppression douce (`deleted_at`), `relevance = 0`, `relevance_note = "auto: sport (AI) – <raison>"`, `ai_label = 'sport'`. La ligne n'est **pas** supprimée physiquement — la déduplication par `url_hash` empêche sa réingestion et sa reclassification lorsque la même URL réapparaît.
+
+**Règles de sécurité :**
+- chaque article n'est classé qu'une seule fois (`ai_checked_at`) ; les articles dont la `relevance` a été fixée manuellement ne sont jamais modifiés ;
+- en cas d'échec de l'API, l'article reste non classé et sera retenté au prochain passage — une panne de l'API n'exclut jamais rien ;
+- en cas de limite de débit (HTTP 429) ou après 3 échecs consécutifs (timeout de 30 s par appel), le contrôle IA s'arrête pour le passage en cours ;
+- sans `NVIDIA_API_KEY`, le filtre est désactivé et le pipeline fonctionne comme avant.
+
+**Vérification dans le tableau de bord :** `/browse` → bouton **« Vyradené AI »** (ou filtre *Zmazané* → *len vyradené AI*) liste les articles exclus avec un badge violet **šport (AI)** ; la raison figure dans l'infobulle. Un faux positif se restaure via l'annulation de suppression standard.
+
+**Classification rétroactive des articles existants :**
+
+```bash
+python classify_existing.py --limit 20            # dry-run : appelle l'IA, affiche les résultats, n'écrit rien
+python classify_existing.py --apply --limit 500   # enregistre les résultats
+```
+
+L'offre gratuite autorise ~40 requêtes/minute ; `AI_CLASSIFY_DELAY=1.5` maintient la classification rétroactive sous cette limite. Nécessite la migration `migrations/003_ai_classification.sql` (colonnes `ai_label`, `ai_checked_at`).
 
 ### Sauvegarde et restauration de la base de données
 

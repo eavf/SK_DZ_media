@@ -44,6 +44,16 @@ cp deploy.sh.example deploy.sh
 
 > `.env` sa kopíruje automaticky pri `./deploy.sh` a `./deploy.sh --no-rebuild`. Pri prvom nasadení ho treba vytvoriť manuálne podľa `.env.example`.
 
+> **Pozor:** deploy **prepíše** serverový `.env`, `docker-compose.yml`, `templates/`, `config/*.json` a `static/` lokálnymi verziami.
+> Ak sa na serveri niečo menilo (nové premenné v `.env`, dopyty uložené cez `/admin/queries` do `config/*.json`), najprv to zosynchronizuj lokálne.
+> Porovnanie `.env` len podľa názvov premenných (hodnoty sa nevypíšu):
+>
+> ```bash
+> diff <(ssh synology "grep -oE '^[A-Z_]+=' /volume1/docker/dz_news/.env" | sort) <(grep -oE '^[A-Z_]+=' .env | sort)
+> ```
+>
+> `config/translator_backend` (backend zvolený v admin UI) existuje len na serveri a deploy ho neprepíše.
+
 ## Prvé spustenie – prihlásenie na Docker Hub
 
 ```bash
@@ -160,7 +170,27 @@ sudo /usr/local/bin/docker exec -it dz-app python create_admin.py
 
 ### Ostatné migrácie
 
-Spúšťajú sa manuálne cez Container Manager → Terminal:
+> DB používateľ aplikácie `dz_app` má len `SELECT/INSERT/UPDATE/DELETE` — **nemá `ALTER`**.
+> Migrácie, ktoré menia štruktúru tabuliek, preto spúšťaj ako root v **phpMyAdmin na Synology** (DB `dz_news` → záložka SQL).
+> Migráciu spusti **pred** deployom nového kódu, ktorý ju potrebuje.
+
+| Migrácia | Obsah |
+|---|---|
+| `002_user_roles.sql` | CHECK constraint na roly `user` / `power` / `admin` |
+| `003_ai_classification.sql` | stĺpce `ai_label`, `ai_checked_at` + index (AI filter športu) — **nutná pred deployom verzie s AI filtrom**, inak `/browse` spadne |
+
+Príklad (003) — vlož do phpMyAdmin → SQL:
+
+```sql
+ALTER TABLE articles
+  ADD COLUMN IF NOT EXISTS ai_label varchar(20) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS ai_checked_at datetime DEFAULT NULL,
+  ADD INDEX IF NOT EXISTS idx_articles_ai_label (ai_label);
+```
+
+Overenie: `SHOW COLUMNS FROM articles LIKE 'ai%';`
+
+Staršie jednoduché migrácie sa spúšťali aj cez Container Manager → Terminal (funguje len ak má DB používateľ potrebné práva):
 
 ```bash
 python -c "
@@ -196,6 +226,16 @@ cd /volume1/docker/dz_news
 sudo docker compose down
 sudo docker compose pull
 sudo docker compose up -d
+```
+
+### AI filter športu — spätná klasifikácia po nasadení
+
+Po deployi verzie s AI filtrom (a doplnení `NVIDIA_API_KEY` do `.env`):
+
+```bash
+ssh synology
+sudo /usr/local/bin/docker exec dz-app python classify_existing.py --limit 20           # dry-run
+sudo /usr/local/bin/docker exec dz-app python classify_existing.py --apply --limit 500  # zápis
 ```
 
 ### Overenie verzie bežiaceho app.py

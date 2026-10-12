@@ -43,6 +43,21 @@ python search_flow_news.py
 
 # Step 2: Extract article content from bundle and ingest into DB
 python ingest_to_dz_news_reworked.py
+
+# Step 3: Bulk-extract articles still missing content_text
+python extract_bulk.py [--limit N] [--dry-run]
+```
+
+### Other scripts
+
+```bash
+python search_mfa_gov.py [--when 30d]          # Scrape MFA Algeria press releases (no SerpAPI)
+python refetch_article.py --article-id <id>    # Re-fetch and re-extract a single article
+python fix_serp_dates.py [--apply]             # Fix relative SerpAPI dates (dry-run by default)
+python classify_existing.py [--apply] [--limit N]  # Backfill AI sport classification (dry-run by default)
+python scheduler.py                            # Daily pipeline at 15:00 + email notification
+python setup_db.py                             # One-time DB init + first admin user
+python create_admin.py [--role user|power|admin]
 ```
 
 ## Architecture
@@ -50,16 +65,19 @@ python ingest_to_dz_news_reworked.py
 ### Data Flow
 
 ```
-SerpAPI (Google News)
-    ↓ search_flow_news.py
-bundle/news_bundle_*.json  (intermediate JSON files)
+SerpAPI (Google News)            MFA Algeria (Next.js JSON)
+    ↓ search_flow_news.py            ↓ search_mfa_gov.py
+bundle/*.json  (intermediate JSON files)
     ↓ extract_articles_reworked.py
 ExtractionResult objects   (fetches URLs, extracts text via trafilatura)
     ↓ ingest_to_dz_news_reworked.py
 MySQL database             (articles + sources tables)
+    ↓ extract_bulk.py      (fills missing content_text, filters irrelevant)
     ↓ app.py (Flask)
-Web dashboard              (browse, label, export)
+Web dashboard              (browse, label, translate, export)
 ```
+
+`scheduler.py` (container `dz-scheduler`) runs search → ingest → extract_bulk daily at 15:00 and emails a summary (`SMTP_*`, `NOTIFY_TO`).
 
 ### Key Modules
 
@@ -67,7 +85,16 @@ Web dashboard              (browse, label, export)
 - **search_flow_news.py** — Builds SerpAPI queries with a multi-query fallback strategy (preferred domains → broad .dz search → fallback). Outputs JSON bundles to `./bundle/`.
 - **extract_articles_reworked.py** — Fetches URLs, extracts content via trafilatura, detects language/dates/topics, returns `ExtractionResult` dataclasses. Handles dedup by URL canonicalization.
 - **ingest_to_dz_news_reworked.py** — Maps `ExtractionResult` → MySQL. Handles source upserts, content-hash dedup, and title fuzzy matching.
-- **app.py** — Flask app with ~27 routes. Uses SQLAlchemy `text()` queries directly (no ORM models). Filter state is built as SQL fragments via helper functions.
+- **extract_bulk.py** — Extracts articles where `content_text IS NULL`. Articles without Slovak context are soft-deleted, commercial content gets `relevance=0`, failures are stored in `fetch_error`.
+- **classify_ai.py** — AI check "is this sports news?" via NVIDIA API (build.nvidia.com, OpenAI-compatible, `NVIDIA_API_KEY`, `NVIDIA_MODEL`). Called from `extract_bulk.py` (before translation) and `refetch_article.py`. Sports articles get `ai_label='sport'`, soft delete, `relevance=0`, note `auto: sport (AI) – <reason>`. Each article is classified once (`ai_checked_at`); articles with manual `relevance` are never touched; API failures leave the article unclassified for a later retry. Rows are never hard-deleted so `url_hash` dedup prevents re-ingest. Browse filter `del=ai` shows AI-excluded articles.
+- **translate.py** — AR→FR translation with three backends: `local` (MarianMT service at `TRANSLATOR_URL`), `deepl`, `azure`. The backend chosen in the admin UI is stored in `config/translator_backend` (gitignored) and overrides `TRANSLATOR_BACKEND` from `.env`.
+- **app.py** — Flask app with ~53 routes. Uses SQLAlchemy `text()` queries directly (no ORM models). Filter state is built as SQL fragments via helper functions. Route groups:
+  - browse / stats / export (CSV, Word), errors
+  - article detail, label, edit, fetch, translate, set_content, delete/undelete
+  - search (SerpAPI, MFA) and process (ingest, extract_bulk as background jobs, `/process/job/<id>`)
+  - sources (create, note, avoid/unavoid), users
+  - `/admin/queries`, `/admin/search-terms`, `/admin/maintenance` (translator backend, fix-dates, DB backup/restore)
+- **Roles** — hierarchy `user < power < admin` (`User.has_role()`), decorators `user_required`, `power_required`, `admin_required`.
 
 ### Configuration
 
@@ -76,13 +103,22 @@ All config comes from `.env` (loaded via python-dotenv). Key variables:
 - `DB_HOST/PORT/NAME/USER/PASS` — MySQL connection
 - `PREFERRED_DOMAINS` — CSV of prioritized Algerian news domains
 - `FLASK_PORT`, `FLASK_SECRET_KEY`
+- `SERP_HL/GL/NUM/WHEN/ENGINE` — SerpAPI search defaults
+- `TRANSLATOR_BACKEND`, `TRANSLATOR_URL`, `DEEPL_API_KEY`, `AZURE_TRANSLATOR_KEY/REGION` — translation
+- `SMTP_HOST/PORT/USER/PASS`, `NOTIFY_TO` — scheduler email notifications
+- `NVIDIA_API_KEY`, `NVIDIA_MODEL`, `AI_CLASSIFY_ENABLED`, `AI_CLASSIFY_DELAY` — AI sport classification (disabled without key)
+- `EXTRACT_MAX`, `EXTRACT_ONLY_MISSING`, `LOG_FILE/LEVEL/PREFIX`
 - There is .env.local file, where are put variables for development PC and server 
+- See `.env.example` for the full list.
 
 Static config files in `config/`:
 - `sources.json` — Preferred domain list
 - `ranking.json` — Per-domain quality scores
 - `topics.json` — Keyword lists (French/English/Arabic) for politics, economy, security
 - `url_cleanup.json` — Query params stripped from URLs before dedup
+- `queries.json`, `search_terms.json` — Search query presets and terms (editable via `/admin/queries`, `/admin/search-terms`)
+
+`deploy.sh` is not tracked in git (server-specific); the template is `deploy.sh.example`. See `DEPLOYMENT.md`.
 
 ### Test Setup
 
@@ -90,7 +126,7 @@ Static config files in `config/`:
 
 ### Database
 
-MySQL with utf8mb4 (MariaDB 11.4). Main tables: `articles`, `sources`, `run_articles`. The app uses soft-delete (`deleted_at` timestamp) and domain muting (`sources.is_avoided`).
+MySQL with utf8mb4 (MariaDB 11.4). Main tables: `articles`, `sources`, `runs`, `run_articles`, `users`. Schema and migrations live in `migrations/` (`000_init_schema.sql`, `001_add_users.sql`, `002_user_roles.sql`, `003_ai_classification.sql`). The app uses soft-delete (`deleted_at` timestamp) and domain muting (`sources.is_avoided`).
 
 #### Table: `articles`
 
@@ -129,10 +165,20 @@ CREATE TABLE `articles` (
   `relevance_note`       varchar(255) DEFAULT NULL,
   `deleted_at`           datetime DEFAULT NULL,                     -- soft delete
   `content_text_fr`      longtext DEFAULT NULL,
-  `snippet_fr`           text DEFAULT NULL
+  `snippet_fr`           text DEFAULT NULL,
+  `ai_label`             varchar(20) DEFAULT NULL,                  -- AI classification: 'sport' | 'other' | NULL
+  `ai_checked_at`        datetime DEFAULT NULL                      -- when classified (once per article)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 ```
 
+#### Table: `users`
+
+`id`, `username` (UNIQUE), `password_hash`, `role` (`user`/`power`/`admin`, CHECK constraint), `created_at`.
+
 ### Docker
 
-`docker-compose.yml` uses `network_mode: host` to reach a Synology-hosted MySQL instance. The app runs as a non-root user on port 5088 via gunicorn (2 workers, 4 threads).
+`docker-compose.yml` defines two containers from image `eavfeavf/dz-news`, both with `network_mode: host` to reach a Synology-hosted MySQL instance:
+- `dz-app` — runs as a non-root user on port 5088 via gunicorn (2 workers, 4 threads)
+- `dz-scheduler` — runs `python scheduler.py`
+
+`entrypoint.sh` waits until MariaDB accepts connections before starting the main command.

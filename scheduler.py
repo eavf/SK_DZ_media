@@ -315,7 +315,8 @@ def run_pipeline() -> None:
 
 
 def main() -> None:
-    logger.info("Scheduler spustený. Pipeline beží denne o %02d:%02d.", RUN_HOUR, RUN_MINUTE)
+    from version import version_string
+    logger.info("Scheduler spustený (%s). Pipeline beží denne o %02d:%02d.", version_string(), RUN_HOUR, RUN_MINUTE)
     last_run: date | None = None
 
     while True:

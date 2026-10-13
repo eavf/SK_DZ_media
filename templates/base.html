@@ -71,6 +71,10 @@
 
     {% block content %}{% endblock %}
 
+    <div class="small" style="margin:24px 0 8px;text-align:center;opacity:.6">
+      DZ News · <span title="spustené {{ app_version.started_at }}">{{ app_version_str }}</span>
+    </div>
+
   </div>
   {% block scripts %}{% endblock %}
 </body>

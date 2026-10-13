@@ -24,6 +24,14 @@ DOCKER_IMAGE="dockerhub-username/image-name:latest"
 SYNOLOGY_HOST="myserver"          # alias z ~/.ssh/config
 REMOTE_DIR="/path/to/remote/app"  # napr. /volume1/docker/dz_news
 LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Verzia vpísaná do image (zobrazí sa v pätičke webu a v /admin/maintenance)
+GIT_COMMIT="$(git -C "${LOCAL_DIR}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+if [[ -n "$(git -C "${LOCAL_DIR}" status --porcelain --untracked-files=no 2>/dev/null)" ]]; then
+  GIT_COMMIT="${GIT_COMMIT}-dirty"
+fi
+BUILD_DATE="$(date '+%Y-%m-%d %H:%M')"
+BUILD_ARGS=(--build-arg "GIT_COMMIT=${GIT_COMMIT}" --build-arg "BUILD_DATE=${BUILD_DATE}")
 SCP="scp -O"                      # -O = legacy SCP protokol (potrebné pre Synology)
 SSH="ssh -t ${SYNOLOGY_HOST}"
 DOCKER="sudo /usr/local/bin/docker"  # cesta k docker na serveri
@@ -75,8 +83,8 @@ if [[ $MODE == "restart" ]]; then
 fi
 
 if [[ $MODE == "rebuild" ]]; then
-  echo "--> Buildujem Docker image..."
-  docker build -t "${DOCKER_IMAGE}" "${LOCAL_DIR}"
+  echo "--> Buildujem Docker image (${GIT_COMMIT}, ${BUILD_DATE})..."
+  docker build "${BUILD_ARGS[@]}" -t "${DOCKER_IMAGE}" "${LOCAL_DIR}"
   echo "--> Pushnem na Docker Hub..."
   docker push "${DOCKER_IMAGE}"
   echo "==> Image pushnutý. Nasaď ho cez: ./deploy.sh --restart"
@@ -84,8 +92,8 @@ if [[ $MODE == "rebuild" ]]; then
 fi
 
 # ── 1. Build image ─────────────────────────────────────────────────────────────
-echo "--> Buildujem Docker image..."
-docker build -t "${DOCKER_IMAGE}" "${LOCAL_DIR}"
+echo "--> Buildujem Docker image (${GIT_COMMIT}, ${BUILD_DATE})..."
+docker build "${BUILD_ARGS[@]}" -t "${DOCKER_IMAGE}" "${LOCAL_DIR}"
 
 # ── 2. Push na Docker Hub ──────────────────────────────────────────────────────
 echo "--> Pushnem na Docker Hub..."

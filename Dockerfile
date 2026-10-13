@@ -15,6 +15,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Verzia (nastavuje deploy.sh: --build-arg GIT_COMMIT=... --build-arg BUILD_DATE=...)
+ARG GIT_COMMIT=
+ARG BUILD_DATE=
+ENV GIT_COMMIT=${GIT_COMMIT} \
+    BUILD_DATE=${BUILD_DATE}
+
 RUN useradd -m appuser && chown -R appuser:appuser /app && chmod +x /app/entrypoint.sh
 USER appuser
 

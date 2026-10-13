@@ -67,6 +67,12 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 configure_logging(app, settings)
 
 
+@app.context_processor
+def inject_app_version():
+    from version import get_version, version_string
+    return {"app_version": get_version(), "app_version_str": version_string()}
+
+
 @app.template_filter("ts_human")
 def ts_human(ts):
     """Unix timestamp → 'YYYY-MM-DD HH:MM'."""

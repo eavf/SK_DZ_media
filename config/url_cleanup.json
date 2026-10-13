@@ -38,7 +38,7 @@
     "/?m="
   ],
   "title_bad_words": [
-    "promo", "promotion", "prix", "offre", "pass", "roaming",
-    "سعر", "عرض", "تخفيضات", "شراء"
+    "promo", "promotion", "prix", "offre", "forfait", "roaming",
+    "سعر", "عروض", "العروض", "عرض خاص", "تخفيضات"
   ]
 }

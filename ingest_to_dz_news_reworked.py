@@ -16,6 +16,7 @@ import logging
 
 from config.config import get_db_engine, init_context, init_cli
 from translate import translate_ar_fr
+from text_filters import find_bad_word
 
 
 # ---------------------------------------------------------------------------
@@ -260,6 +261,7 @@ class ArticleCandidate:
     source_label: Optional[str]
     language: Optional[str]
     auto_irrelevant: bool = False
+    auto_note: Optional[str] = None  # dôvod automatického relevance=0 (relevance_note)
 
 
 # ---------------------------------------------------------------------------
@@ -378,12 +380,17 @@ def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, pr
     title_hash = sha256_hex(normalized_title) if normalized_title else ""
 
     low_url = canon.lower()
-    text_for_filter = f"{title or ''} {item.get('snippet') or ''}".lower()
-    auto_irrelevant = (
-        dom in BLOCKLIST_DOMAINS
-        or any(m in low_url for m in BAD_PATH_MARKERS)
-        or any(w.lower() in text_for_filter for w in TITLE_BAD_WORDS)
-    )
+    bad_marker = next((m for m in BAD_PATH_MARKERS if m in low_url), None)
+    bad_word = find_bad_word(f"{title or ''} {item.get('snippet') or ''}", TITLE_BAD_WORDS)
+    if dom in BLOCKLIST_DOMAINS:
+        auto_note = "auto: blokovaná doména"
+    elif bad_marker:
+        auto_note = f"auto: URL ({bad_marker})"
+    elif bad_word:
+        auto_note = f"auto: komerčné ({bad_word})"
+    else:
+        auto_note = None
+    auto_irrelevant = auto_note is not None
 
     return ArticleCandidate(
         query_id=query_id,
@@ -404,6 +411,7 @@ def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, pr
         source_label=item.get("source"),
         language=item.get("language"),
         auto_irrelevant=auto_irrelevant,
+        auto_note=auto_note,
     )
 
 
@@ -578,7 +586,7 @@ def upsert_article(conn, c: ArticleCandidate, source_id: int) -> int:
             title, normalized_title, title_hash, published_at_text, published_at_real, published_conf,
             snippet, language,
             ingestion_engine, ingestion_query_id, ingestion_rank,
-            relevance,
+            relevance, relevance_note,
             first_seen_at, last_seen_at
         )
         VALUES (
@@ -586,7 +594,7 @@ def upsert_article(conn, c: ArticleCandidate, source_id: int) -> int:
             :title, :normalized_title, :title_hash, :published_at_text, :published_at_real, :published_conf,
             :snippet, :language,
             :ingestion_engine, :ingestion_query_id, :ingestion_rank,
-            :relevance,
+            :relevance, :relevance_note,
             NOW(), NOW()
         )
         ON DUPLICATE KEY UPDATE
@@ -623,6 +631,7 @@ def upsert_article(conn, c: ArticleCandidate, source_id: int) -> int:
         "ingestion_query_id": c.query_id,
         "ingestion_rank": c.rank,
         "relevance": 0 if c.auto_irrelevant else None,
+        "relevance_note": c.auto_note,
     })
     return result.rowcount
 

@@ -42,7 +42,7 @@ def fetch_article_url(article_id: int) -> dict | None:
     with engine.begin() as conn:
         row = conn.execute(text("""
             SELECT COALESCE(final_url, url) AS fetch_url, title, snippet,
-                   title_fr, snippet_fr, language
+                   title_fr, snippet_fr, language, relevance
             FROM articles
             WHERE id = :id
         """), {"id": article_id}).mappings().fetchone()
@@ -69,6 +69,7 @@ def save_extraction(article_id: int, result):
                 published_conf       = :published_conf,
                 lang_detected        = :lang_detected,
                 extraction_ok        = :extraction_ok,
+                relevance_note       = CASE WHEN relevance IS NULL AND :auto_irrelevant THEN :note ELSE relevance_note END,
                 relevance            = CASE WHEN relevance IS NULL AND :auto_irrelevant THEN 0 ELSE relevance END
             WHERE id = :id
         """), {
@@ -84,6 +85,8 @@ def save_extraction(article_id: int, result):
             "lang_detected":       result.lang_detected,
             "extraction_ok":       1 if result.extraction_ok else 0,
             "auto_irrelevant":     1 if auto_irrelevant else 0,
+            "note": (f"auto: komerčné ({result.commercial_word})" if result.is_commercial
+                     else "auto: bez SK kontextu"),
             "id":                  article_id,
         })
         return relink_source(conn, article_id, result.final_url, result.final_url_hash)
@@ -129,7 +132,8 @@ def main() -> int:
                 return 0
         except Exception as e:
             logger.warning("AI klasifikácia preskočená pre id=%s: %s", article_id, e)
-        _translate_if_arabic(article_id, result, row)
+        if row.get("relevance") != 0:
+            _translate_if_arabic(article_id, result, row)
         logger.info("OK: id=%s, chars=%s", article_id, result.extracted_chars)
         return 0
     else:

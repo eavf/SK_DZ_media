@@ -11,6 +11,7 @@ from collections import Counter
 
 import logging
 from config.config import init_context, init_cli, require
+from text_filters import find_bad_word
 from search_mfa_gov import scrape_mfa
 
 # ----------------------------
@@ -327,8 +328,7 @@ def looks_unwanted_news_item(item: dict) -> bool:
     if low_link.endswith("/opac_css/"):
         return True
 
-    title = (item.get("title") or "").lower()
-    if any(w in title for w in TITLE_BAD_WORDS):
+    if find_bad_word(item.get("title"), TITLE_BAD_WORDS):
         return True
 
     return False

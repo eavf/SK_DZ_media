@@ -354,3 +354,22 @@ class TestIngestDeduplication:
         c2 = _make_candidate("https://aps.dz/art2", "aps.dz", title="")
         result = dedupe_candidates([c1, c2], SOURCE_RANK)
         assert len(result) == 2
+
+
+class TestAutoIrrelevantNote:
+    """news_item_to_candidate: relevance=0 s poznámkou o dôvode (title_bad_words = promo, promotion, prix, offre)."""
+
+    def _cand(self, title, link="https://aps.dz/fr/article-1", snippet=""):
+        return news_item_to_candidate({"link": link, "title": title, "snippet": snippet}, "q1", 1, "google_news", set())
+
+    def test_commercial_word_note(self):
+        c = self._cand("Nouvelle offre internet")
+        assert c.auto_irrelevant and c.auto_note == "auto: komerčné (offre)"
+
+    def test_substring_not_flagged(self):
+        c = self._cand("Les offres de coopération algéro-slovaques")  # "offres" ≠ "offre"
+        assert not c.auto_irrelevant and c.auto_note is None
+
+    def test_blocklisted_domain_note(self):
+        c = self._cand("Titre", link="https://mobilis.dz/x")
+        assert c.auto_irrelevant and c.auto_note == "auto: blokovaná doména"

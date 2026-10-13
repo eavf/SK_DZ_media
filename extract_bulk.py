@@ -67,7 +67,7 @@ def fetch_pending(conn, limit: int) -> list[dict]:
     rows = conn.execute(text("""
         SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
                a.title_fr, a.snippet_fr, a.language,
-               a.published_at_real, a.published_at_text
+               a.published_at_real, a.published_at_text, a.relevance
         FROM articles a
         JOIN sources s ON s.id = a.source_id
         WHERE a.content_text IS NULL
@@ -89,7 +89,7 @@ def fetch_blocked(conn, limit: int) -> list[dict]:
     rows = conn.execute(text("""
         SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
                a.title_fr, a.snippet_fr, a.language,
-               a.published_at_real, a.published_at_text
+               a.published_at_real, a.published_at_text, a.relevance
         FROM articles a
         JOIN sources s ON s.id = a.source_id
         WHERE a.content_text IS NULL
@@ -217,9 +217,11 @@ def save_result(
                 published_at_text   = COALESCE(:norm_text, published_at_text),
                 lang_detected       = :lang_detected,
                 extraction_ok       = 1,
+                relevance_note      = CASE WHEN relevance IS NULL THEN :note ELSE relevance_note END,
                 relevance           = CASE WHEN relevance IS NULL THEN 0 ELSE relevance END
             WHERE id = :id
         """), {
+            "note": f"auto: komerčné ({result.commercial_word})",
             "http_status": result.http_status,
             "fetch_error": result.fetch_error,
             "content_text": result.content_text,
@@ -402,8 +404,9 @@ def main() -> int:
                 ai_stopped = True
                 logger.warning("AI klasifikácia zastavená (%s) — dokončí sa pri ďalšom behu.", e)
 
-        # prekladajú sa len ponechané články — nie zmazané (bez SK kontextu, duplikát), komerčné ani neúspešné
-        if status == "ok" and not translation_stopped:
+        # prekladajú sa len ponechané články — nie zmazané (bez SK kontextu, duplikát), komerčné,
+        # neúspešné ani skôr označené ako irelevantné (relevance=0)
+        if status == "ok" and row.get("relevance") != 0 and not translation_stopped:
             if not translate_after_extraction(article_id, result, row):
                 translation_stopped = True
                 logger.warning("Kredit prekladača vyčerpaný (456) — ďalšie články v tomto behu sa neprekladajú.")

@@ -26,6 +26,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import logging
 
 from config.config import get_settings
+from text_filters import find_bad_word
 
 s = get_settings()
 log = logging.getLogger("extract_articles")
@@ -100,6 +101,7 @@ class ExtractionResult:
     matched_keywords: dict[str, list[str]] | None = None
     raw_search_result: dict[str, Any] | None = None
     is_commercial: bool = False
+    commercial_word: str | None = None  # nájdené komerčné slovo (pre relevance_note)
     no_slovak_context: bool = False
 
 
@@ -460,10 +462,9 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
             s.topic_keywords,
         )
 
-        title_bad_words = s.title_bad_words or set()
-        combined_text = "\n".join(filter(None, [item.title or "", item.snippet or "", text_out])).lower()
-        if any(w.lower() in combined_text for w in title_bad_words):
-            result.is_commercial = True
+        combined_text = "\n".join(filter(None, [item.title or "", item.snippet or "", text_out]))
+        result.commercial_word = find_bad_word(combined_text, s.title_bad_words)
+        result.is_commercial = result.commercial_word is not None
 
         slovakia_terms = s.search_terms.get("slovakia", [])
         combined_sk = "\n".join(filter(None, [item.title or "", item.snippet or "", text_out])).lower()

@@ -318,3 +318,75 @@ class TestDedupeCandiates:
         result = dedupe_candidates(items)
         assert len(result) == 1
         assert result[0].url == "https://aps.dz/valid"
+
+
+class TestImpersonatedFallback:
+    """resolve_and_fetch: pri 403 skúsi curl_cffi (odtlačok Chrome)."""
+
+    def _requests_resp(self, status, url="https://site.dz/a"):
+        from unittest.mock import MagicMock
+        import requests
+        r = MagicMock()
+        r.status_code, r.url, r.text, r.content = status, url, "<html/>", b"<html/>"
+        r.headers = {"Content-Type": "text/html"}
+        if status >= 400:
+            r.raise_for_status.side_effect = requests.HTTPError(f"{status} Client Error", response=r)
+        return r
+
+    def _cffi_resp(self, status, url="https://site.dz/a"):
+        from unittest.mock import MagicMock
+        r = MagicMock()
+        r.status_code, r.url, r.reason, r.text, r.content = status, url, "Forbidden", "<html>ok</html>", b"x"
+        r.headers = {"Content-Type": "text/html"}
+        return r
+
+    def _patch(self, monkeypatch, req_status, cffi):
+        from unittest.mock import MagicMock
+        import extract_articles_reworked as ear
+        sess = MagicMock()
+        sess.get.return_value = self._requests_resp(req_status)
+        monkeypatch.setattr(ear.requests, "Session", MagicMock(return_value=sess))
+        fake_cffi = MagicMock()
+        if isinstance(cffi, Exception):
+            fake_cffi.get.side_effect = cffi
+        else:
+            fake_cffi.get.return_value = cffi
+        monkeypatch.setattr(ear, "cffi_requests", fake_cffi)
+        return fake_cffi
+
+    def test_403_falls_back_to_curl_cffi(self, monkeypatch):
+        from extract_articles_reworked import resolve_and_fetch
+        cffi = self._patch(monkeypatch, 403, self._cffi_resp(200))
+        url, status, html, _, _ = resolve_and_fetch("https://site.dz/a")
+        assert status == 200 and html == "<html>ok</html>"
+        assert cffi.get.call_args.kwargs["impersonate"] == "chrome"
+
+    def test_fallback_error_is_requests_httperror(self, monkeypatch):
+        import pytest, requests
+        from extract_articles_reworked import resolve_and_fetch
+        self._patch(monkeypatch, 403, self._cffi_resp(403))
+        with pytest.raises(requests.HTTPError) as e:
+            resolve_and_fetch("https://site.dz/a")
+        assert e.value.response.status_code == 403
+        assert "for url: https://site.dz/a" in str(e.value)
+
+    def test_fallback_exception_keeps_original_403(self, monkeypatch):
+        import pytest, requests
+        from extract_articles_reworked import resolve_and_fetch
+        self._patch(monkeypatch, 403, RuntimeError("curl failed"))
+        with pytest.raises(requests.HTTPError):
+            resolve_and_fetch("https://site.dz/a")
+
+    def test_no_fallback_for_other_status(self, monkeypatch):
+        import pytest, requests
+        from extract_articles_reworked import resolve_and_fetch
+        cffi = self._patch(monkeypatch, 404, self._cffi_resp(200))
+        with pytest.raises(requests.HTTPError):
+            resolve_and_fetch("https://site.dz/a")
+        cffi.get.assert_not_called()
+
+    def test_ok_without_fallback(self, monkeypatch):
+        from extract_articles_reworked import resolve_and_fetch
+        cffi = self._patch(monkeypatch, 200, self._cffi_resp(200))
+        assert resolve_and_fetch("https://site.dz/a")[1] == 200
+        cffi.get.assert_not_called()

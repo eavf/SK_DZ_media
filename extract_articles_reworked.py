@@ -15,6 +15,12 @@ import requests
 import trafilatura
 import fitz  # pymupdf
 
+try:
+    # napodobňuje TLS/HTTP2 odtlačok Chrome — prejde cez Akamai/Cloudflare ochranu, ktorá blokuje requests
+    from curl_cffi import requests as cffi_requests
+except ImportError:  # pragma: no cover — voliteľná závislosť
+    cffi_requests = None
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 import logging
@@ -174,6 +180,17 @@ def is_js_shell(html: str) -> bool:
 FETCH_TIMEOUT: tuple[int, int] = (15, 60)
 
 
+def _fetch_impersonated(url: str, timeout: tuple[int, int]) -> tuple[str, int, str, str, bytes]:
+    """Fetch cez curl_cffi s odtlačkom Chrome. Chybový stav vyhodí ako requests.HTTPError (rovnako ako requests)."""
+    resp = cffi_requests.get(url, impersonate="chrome", timeout=timeout, allow_redirects=True, verify=False)
+    if resp.status_code >= 400:
+        err = requests.Response()
+        err.status_code, err.reason, err.url = resp.status_code, resp.reason or "", str(resp.url)
+        err.raise_for_status()
+    content_type = resp.headers.get("Content-Type", "")
+    return str(resp.url), resp.status_code, resp.text, content_type, resp.content
+
+
 def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple[str, int, str, str, bytes]:
     timeout = timeout or FETCH_TIMEOUT
     sess = requests.Session()
@@ -183,6 +200,17 @@ def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple
     except requests.exceptions.SSLError:
         log.warning("SSL verify failed, retrying without verify: %s", url)
         resp = sess.get(url, allow_redirects=True, timeout=timeout, verify=False)
+
+    # 403 býva ochrana proti botom (Akamai, Cloudflare), ktorá spozná requests podľa TLS odtlačku
+    if resp.status_code == 403 and cffi_requests is not None:
+        log.info("403 → skúšam curl_cffi (impersonate chrome): %s", resp.url)
+        try:
+            return _fetch_impersonated(resp.url, timeout)
+        except requests.HTTPError:
+            raise
+        except Exception as e:
+            log.warning("curl_cffi zlyhal (%s: %s), ponechávam 403: %s", type(e).__name__, e, resp.url)
+
     resp.raise_for_status()
     content_type = resp.headers.get("Content-Type", "")
     return resp.url, resp.status_code, resp.text, content_type, resp.content

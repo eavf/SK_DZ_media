@@ -1360,7 +1360,8 @@ def article_translate(article_id: int):
 
     logger.info("Article translated AR→FR: id=%s", article_id)
     from translate import get_deepl_usage, get_translator_backend
-    usage = get_deepl_usage(api_key)
+    backend = get_translator_backend()
+    usage = get_deepl_usage(api_key) if backend == "deepl" else None
     if usage:
         from datetime import date
         today = date.today()
@@ -1373,7 +1374,7 @@ def article_translate(article_id: int):
         remaining = usage["limit"] - usage["used"]
         flash(f"Preklad AR→FR uložený. DeepL: minuté {usage['used']:,} / zostatok {remaining:,} / limit {usage['limit']:,} znakov. Obnova: {reset_date.strftime('%-d.%-m.%Y')}.", "ok")
     else:
-        flash(f"Preklad AR→FR uložený (backend: {get_translator_backend()}).", "ok")
+        flash(f"Preklad AR→FR uložený (backend: {backend}).", "ok")
     return redirect(url_for("article_detail", article_id=article_id))
 
 

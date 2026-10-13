@@ -47,7 +47,16 @@ def _to_mysql_dt(iso: str | None) -> str | None:
         return None
 
 
+RETRY_AFTER_DAYS = 7  # prechodné chyby (timeout, sieť, 5xx) sa skúsia znova najskôr po N dňoch
+
+
 def fetch_pending(conn, limit: int) -> list[dict]:
+    """Články na extrakciu: najprv nikdy neskúšané (najnovšie prvé), potom prechodné chyby po RETRY_AFTER_DAYS.
+
+    Trvalé chyby (403, PDF_LEGACY_ENCODING, EXTRACTION_EMPTY, ...) sa automaticky neopakujú —
+    inak by najstaršie neúspešné články zabrali celý limit a nové by sa nikdy nedostali na rad.
+    Ručne sa dajú zopakovať cez refetch v detaile článku.
+    """
     rows = conn.execute(text("""
         SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
                a.title_fr, a.snippet_fr, a.language,
@@ -57,9 +66,14 @@ def fetch_pending(conn, limit: int) -> list[dict]:
         WHERE a.content_text IS NULL
           AND a.deleted_at IS NULL
           AND s.is_avoided = 0
-        ORDER BY a.id
+          AND (
+                a.fetched_at IS NULL
+             OR ((a.fetch_error IN ('TIMEOUT', 'NETWORK_UNREACHABLE') OR a.http_status >= 500)
+                 AND a.fetched_at < NOW() - INTERVAL :retry_days DAY)
+          )
+        ORDER BY a.fetched_at IS NOT NULL, a.id DESC
         LIMIT :limit
-    """), {"limit": limit}).mappings().fetchall()
+    """), {"limit": limit, "retry_days": RETRY_AFTER_DAYS}).mappings().fetchall()
     return [dict(r) for r in rows]
 
 

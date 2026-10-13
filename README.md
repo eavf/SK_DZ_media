@@ -980,4 +980,19 @@ docker pull eavfeavf/dz-news:latest
 
 ---
 
+## Changelog
+
+### 2026-10-13/14
+- **Google odkazy** (`google.com/goto?url=…`): po fetchi sa článok preradí na skutočnú doménu, duplikát sa skryje (`source_relink.py`, backfill `--apply`: 136 preradených, 79 duplikátov)
+- **extract_bulk**: front už neblokujú trvalo neúspešné články; prekladajú sa len ponechané články (nie zmazané/komerčné/`relevance=0`); po DeepL 456 sa preklad v behu zastaví; zapnuté logovanie (súhrn „Hotovo“)
+- **`--retry-blocked`** + `SKIP_ENV_LOCAL=1`: znova 403/nedostupné články, aj z lokálneho stroja proti produkčnej DB
+- **curl_cffi fallback pri 403**: Akamai/Cloudflare ochrana (alaraby, winwin, france24) prejde aj zo SK servera
+- **Timeout** sťahovania 25 → 60 s (pomalé weby generujúce stránku pri prvom otvorení)
+- **Prekladový backend `nvidia`** (LLM `nemotron-3-super-120b`, reasoning vypnutý, delenie na časti); **`translate_missing.py`** na dodatočný preklad
+- **Denný email**: len relevantné články (text + nie zmazané / `relevance=0` / šport); neoverené len ak spomínajú Slovensko
+- **Komerčný filter**: celé slová namiesto podreťazcov, užší zoznam slov, poznámka `auto: …` pri automatickom `relevance=0`; 83 chybne vyradených článkov vrátených na kontrolu
+- **Opravy**: `refetch_article` posielal na preklad DeepL kľúč namiesto textu (preklad „c“); hláška po ručnom preklade ukazovala DeepL aj pri inom backende
+
+---
+
 *Developed for monitoring Slovak–Algerian media relations.*

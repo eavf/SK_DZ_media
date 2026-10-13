@@ -53,7 +53,7 @@
   </div>
 
   <form method="post" action="/admin/maintenance/set-translator" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-    {% for b, label in [('local', 'Local (MarianMT)'), ('deepl', 'DeepL'), ('azure', 'Azure')] %}
+    {% for b, label in [('local', 'Local (MarianMT)'), ('deepl', 'DeepL'), ('azure', 'Azure'), ('nvidia', 'NVIDIA (LLM)')] %}
       <button type="submit" name="backend" value="{{ b }}"
         class="pill {% if tr.backend == b %}ok{% endif %}"
         style="cursor:pointer;border:none">
@@ -84,6 +84,19 @@
     </div>
     <div class="small" style="margin-top:8px;opacity:.7">
       Free tier: 2 000 000 znakov/mesiac. Pozri <em>Metrics → Characters Translated</em> v Azure Portáli.
+    </div>
+
+  {% elif tr.backend == 'nvidia' %}
+    <div class="box">
+      <p style="margin:0 0 6px">
+        <strong>NVIDIA build.nvidia.com</strong> — preklad cez LLM, model <code>{{ tr.nvidia_model }}</code>
+        {% if not tr.nvidia_key %}<span class="pill bad">chýba NVIDIA_API_KEY</span>{% endif %}
+      </p>
+      <a class="pill ok" href="https://build.nvidia.com/" target="_blank" rel="noopener">Otvoriť build.nvidia.com →</a>
+    </div>
+    <div class="small" style="margin-top:8px;opacity:.7">
+      Bez limitu znakov, ale ~40 requestov/min (spoločne s AI klasifikáciou športu).
+      Dlhé texty sa prekladajú po častiach. Model sa mení cez <code>NVIDIA_TRANSLATE_MODEL</code> v <code>.env</code>.
     </div>
 
   {% elif tr.backend == 'local' %}

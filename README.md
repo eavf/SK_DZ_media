@@ -24,7 +24,7 @@
 - Direct scraping of **MFA Algeria** press releases (no SerpAPI required)
 - Full-text extraction via **trafilatura** (HTML) and **pymupdf** (PDF)
 - Language detection at search time via **langdetect** (title + snippet), refined by trafilatura during extraction
-- Arabic → French translation via a **configurable backend** — choose between local [MarianMT](https://huggingface.co/Helsinki-NLP) service, **DeepL API**, or **Azure Cognitive Translator** via `TRANSLATOR_BACKEND`; `title` + `snippet` translated automatically (pipeline + backfill); `content_text` translated only during fresh extraction or manually via the article detail page
+- Arabic → French translation via a **configurable backend** — choose between local [MarianMT](https://huggingface.co/Helsinki-NLP) service, **DeepL API**, **Azure Cognitive Translator**, or an **LLM via build.nvidia.com** via `TRANSLATOR_BACKEND`; `title` + `snippet` translated automatically (pipeline + backfill); `content_text` translated only during fresh extraction or manually via the article detail page
 - Relevance labeling and soft-delete workflow
 - **AI sports filter** — sports news is detected by an LLM (NVIDIA API, build.nvidia.com) and automatically excluded
 - Export to **Word** and **CSV**
@@ -57,6 +57,7 @@ A `scheduler.py` daemon runs the full pipeline daily and sends a detailed email 
   - Local MarianMT service (`TRANSLATOR_BACKEND=local`, default)
   - [DeepL API](https://www.deepl.com/pro-api) key (`TRANSLATOR_BACKEND=deepl`)
   - [Azure Cognitive Translator](https://azure.microsoft.com/en-us/products/ai-services/translator) key (`TRANSLATOR_BACKEND=azure`)
+  - [NVIDIA build.nvidia.com](https://build.nvidia.com/) key (`TRANSLATOR_BACKEND=nvidia`, same `NVIDIA_API_KEY` as the sports filter)
 - `langdetect` (installed via `requirements.txt`)
 - Docker (for containerized deployment)
 
@@ -85,7 +86,7 @@ Key `.env` variables:
 |---|---|
 | `SERPAPI_KEY` | SerpAPI key for Google News search |
 | `DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASS` | MySQL connection |
-| `TRANSLATOR_BACKEND` | Translation backend: `local` (default), `deepl`, or `azure` |
+| `TRANSLATOR_BACKEND` | Translation backend: `local` (default), `deepl`, `azure`, or `nvidia` |
 | `TRANSLATOR_URL` | URL of the local MarianMT service (default: `https://translate.eavf1621.synology.me`) |
 | `DEEPL_API_KEY` | DeepL API key (required when `TRANSLATOR_BACKEND=deepl`) |
 | `AZURE_TRANSLATOR_KEY` | Azure Cognitive Translator key (required when `TRANSLATOR_BACKEND=azure`) |
@@ -95,6 +96,7 @@ Key `.env` variables:
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Email notifications (optional) |
 | `NVIDIA_API_KEY` | NVIDIA API key for the AI sports filter (optional — filter is disabled without it) |
 | `NVIDIA_MODEL` | LLM model (default: `meta/llama-3.2-11b-vision-instruct`) |
+| `NVIDIA_TRANSLATE_MODEL` | LLM model for `TRANSLATOR_BACKEND=nvidia` (default: `nvidia/nemotron-3-super-120b-a12b`) |
 | `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Turn the AI filter off (`0`) / min. seconds between API calls (default `1.5`) |
 
 Static config files in `config/`:
@@ -352,7 +354,7 @@ docker pull eavfeavf/dz-news:latest
 - Priame prehľadávanie press releases **MFA Alžírsko** (bez SerpAPI)
 - Extrakcia plného textu cez **trafilatura** (HTML) a **pymupdf** (PDF)
 - Detekcia jazyka pri vyhľadávaní cez **langdetect** (title + snippet), upresnená trafilaturou pri extrakcii
-- Preklad arabčiny do francúzštiny cez **konfigurovateľný backend** — výber medzi lokálnou službou [MarianMT](https://huggingface.co/Helsinki-NLP), **DeepL API** alebo **Azure Cognitive Translator** cez `TRANSLATOR_BACKEND`; `title` + `snippet` sa prekladajú automaticky (pipeline + backfill); `content_text` iba pri čerstvej extrakcii alebo manuálne cez stránku článku
+- Preklad arabčiny do francúzštiny cez **konfigurovateľný backend** — výber medzi lokálnou službou [MarianMT](https://huggingface.co/Helsinki-NLP), **DeepL API**, **Azure Cognitive Translator** alebo **LLM cez build.nvidia.com** cez `TRANSLATOR_BACKEND`; `title` + `snippet` sa prekladajú automaticky (pipeline + backfill); `content_text` iba pri čerstvej extrakcii alebo manuálne cez stránku článku
 - Označovanie relevancie a soft-delete workflow
 - **AI filter športu** — športové spravodajstvo rozpozná LLM (NVIDIA API, build.nvidia.com) a automaticky ho vyradí
 - Export do **Word** a **CSV**
@@ -385,6 +387,7 @@ Webový dashboard                 — prehľad, označovanie, export
   - Lokálna MarianMT služba (`TRANSLATOR_BACKEND=local`, default)
   - Kľúč [DeepL API](https://www.deepl.com/pro-api) (`TRANSLATOR_BACKEND=deepl`)
   - Kľúč [Azure Cognitive Translator](https://azure.microsoft.com/en-us/products/ai-services/translator) (`TRANSLATOR_BACKEND=azure`)
+  - Kľúč [NVIDIA build.nvidia.com](https://build.nvidia.com/) (`TRANSLATOR_BACKEND=nvidia`, rovnaký `NVIDIA_API_KEY` ako filter športu)
 - `langdetect` (inštaluje sa cez `requirements.txt`)
 - Docker (pre kontajnerizované nasadenie)
 
@@ -413,7 +416,7 @@ Kľúčové premenné v `.env`:
 |---|---|
 | `SERPAPI_KEY` | Kľúč SerpAPI pre Google News |
 | `DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASS` | MySQL pripojenie |
-| `TRANSLATOR_BACKEND` | Prekladový backend: `local` (default), `deepl` alebo `azure` |
+| `TRANSLATOR_BACKEND` | Prekladový backend: `local` (default), `deepl`, `azure` alebo `nvidia` |
 | `TRANSLATOR_URL` | URL lokálnej MarianMT služby (default: `https://translate.eavf1621.synology.me`) |
 | `DEEPL_API_KEY` | Kľúč DeepL (vyžadované pri `TRANSLATOR_BACKEND=deepl`) |
 | `AZURE_TRANSLATOR_KEY` | Kľúč Azure Cognitive Translator (vyžadované pri `TRANSLATOR_BACKEND=azure`) |
@@ -423,6 +426,7 @@ Kľúčové premenné v `.env`:
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Emailové notifikácie (voliteľné) |
 | `NVIDIA_API_KEY` | NVIDIA API kľúč pre AI filter športu (voliteľné — bez neho je filter vypnutý) |
 | `NVIDIA_MODEL` | LLM model (default: `meta/llama-3.2-11b-vision-instruct`) |
+| `NVIDIA_TRANSLATE_MODEL` | LLM model pre `TRANSLATOR_BACKEND=nvidia` (default: `nvidia/nemotron-3-super-120b-a12b`) |
 | `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Vypnutie AI filtra (`0`) / min. sekúnd medzi volaniami API (default `1.5`) |
 
 ### Použitie
@@ -670,7 +674,7 @@ docker pull eavfeavf/dz-news:latest
 - Collecte directe des communiqués de presse du **MAE Algérie** (sans SerpAPI)
 - Extraction du texte intégral via **trafilatura** (HTML) et **pymupdf** (PDF)
 - Détection de la langue dès la recherche via **langdetect** (titre + extrait), affinée par trafilatura à l'extraction
-- Traduction arabe → français via un **backend configurable** — choix entre service local [MarianMT](https://huggingface.co/Helsinki-NLP), **API DeepL** ou **Azure Cognitive Translator** via `TRANSLATOR_BACKEND` ; `title` + `snippet` traduits automatiquement (pipeline + remplissage) ; `content_text` uniquement lors d'une extraction fraîche ou manuellement via la page de détail
+- Traduction arabe → français via un **backend configurable** — choix entre service local [MarianMT](https://huggingface.co/Helsinki-NLP), **API DeepL**, **Azure Cognitive Translator** ou un **LLM via build.nvidia.com** via `TRANSLATOR_BACKEND` ; `title` + `snippet` traduits automatiquement (pipeline + remplissage) ; `content_text` uniquement lors d'une extraction fraîche ou manuellement via la page de détail
 - Étiquetage de pertinence et workflow de suppression douce
 - **Filtre IA du sport** — l'actualité sportive est détectée par un LLM (API NVIDIA, build.nvidia.com) et exclue automatiquement
 - Export en **Word** et **CSV**
@@ -703,6 +707,7 @@ Le démon `scheduler.py` exécute le pipeline quotidiennement et envoie un e-mai
   - Service local MarianMT (`TRANSLATOR_BACKEND=local`, défaut)
   - Clé [API DeepL](https://www.deepl.com/pro-api) (`TRANSLATOR_BACKEND=deepl`)
   - Clé [Azure Cognitive Translator](https://azure.microsoft.com/fr-fr/products/ai-services/translator) (`TRANSLATOR_BACKEND=azure`)
+  - Clé [NVIDIA build.nvidia.com](https://build.nvidia.com/) (`TRANSLATOR_BACKEND=nvidia`, même `NVIDIA_API_KEY` que le filtre sport)
 - `langdetect` (installé via `requirements.txt`)
 - Docker (pour le déploiement conteneurisé)
 
@@ -731,7 +736,7 @@ Variables clés dans `.env` :
 |---|---|
 | `SERPAPI_KEY` | Clé SerpAPI pour Google Actualités |
 | `DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASS` | Connexion MySQL |
-| `TRANSLATOR_BACKEND` | Backend de traduction : `local` (défaut), `deepl` ou `azure` |
+| `TRANSLATOR_BACKEND` | Backend de traduction : `local` (défaut), `deepl`, `azure` ou `nvidia` |
 | `TRANSLATOR_URL` | URL du service local MarianMT (défaut : `https://translate.eavf1621.synology.me`) |
 | `DEEPL_API_KEY` | Clé DeepL (requis si `TRANSLATOR_BACKEND=deepl`) |
 | `AZURE_TRANSLATOR_KEY` | Clé Azure Cognitive Translator (requis si `TRANSLATOR_BACKEND=azure`) |
@@ -741,6 +746,7 @@ Variables clés dans `.env` :
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Notifications e-mail (optionnel) |
 | `NVIDIA_API_KEY` | Clé API NVIDIA pour le filtre IA du sport (optionnel — filtre désactivé sans clé) |
 | `NVIDIA_MODEL` | Modèle LLM (par défaut : `meta/llama-3.2-11b-vision-instruct`) |
+| `NVIDIA_TRANSLATE_MODEL` | Modèle LLM pour `TRANSLATOR_BACKEND=nvidia` (par défaut : `nvidia/nemotron-3-super-120b-a12b`) |
 | `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Désactiver le filtre IA (`0`) / secondes min. entre appels API (par défaut `1.5`) |
 
 ### Utilisation

@@ -2108,6 +2108,10 @@ def maintenance_page():
         tr_info["url"] = TRANSLATOR_URL
     elif tr_backend == "azure":
         tr_info["azure_region"] = os.getenv("AZURE_TRANSLATOR_REGION", "westeurope")
+    elif tr_backend == "nvidia":
+        from translate import nvidia_translate_model
+        tr_info["nvidia_model"] = nvidia_translate_model()
+        tr_info["nvidia_key"] = bool(os.getenv("NVIDIA_API_KEY", "").strip())
     if settings.deepl_api_key:
         tr_info["deepl"] = get_deepl_usage(settings.deepl_api_key)
 

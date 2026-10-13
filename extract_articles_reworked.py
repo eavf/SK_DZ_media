@@ -169,7 +169,13 @@ def is_js_shell(html: str) -> bool:
     return False
 
 
-def resolve_and_fetch(url: str, timeout: tuple[int, int] = (10, 25)) -> tuple[str, int, str, str, bytes]:
+# (connect, read) v sekundách — niektoré alžírske weby generujú stránku pri prvom otvorení
+# aj desiatky sekúnd (potom ju majú v cache), preto dlhší read timeout
+FETCH_TIMEOUT: tuple[int, int] = (15, 60)
+
+
+def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple[str, int, str, str, bytes]:
+    timeout = timeout or FETCH_TIMEOUT
     sess = requests.Session()
     sess.headers.update(REQUEST_HEADERS)
     try:
@@ -526,8 +532,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("-o", "--output", help="Output JSON path.")
     parser.add_argument("--limit", type=int, default=s.extract_max, help="Maximum number of unique URLs to extract.")
-    parser.add_argument("--timeout-connect", type=int, default=10)
-    parser.add_argument("--timeout-read", type=int, default=25)
+    parser.add_argument("--timeout-connect", type=int, default=FETCH_TIMEOUT[0])
+    parser.add_argument("--timeout-read", type=int, default=FETCH_TIMEOUT[1])
     return parser.parse_args()
 
 
@@ -537,8 +543,9 @@ def main() -> None:
     if not paths:
         raise SystemExit("No input JSON files found.")
 
-    global REQUEST_HEADERS
+    global REQUEST_HEADERS, FETCH_TIMEOUT
     REQUEST_HEADERS = dict(REQUEST_HEADERS)
+    FETCH_TIMEOUT = (args.timeout_connect, args.timeout_read)
 
     candidates = load_candidates(paths)
     if not candidates:

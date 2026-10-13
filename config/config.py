@@ -256,8 +256,9 @@ def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = Non
         return _CACHED
 
     load_dotenv(dotenv_path=dotenv_path)
-    # .env.local prepíše hodnoty z .env (lokálny dev override)
-    load_dotenv(dotenv_path=PROJECT_ROOT / ".env.local", override=True)
+    # .env.local prepíše hodnoty z .env (lokálny dev override); SKIP_ENV_LOCAL=1 → produkčné hodnoty z .env
+    if os.getenv("SKIP_ENV_LOCAL", "").strip().lower() not in ("1", "true", "yes"):
+        load_dotenv(dotenv_path=PROJECT_ROOT / ".env.local", override=True)
 
     def _resolve_path_from_env(env_name: str, default_path: Path) -> Path:
         raw = os.getenv(env_name)

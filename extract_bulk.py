@@ -11,6 +11,11 @@ Pre každý článok kde content_text IS NULL a deleted_at IS NULL:
 
 Použitie:
     python extract_bulk.py [--limit N] [--dry-run]
+    python extract_bulk.py --retry-blocked [--limit N]   # znova 403 / nedostupné (napr. z alžírskej IP)
+
+--retry-blocked: alžírske weby blokujú server v SK (403, timeout), z alžírskej IP fungujú.
+Spustenie z lokálneho stroja proti produkčnej DB:
+    SKIP_ENV_LOCAL=1 python extract_bulk.py --retry-blocked --limit 200
 """
 from __future__ import annotations
 
@@ -30,7 +35,7 @@ _RELATIVE_TEXT_RE = re.compile(
 from sqlalchemy import text
 
 from extract_articles_reworked import CandidateArticle, extract_candidate
-from config.config import get_db_engine, init_context
+from config.config import get_db_engine, init_cli, init_context
 from translate import translate_ar_fr
 from classify_ai import ClassificationStopped, classify_and_mark, classify_pending
 from source_relink import relink_source
@@ -76,6 +81,25 @@ def fetch_pending(conn, limit: int) -> list[dict]:
         ORDER BY a.fetched_at IS NOT NULL, a.id DESC
         LIMIT :limit
     """), {"limit": limit, "retry_days": RETRY_AFTER_DAYS}).mappings().fetchall()
+    return [dict(r) for r in rows]
+
+
+def fetch_blocked(conn, limit: int) -> list[dict]:
+    """Články, ktorých fetch zlyhal na 403 alebo nedostupnosti — bez ohľadu na RETRY_AFTER_DAYS (najnovšie prvé)."""
+    rows = conn.execute(text("""
+        SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
+               a.title_fr, a.snippet_fr, a.language,
+               a.published_at_real, a.published_at_text
+        FROM articles a
+        JOIN sources s ON s.id = a.source_id
+        WHERE a.content_text IS NULL
+          AND a.deleted_at IS NULL
+          AND s.is_avoided = 0
+          AND (a.http_status = 403 OR a.fetch_error LIKE 'HTTPError: 403%'
+               OR a.fetch_error IN ('TIMEOUT', 'NETWORK_UNREACHABLE'))
+        ORDER BY a.id DESC
+        LIMIT :limit
+    """), {"limit": limit}).mappings().fetchall()
     return [dict(r) for r in rows]
 
 
@@ -309,15 +333,19 @@ def translate_missing_titles(limit: int, dry_run: bool) -> int:
 
 
 def main() -> int:
+    init_cli("extract_bulk")  # logovanie do stderr + logs/ (inak sa INFO vrátane súhrnu nevypíše)
     p = argparse.ArgumentParser(description="Hromadná extrakcia článkov bez content_text.")
     p.add_argument("--limit", type=int, default=50, help="Max počet článkov (default 50)")
     p.add_argument("--dry-run", action="store_true", help="Len vypíše čo by urobil, nezapisuje")
+    p.add_argument("--retry-blocked", action="store_true",
+                   help="Znova skúsi články s chybou 403 / NETWORK_UNREACHABLE / TIMEOUT (napr. z alžírskej IP)")
     args = p.parse_args()
 
     engine = get_db_engine()
+    logger.info("DB: %s@%s/%s", s.db_user, s.db_host, s.db_name)
 
     with engine.begin() as conn:
-        pending = fetch_pending(conn, args.limit)
+        pending = fetch_blocked(conn, args.limit) if args.retry_blocked else fetch_pending(conn, args.limit)
 
     if not pending:
         logger.info("Žiadne články na extrakciu.")

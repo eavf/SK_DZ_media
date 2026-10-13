@@ -79,12 +79,15 @@ def fetch_pending(conn, limit: int) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def translate_after_extraction(article_id: int, result, row: dict) -> None:
-    """Preloží content_text (a title/snippet ak chýbajú) pre arabský článok."""
+def translate_after_extraction(article_id: int, result, row: dict) -> bool:
+    """Preloží content_text (a title/snippet ak chýbajú) pre arabský článok.
+
+    Vracia False ak je vyčerpaný kredit prekladača (DeepL 456) — ďalšie preklady v behu nemajú zmysel.
+    """
     api_key = s.deepl_api_key
     lang = row.get("language") or result.lang_detected
     if lang != "ar":
-        return
+        return True
 
     texts, keys = [], []
     if result.content_text:
@@ -95,7 +98,7 @@ def translate_after_extraction(article_id: int, result, row: dict) -> None:
         texts.append(row["snippet"]); keys.append("snippet_fr")
 
     if not texts:
-        return
+        return True
 
     try:
         translated = translate_ar_fr(texts, api_key=api_key)
@@ -108,6 +111,9 @@ def translate_after_extraction(article_id: int, result, row: dict) -> None:
         logger.info("Preložené AR→FR: id=%s, polia=%s", article_id, keys)
     except Exception as e:
         logger.warning("Preklad zlyhal pre id=%s: %s", article_id, e)
+        if getattr(getattr(e, "response", None), "status_code", None) == 456:
+            return False
+    return True
 
 
 def save_result(
@@ -321,6 +327,7 @@ def main() -> int:
 
     counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0}
     ai_stopped = False
+    translation_stopped = False
     last_domain_fetch: dict[str, float] = {}
     DOMAIN_DELAY = 1.5  # min. sekúnd medzi requestmi na rovnakú doménu
 
@@ -367,8 +374,11 @@ def main() -> int:
                 ai_stopped = True
                 logger.warning("AI klasifikácia zastavená (%s) — dokončí sa pri ďalšom behu.", e)
 
-        if status != "ai_sport":
-            translate_after_extraction(article_id, result, row)
+        # prekladajú sa len ponechané články — nie zmazané (bez SK kontextu, duplikát), komerčné ani neúspešné
+        if status == "ok" and not translation_stopped:
+            if not translate_after_extraction(article_id, result, row):
+                translation_stopped = True
+                logger.warning("Kredit prekladača vyčerpaný (456) — ďalšie články v tomto behu sa neprekladajú.")
         counts[status] += 1
         logger.info("id=%s → %s", article_id, status)
         time.sleep(0.3)

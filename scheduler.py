@@ -6,7 +6,9 @@ Pipeline:
   2. ingest_to_dz_news_reworked.py
   3. extract_bulk.py
 
-Po skončení odošle emailové upozornenie s počtom nových článkov.
+Po skončení odošle emailové upozornenie. V maili sú len články, ktoré prešli filtrami
+(nie zmazané, nie relevance=0, nie AI šport) — viď _EMAIL_FILTER_SQL. Články bez textu
+(extrakcia zlyhala) sú v samostatnej sekcii, a to len ak titulok/snippet spomína Slovensko.
 """
 from __future__ import annotations
 
@@ -103,6 +105,21 @@ def _translate_missing_for_email(engine, rows) -> dict[int, dict]:
     return result
 
 
+# Filtre pre email: skryté (bez SK kontextu, šport, duplikát), irelevantné a AI šport nevypisujeme
+_EMAIL_FILTER_SQL = """
+    a.deleted_at IS NULL
+    AND COALESCE(a.relevance, 1) <> 0
+    AND COALESCE(a.ai_label, '') <> 'sport'
+"""
+
+
+def _mentions_slovakia(*texts: str | None) -> bool:
+    """Spomína text Slovensko? (termíny zo search_terms.json, rovnako ako filter v extrakcii)"""
+    terms = [t.lower() for t in s.search_terms.get("slovakia", [])]
+    combined = " ".join(t for t in texts if t).lower()
+    return any(term in combined for term in terms)
+
+
 def fetch_reseen_articles(run_ids: list[int], run_start: datetime) -> list[dict]:
     """Vráti články z tohto behu, ktoré existovali pred spustením pipeline."""
     try:
@@ -120,6 +137,8 @@ def fetch_reseen_articles(run_ids: list[int], run_start: datetime) -> list[dict]
                 JOIN run_articles ra ON ra.article_id = a.id
                 WHERE ra.run_id IN ({placeholders})
                   AND a.first_seen_at < :run_start
+                  AND a.content_text IS NOT NULL
+                  AND {_EMAIL_FILTER_SQL}
             """), params).fetchall()
         result = []
         for r in rows:
@@ -133,8 +152,12 @@ def fetch_reseen_articles(run_ids: list[int], run_start: datetime) -> list[dict]
         return []
 
 
-def fetch_todays_articles(run_ids: list[int], run_start: datetime) -> list[dict]:
-    """Vráti zoznam nových článkov z tohto behu (inserted). Arabské bez prekladu preloží a uloží do DB."""
+def fetch_todays_articles(run_ids: list[int], run_start: datetime) -> tuple[list[dict], list[dict]]:
+    """Nové články z tohto behu, ktoré prešli filtrami. Arabské bez prekladu preloží a uloží do DB.
+
+    Vracia (overené, neoverené): overené majú text a prešli SK/komerčným/AI filtrom; neoverené sú
+    články, ktorých extrakcia zlyhala, ale titulok alebo snippet spomína Slovensko.
+    """
     try:
         from config.config import get_db_engine
         from sqlalchemy import text
@@ -145,37 +168,47 @@ def fetch_todays_articles(run_ids: list[int], run_start: datetime) -> list[dict]
         with engine.begin() as conn:
             rows = conn.execute(text(f"""
                 SELECT a.id, a.title, a.title_fr, a.snippet, a.snippet_fr, a.url,
-                       a.extraction_ok, COALESCE(a.lang_detected, a.language, '?') AS lang
+                       a.content_text IS NOT NULL AS has_text, COALESCE(a.lang_detected, a.language, '?') AS lang
                 FROM articles a
                 JOIN run_articles ra ON ra.article_id = a.id
                 WHERE ra.run_id IN ({placeholders})
                   AND a.first_seen_at >= :run_start
-                  AND a.deleted_at IS NULL
+                  AND {_EMAIL_FILTER_SQL}
                 ORDER BY a.first_seen_at DESC
             """), params).fetchall()
 
+        # neoverené (bez textu) len ak titulok/snippet spomína Slovensko — inak by v maili boli aj
+        # športové a nesúvisiace články, ktoré filtrami neprešli len preto, že sa nedali stiahnuť
+        rows = [r for r in rows if r[6] or _mentions_slovakia(r[1], r[2], r[3], r[4])]
+
         translations = _translate_missing_for_email(engine, rows)
 
-        articles = []
+        verified, unverified = [], []
         for r in rows:
-            article_id, title, title_fr, snippet, snippet_fr, url, extraction_ok, lang_detected = r
+            article_id, title, title_fr, snippet, snippet_fr, url, has_text, lang_detected = r
             tr = translations.get(article_id, {})
             if not lang_detected or lang_detected == "?":
                 lang_detected = _detect_lang(title or snippet)
-            articles.append({
-                "title":        tr.get("title_fr") or title_fr or title,
-                "snippet":      tr.get("snippet_fr") or snippet_fr or snippet,
-                "url":          url,
-                "extraction_ok": extraction_ok,
-                "lang":         lang_detected,
+            (verified if has_text else unverified).append({
+                "title":   tr.get("title_fr") or title_fr or title,
+                "snippet": tr.get("snippet_fr") or snippet_fr or snippet,
+                "url":     url,
+                "lang":    lang_detected,
             })
-        return articles
+        return verified, unverified
     except Exception as e:
         logger.warning("Nepodarilo sa načítať článkov: %s", e)
-        return []
+        return [], []
 
 
-def send_notification(inserted: int, updated: int, failed_step: str | None, articles: list[dict] | None = None, reseen: list[dict] | None = None) -> None:
+def send_notification(
+    inserted: int,
+    updated: int,
+    failed_step: str | None,
+    articles: list[dict] | None = None,
+    reseen: list[dict] | None = None,
+    unverified: list[dict] | None = None,
+) -> None:
     if not s.smtp_host or not s.notify_to:
         logger.info("SMTP nie je nakonfigurované — notifikácia preskočená.")
         return
@@ -183,7 +216,7 @@ def send_notification(inserted: int, updated: int, failed_step: str | None, arti
     subject = (
         f"DZ News – pipeline zlyhala ({failed_step})"
         if failed_step
-        else f"DZ News – pipeline hotová ({inserted} nových / {updated} aktualizovaných)"
+        else f"DZ News – {len(articles or [])} relevantných ({inserted} nových / {updated} aktualizovaných)"
     )
 
     if failed_step:
@@ -192,17 +225,22 @@ def send_notification(inserted: int, updated: int, failed_step: str | None, arti
         lines = [
             f"Denná pipeline prebehla úspešne.",
             f"",
-            f"Nové články: {inserted}",
+            f"Nové články: {inserted}, z toho relevantných: {len(articles or [])}",
             f"Znovu videné (aktualizované): {updated}",
             f"Čas: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         ]
         if articles:
             lines.append("")
             for i, a in enumerate(articles, 1):
-                ext = "extrakcia:OK" if a["extraction_ok"] else "extrakcia:CHYBA"
-                lines.append(f"{i}. [{ext} | jazyk:{a['lang']}] {a['title'] or '(bez názvu)'}")
+                lines.append(f"{i}. [jazyk:{a['lang']}] {a['title'] or '(bez názvu)'}")
                 if a["snippet"]:
                     lines.append(f"   {a['snippet']}")
+                lines.append(f"   {a['url']}")
+        if unverified:
+            lines.append("")
+            lines.append(f"--- Neoverené – text sa nepodarilo stiahnuť, spomínajú Slovensko ({len(unverified)}) ---")
+            for i, a in enumerate(unverified, 1):
+                lines.append(f"{i}. [jazyk:{a['lang']}] {a['title'] or '(bez názvu)'}")
                 lines.append(f"   {a['url']}")
         if reseen:
             lines.append("")
@@ -306,9 +344,9 @@ def run_pipeline() -> None:
     if not failed_step:
         backfill_missing_language()
         inserted, updated, run_ids = _parse_ingest_output(ingest_output)
-        articles = fetch_todays_articles(run_ids, run_start) if (run_ids and inserted > 0) else []
+        articles, unverified = fetch_todays_articles(run_ids, run_start) if (run_ids and inserted > 0) else ([], [])
         reseen = fetch_reseen_articles(run_ids, run_start) if run_ids else []
-        send_notification(inserted, updated, failed_step, articles, reseen)
+        send_notification(inserted, updated, failed_step, articles, reseen, unverified)
         logger.info("=== Pipeline hotová — nových: %s, aktualizovaných: %s ===", inserted, updated)
     else:
         send_notification(0, 0, failed_step, [], [])

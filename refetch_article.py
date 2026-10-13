@@ -139,9 +139,9 @@ def main() -> int:
 
 def _translate_if_arabic(article_id: int, result, row: dict) -> None:
     """Preloží content_text (a title/snippet ak chýbajú) pre arabský článok."""
-    api_key = s.deepl_api_key
+    api_key = s.deepl_api_key  # potrebný len pre backend deepl; ostatné backendy si kľúč čítajú samy
     lang = row.get("language") or result.lang_detected
-    if not api_key or lang != "ar":
+    if lang != "ar":
         return
 
     texts, keys = [], []
@@ -156,7 +156,7 @@ def _translate_if_arabic(article_id: int, result, row: dict) -> None:
         return
 
     try:
-        translated = translate_ar_fr(api_key, texts)
+        translated = translate_ar_fr(texts, api_key=api_key)
         updates = dict(zip(keys, translated))
         updates["id"] = article_id
         set_clause = ", ".join(f"{k} = :{k}" for k in keys)
@@ -165,7 +165,7 @@ def _translate_if_arabic(article_id: int, result, row: dict) -> None:
             conn.execute(text(f"UPDATE articles SET {set_clause} WHERE id = :id"), updates)
         logger.info("Preložené AR→FR: id=%s, polia=%s", article_id, keys)
     except Exception as e:
-        logger.warning("DeepL zlyhal pre id=%s: %s", article_id, e)
+        logger.warning("Preklad zlyhal pre id=%s: %s", article_id, e)
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_context
 from translate import translate_ar_fr
 from classify_ai import classify_and_mark
+from source_relink import relink_source
 
 s, paths = init_context()
 logger = logging.getLogger("refetch_article")
@@ -48,7 +49,8 @@ def fetch_article_url(article_id: int) -> dict | None:
     return dict(row) if row else None
 
 
-def save_extraction(article_id: int, result) -> None:
+def save_extraction(article_id: int, result):
+    """Uloží výsledok extrakcie; článok z google.com/goto preradí na skutočnú doménu (vracia RelinkResult|None)."""
     engine = get_db_engine()
     with engine.begin() as conn:
         published_at_real = _to_mysql_dt(result.published_at_real)
@@ -84,6 +86,7 @@ def save_extraction(article_id: int, result) -> None:
             "auto_irrelevant":     1 if auto_irrelevant else 0,
             "id":                  article_id,
         })
+        return relink_source(conn, article_id, result.final_url, result.final_url_hash)
 
 
 def main() -> int:
@@ -113,7 +116,10 @@ def main() -> int:
     logger.info("Fetching: %s", url)
     result = extract_candidate(candidate)
 
-    save_extraction(article_id, result)
+    relinked = save_extraction(article_id, result)
+    if relinked and relinked.deleted:
+        logger.info("OK: id=%s, vyradený ako duplikát #%s", article_id, relinked.duplicate_of)
+        return 0
 
     if result.extraction_ok:
         # AI klasifikácia (len ak článok ešte nebol klasifikovaný ani ručne označený)

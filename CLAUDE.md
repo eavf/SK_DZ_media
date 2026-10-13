@@ -55,6 +55,7 @@ python search_mfa_gov.py [--when 30d]          # Scrape MFA Algeria press releas
 python refetch_article.py --article-id <id>    # Re-fetch and re-extract a single article
 python fix_serp_dates.py [--apply]             # Fix relative SerpAPI dates (dry-run by default)
 python classify_existing.py [--apply] [--limit N]  # Backfill AI sport classification (dry-run by default)
+python source_relink.py [--apply]              # Relink google.com/goto articles to their real domain (dry-run by default)
 python scheduler.py                            # Daily pipeline at 15:00 + email notification
 python setup_db.py                             # One-time DB init + first admin user
 python create_admin.py [--role user|power|admin]
@@ -87,6 +88,7 @@ Web dashboard              (browse, label, translate, export)
 - **ingest_to_dz_news_reworked.py** — Maps `ExtractionResult` → MySQL. Handles source upserts, content-hash dedup, and title fuzzy matching.
 - **extract_bulk.py** — Extracts articles where `content_text IS NULL`. Articles without Slovak context are soft-deleted, commercial content gets `relevance=0`, failures are stored in `fetch_error`.
 - **classify_ai.py** — AI check "is this sports news?" via NVIDIA API (build.nvidia.com, OpenAI-compatible, `NVIDIA_API_KEY`, `NVIDIA_MODEL`). Called from `extract_bulk.py` (before translation) and `refetch_article.py`. Sports articles get `ai_label='sport'`, soft delete, `relevance=0`, note `auto: sport (AI) – <reason>`. Each article is classified once (`ai_checked_at`); articles with manual `relevance` are never touched; API failures leave the article unclassified for a later retry. Rows are never hard-deleted so `url_hash` dedup prevents re-ingest. Browse filter `del=ai` shows AI-excluded articles.
+- **source_relink.py** — SerpAPI sometimes returns only a `google.com/goto?url=…` redirect, so ingest files the article under `google.com`. After fetch, `relink_source()` (called from `extract_bulk.py` and `refetch_article.py`) moves the article to the domain of `final_url` (on HTTP errors `final_url` is taken from the error response). If another active article already has that URL, the redirected one is soft-deleted with note `auto: duplikát #<id>` (only when `relevance IS NULL`).
 - **translate.py** — AR→FR translation with three backends: `local` (MarianMT service at `TRANSLATOR_URL`), `deepl`, `azure`. The backend chosen in the admin UI is stored in `config/translator_backend` (gitignored) and overrides `TRANSLATOR_BACKEND` from `.env`.
 - **app.py** — Flask app with ~53 routes. Uses SQLAlchemy `text()` queries directly (no ORM models). Filter state is built as SQL fragments via helper functions. Route groups:
   - browse / stats / export (CSV, Word), errors

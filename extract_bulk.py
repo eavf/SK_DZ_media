@@ -7,6 +7,7 @@ Pre každý článok kde content_text IS NULL a deleted_at IS NULL:
   - ak text je komerčný → relevance=0
   - ak AI vyhodnotí článok ako šport → soft delete + relevance=0 (classify_ai.py)
   - ak extrakcia zlyhala → zapíše chybu, článok ostáva v DB
+  - článok z google.com/goto sa preradí na skutočnú doménu (source_relink.py), duplikát → soft delete
 
 Použitie:
     python extract_bulk.py [--limit N] [--dry-run]
@@ -32,6 +33,7 @@ from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_context
 from translate import translate_ar_fr
 from classify_ai import ClassificationStopped, classify_and_mark, classify_pending
+from source_relink import relink_source
 
 s, paths = init_context()
 logger = logging.getLogger("extract_bulk")
@@ -115,7 +117,7 @@ def save_result(
     existing_published_at_real: str | None = None,
     existing_published_at_text: str | None = None,
 ) -> str:
-    """Uloží výsledok extrakcie. Vracia: 'ok', 'soft_deleted', 'commercial', 'failed'.
+    """Uloží výsledok extrakcie. Vracia: 'ok', 'soft_deleted', 'commercial', 'failed', 'duplicate'.
 
     existing_published_at_real: hodnota published_at_real z DB pred extrakciou (zo SerpAPI ingesta).
     Ak HTML dátum je novší ako SerpAPI dátum, SerpAPI dátum má prednosť — HTML môže obsahovať
@@ -145,6 +147,26 @@ def save_result(
         and _RELATIVE_TEXT_RE.search(existing_published_at_text)
     )
     normalized_published_at_text = published_at_real[:10] if normalize_text else None
+
+    # Skutočná URL aj pri neúspechu (napr. 403 až na cieľovom webe) — článok z google.com/goto
+    # sa preradí na skutočnú doménu a ďalší pokus o fetch pôjde priamo tam.
+    if result.final_url:
+        conn.execute(text("""
+            UPDATE articles
+            SET final_url = :final_url, final_url_canonical = :final_url_canonical, final_url_hash = :final_url_hash
+            WHERE id = :id
+        """), {
+            "final_url": result.final_url,
+            "final_url_canonical": result.final_url_canonical,
+            "final_url_hash": result.final_url_hash,
+            "id": article_id,
+        })
+        relinked = relink_source(conn, article_id, result.final_url, result.final_url_hash)
+        if relinked and relinked.deleted:
+            conn.execute(text("""
+                UPDATE articles SET fetched_at = NOW(), http_status = :http_status WHERE id = :id
+            """), {"http_status": result.http_status, "id": article_id})
+            return "duplicate"
 
     if result.extraction_ok and result.no_slovak_context:
         conn.execute(text("""
@@ -297,7 +319,7 @@ def main() -> int:
 
     logger.info("Pending: %s článkov (limit=%s)", len(pending), args.limit)
 
-    counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0, "ai_sport": 0}
+    counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0}
     ai_stopped = False
     last_domain_fetch: dict[str, float] = {}
     DOMAIN_DELAY = 1.5  # min. sekúnd medzi requestmi na rovnakú doménu
@@ -356,8 +378,9 @@ def main() -> int:
         counts["ai_sport"] += classify_pending(limit=args.limit)["sport"]
 
     logger.info(
-        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, ai_sport=%s",
-        counts["ok"], counts["soft_deleted"], counts["commercial"], counts["failed"], counts["ai_sport"]
+        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, duplicate=%s, ai_sport=%s",
+        counts["ok"], counts["soft_deleted"], counts["commercial"], counts["failed"], counts["duplicate"],
+        counts["ai_sport"]
     )
 
     translated = translate_missing_titles(args.limit, args.dry_run)

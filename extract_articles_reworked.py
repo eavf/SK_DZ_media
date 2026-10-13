@@ -455,6 +455,12 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
     except requests.HTTPError as e:
         result.http_status = getattr(e.response, "status_code", None)
         result.fetch_error = f"HTTPError: {e}"
+        # po presmerovaní (napr. google.com/goto) chyba vznikla až na cieľovom webe
+        err_url = getattr(e.response, "url", None)
+        if err_url and err_url != item.url:
+            result.final_url = err_url
+            result.final_url_canonical = canonicalize_url(err_url)
+            result.final_url_hash = sha256_hex(result.final_url_canonical) if result.final_url_canonical else None
         return result
     except Exception as e:
         result.fetch_error = f"{type(e).__name__}: {e}"

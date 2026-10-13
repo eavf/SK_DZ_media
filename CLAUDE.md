@@ -56,6 +56,7 @@ python refetch_article.py --article-id <id>    # Re-fetch and re-extract a singl
 python fix_serp_dates.py [--apply]             # Fix relative SerpAPI dates (dry-run by default)
 python classify_existing.py [--apply] [--limit N]  # Backfill AI sport classification (dry-run by default)
 python source_relink.py [--apply]              # Relink google.com/goto articles to their real domain (dry-run by default)
+python translate_missing.py [--apply] [--limit N]  # Translate AR articles that have content_text but no content_text_fr (dry-run by default)
 python scheduler.py                            # Daily pipeline at 15:00 + email notification
 python setup_db.py                             # One-time DB init + first admin user
 python create_admin.py [--role user|power|admin]

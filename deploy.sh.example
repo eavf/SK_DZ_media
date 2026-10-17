@@ -6,6 +6,7 @@
 #   ./deploy.sh --tpl-only   — len šablóny (bez reštartu, hneď aktívne)
 #   ./deploy.sh --restart    — len reštartuje kontajner na serveri
 #   ./deploy.sh --rebuild    — len build + push (bez deployu na server)
+#   ./deploy.sh --check      — len porovná .env/config/templates/static so serverom
 #
 # Nastavenie:
 #   1. Skopíruj ako deploy.sh: cp deploy.sh.example deploy.sh
@@ -35,6 +36,70 @@ BUILD_ARGS=(--build-arg "GIT_COMMIT=${GIT_COMMIT}" --build-arg "BUILD_DATE=${BUI
 SCP="scp -O"                      # -O = legacy SCP protokol (potrebné pre Synology)
 SSH="ssh -t ${SYNOLOGY_HOST}"
 DOCKER="sudo /usr/local/bin/docker"  # cesta k docker na serveri
+
+# ── Kontrola rozdielov lokál ↔ server ─────────────────────────────────────────
+# Deploy prepisuje na serveri .env, docker-compose.yml, config/, templates/ a static/ lokálnymi verziami.
+# check_remote ukáže, čo by sa prepísalo (hodnoty .env len ako hash, nikdy sa nevypisujú).
+# Návratový kód 1 = na serveri je niečo, čo by sa stratilo (iná hodnota / kľúč len na serveri / iný súbor).
+_env_hashes() {
+  local line k v
+  while IFS= read -r line || [[ -n $line ]]; do
+    [[ $line =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] || continue
+    k="${line%%=*}"; v="${line#*=}"
+    printf '%s %s\n' "$k" "$(printf %s "$v" | md5sum | cut -c1-12)"
+  done | sort -u -k1,1
+}
+
+check_remote() {
+  local tmp risky=0
+  tmp="$(mktemp -d)"
+  echo "--> Kontrolujem rozdiely lokál ↔ ${SYNOLOGY_HOST}:${REMOTE_DIR} ..."
+
+  # .env
+  _env_hashes < "${LOCAL_DIR}/.env" > "${tmp}/env_l"
+  ssh -o BatchMode=yes "${SYNOLOGY_HOST}" "cat ${REMOTE_DIR}/.env 2>/dev/null" | _env_hashes > "${tmp}/env_r"
+  join -a1 -a2 -e MISSING -o 0,1.2,2.2 "${tmp}/env_l" "${tmp}/env_r" > "${tmp}/env_j"
+  while read -r k l r; do
+    if [[ $l == MISSING ]]; then echo "  !! .env ${k}: len na serveri — deploy ho ZMAŽE"; risky=1
+    elif [[ $r == MISSING ]]; then echo "     .env ${k}: len lokálne — deploy ho pridá"
+    elif [[ $l != "$r" ]]; then echo "  !! .env ${k}: iná hodnota — deploy ju PREPÍŠE"; risky=1
+    fi
+  done < "${tmp}/env_j"
+
+  # súbory, ktoré deploy kopíruje
+  (cd "${LOCAL_DIR}" && find docker-compose.yml config templates static -type f \
+      ! -path '*__pycache__*' ! -name '*.pyc' 2>/dev/null | sort) > "${tmp}/files"
+  (cd "${LOCAL_DIR}" && while read -r f; do md5sum "$f"; done < "${tmp}/files") | sort -k2 > "${tmp}/md5_l"
+  ssh -o BatchMode=yes "${SYNOLOGY_HOST}" \
+    "cd ${REMOTE_DIR} && while read -r f; do [ -f \"\$f\" ] && md5sum \"\$f\"; done" \
+    < "${tmp}/files" | sort -k2 > "${tmp}/md5_r"
+  join -1 2 -2 2 -a1 -e MISSING -o 0,1.1,2.1 "${tmp}/md5_l" "${tmp}/md5_r" > "${tmp}/md5_j"
+  while read -r f l r; do
+    if [[ $r == MISSING ]]; then echo "     ${f}: nový (len lokálne)"
+    elif [[ $l != "$r" ]]; then echo "  !! ${f}: na serveri iný — deploy ho PREPÍŠE (zmena cez admin UI?)"; risky=1
+    fi
+  done < "${tmp}/md5_j"
+
+  rm -rf "${tmp}"
+  if (( risky )); then
+    echo "==> Na serveri sú rozdiely, ktoré by deploy prepísal (označené !!)."
+  else
+    echo "==> OK — deploy na serveri nič neprepíše ani nezmaže."
+  fi
+  return $risky
+}
+
+# Pred prepísaním súborov na serveri: pri rizikových rozdieloch sa opýta (DEPLOY_SKIP_CHECK=1 preskočí)
+confirm_remote() {
+  [[ ${DEPLOY_SKIP_CHECK:-0} == 1 ]] && return 0
+  check_remote && return 0
+  if [[ ! -t 0 ]]; then
+    echo "!! Neinteraktívny beh — deploy zastavený. Over rozdiely alebo spusti s DEPLOY_SKIP_CHECK=1." >&2
+    exit 1
+  fi
+  read -r -p "Prepísať server lokálnymi verziami? [y/N] " ans
+  [[ $ans == [yY]* ]] || { echo "Deploy zrušený."; exit 1; }
+}
 # ──────────────────────────────────────────────────────────────────────────────
 
 MODE="full"
@@ -43,6 +108,7 @@ case "${1:-}" in
   --no-rebuild)  MODE="no-rebuild" ;;
   --restart)     MODE="restart" ;;
   --rebuild)     MODE="rebuild" ;;
+  --check)       MODE="check" ;;
   -h|--help)
     echo "Použitie: ./deploy.sh [MOŽNOSŤ]"
     echo ""
@@ -51,12 +117,22 @@ case "${1:-}" in
     echo "  --tpl-only       Len šablóny (templates/) na server, bez reštartu — zmeny sú hneď aktívne"
     echo "  --restart        Len reštartuje kontajnery na serveri"
     echo "  --rebuild        Len build + push na Docker Hub (bez nasadenia na server)"
+    echo "  --check          Len porovná .env, docker-compose.yml, config, templates, static so serverom"
     echo "  -h, --help       Zobrazí túto nápovedu"
+    echo ""
+    echo "  Pred deployom, ktorý prepisuje súbory na serveri, sa kontrola spustí automaticky"
+    echo "  (preskočenie: DEPLOY_SKIP_CHECK=1 ./deploy.sh)"
     exit 0
     ;;
 esac
 
+if [[ $MODE == "check" ]]; then
+  check_remote || exit 1
+  exit 0
+fi
+
 if [[ $MODE == "tpl" ]]; then
+  confirm_remote
   echo "--> Kopírujem len šablóny..."
   ${SCP} -r "${LOCAL_DIR}/templates" "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
   echo "==> Hotovo. Obnov stránku v prehliadači."
@@ -64,6 +140,7 @@ if [[ $MODE == "tpl" ]]; then
 fi
 
 if [[ $MODE == "no-rebuild" ]]; then
+  confirm_remote
   echo "--> Kopírujem config, .env a static (bez rebuildu)..."
   tar -czf - --exclude='__pycache__' --exclude='*.pyc' -C "${LOCAL_DIR}" config | \
     ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR} && chmod 666 ${REMOTE_DIR}/config/*.json"
@@ -90,6 +167,9 @@ if [[ $MODE == "rebuild" ]]; then
   echo "==> Image pushnutý. Nasaď ho cez: ./deploy.sh --restart"
   exit 0
 fi
+
+# ── 0. Kontrola rozdielov (pred buildom, aby sa zbytočne nečakalo) ──────────────
+confirm_remote
 
 # ── 1. Build image ─────────────────────────────────────────────────────────────
 echo "--> Buildujem Docker image (${GIT_COMMIT}, ${BUILD_DATE})..."

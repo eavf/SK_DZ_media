@@ -66,6 +66,10 @@ app.config["SECRET_KEY"] = require(settings.flask_secret_key, "FLASK_SECRET_KEY"
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 configure_logging(app, settings)
 
+# read-only JSON API pre AI agentov (autentifikácia API kľúčom z API_KEYS) — viď api.py
+from api import api as api_blueprint  # noqa: E402
+app.register_blueprint(api_blueprint)
+
 
 @app.context_processor
 def inject_app_version():

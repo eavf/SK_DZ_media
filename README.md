@@ -982,6 +982,10 @@ docker pull eavfeavf/dz-news:latest
 
 ## Changelog
 
+### 2026-10-17
+- **Read-only API pre AI** (`api.py`): `GET /api/articles` (obdobie, default 7 dní; filtre relevancia, téma, jazyk, zdroj; voliteľne text), `GET /api/articles/<id>`, `GET /api/meta`, `GET /api/openapi.json`; autentifikácia kľúčom z `API_KEYS`
+- **MCP server** (`mcp_server.py`, `requirements-mcp.txt`) pre Claude Desktop / Claude Code nad týmto API
+
 ### 2026-10-13/14
 - **Google odkazy** (`google.com/goto?url=…`): po fetchi sa článok preradí na skutočnú doménu, duplikát sa skryje (`source_relink.py`, backfill `--apply`: 136 preradených, 79 duplikátov)
 - **extract_bulk**: front už neblokujú trvalo neúspešné články; prekladajú sa len ponechané články (nie zmazané/komerčné/`relevance=0`); po DeepL 456 sa preklad v behu zastaví; zapnuté logovanie (súhrn „Hotovo“)

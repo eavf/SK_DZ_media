@@ -97,6 +97,8 @@ Web dashboard              (browse, label, translate, export)
   - search (SerpAPI, MFA) and process (ingest, extract_bulk as background jobs, `/process/job/<id>`)
   - sources (create, note, avoid/unavoid), users
   - `/admin/queries`, `/admin/search-terms`, `/admin/maintenance` (translator backend, fix-dates, DB backup/restore)
+- **api.py** — Read-only JSON API blueprint (`/api`) for AI agents. Auth: `API_KEYS` from `.env` (comma-separated) via `Authorization: Bearer <key>` or `X-API-Key`; without keys the API returns 503. Endpoints: `GET /api/articles` (period `from`/`to`, default last 7 days, `date_field=found|published`, filters `relevance`, `topic` (computed from `topics.json` keywords), `lang`, `source`, `has_text`, `include_text`, `limit`/`offset`), `GET /api/articles/<id>` (full text), `GET /api/meta`, `GET /api/openapi.json` (public). Deleted articles are never returned.
+- **mcp_server.py** — MCP server (stdio, `mcp` SDK 2.x, `requirements-mcp.txt`) exposing tools `list_articles`, `get_article`, `get_filters` over the REST API; runs on the AI client's machine with `DZ_API_URL` + `DZ_API_KEY`.
 - **Roles** — hierarchy `user < power < admin` (`User.has_role()`), decorators `user_required`, `power_required`, `admin_required`.
 
 ### Configuration
@@ -110,6 +112,7 @@ All config comes from `.env` (loaded via python-dotenv). Key variables:
 - `TRANSLATOR_BACKEND`, `TRANSLATOR_URL`, `DEEPL_API_KEY`, `AZURE_TRANSLATOR_KEY/REGION`, `NVIDIA_TRANSLATE_MODEL` — translation
 - `SMTP_HOST/PORT/USER/PASS`, `NOTIFY_TO` — scheduler email notifications
 - `NVIDIA_API_KEY`, `NVIDIA_MODEL`, `AI_CLASSIFY_ENABLED`, `AI_CLASSIFY_DELAY` — AI sport classification (disabled without key)
+- `API_KEYS` — keys for the read-only `/api` (empty = API disabled)
 - `EXTRACT_MAX`, `EXTRACT_ONLY_MISSING`, `LOG_FILE/LEVEL/PREFIX`
 - There is .env.local file, where are put variables for development PC and server 
 - See `.env.example` for the full list.

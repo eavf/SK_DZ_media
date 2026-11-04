@@ -20,7 +20,7 @@ from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_context
 from translate import translate_ar_fr
 from classify_ai import classify_and_mark
-from source_relink import relink_source
+from source_relink import mark_url_duplicate, relink_source
 
 s, paths = init_context()
 logger = logging.getLogger("refetch_article")
@@ -50,7 +50,10 @@ def fetch_article_url(article_id: int) -> dict | None:
 
 
 def save_extraction(article_id: int, result):
-    """Uloží výsledok extrakcie; článok z google.com/goto preradí na skutočnú doménu (vracia RelinkResult|None)."""
+    """Uloží výsledok extrakcie; článok z google.com/goto preradí na skutočnú doménu.
+
+    Vracia DuplicateResult ak je článok duplikát iného podľa URL, inak None.
+    """
     engine = get_db_engine()
     with engine.begin() as conn:
         published_at_real = _to_mysql_dt(result.published_at_real)
@@ -89,7 +92,8 @@ def save_extraction(article_id: int, result):
                      else "auto: bez SK kontextu"),
             "id":                  article_id,
         })
-        return relink_source(conn, article_id, result.final_url, result.final_url_hash)
+        relink_source(conn, article_id, result.final_url)
+        return mark_url_duplicate(conn, article_id)
 
 
 def main() -> int:
@@ -119,9 +123,9 @@ def main() -> int:
     logger.info("Fetching: %s", url)
     result = extract_candidate(candidate)
 
-    relinked = save_extraction(article_id, result)
-    if relinked and relinked.deleted:
-        logger.info("OK: id=%s, vyradený ako duplikát #%s", article_id, relinked.duplicate_of)
+    dup = save_extraction(article_id, result)
+    if dup and dup.deleted and dup.delete_id == article_id:
+        logger.info("OK: id=%s, vyradený ako duplikát #%s", article_id, dup.keep_id)
         return 0
 
     if result.extraction_ok:

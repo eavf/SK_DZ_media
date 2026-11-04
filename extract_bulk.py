@@ -7,7 +7,8 @@ Pre každý článok kde content_text IS NULL a deleted_at IS NULL:
   - ak text je komerčný → relevance=0
   - ak AI vyhodnotí článok ako šport → soft delete + relevance=0 (classify_ai.py)
   - ak extrakcia zlyhala → zapíše chybu, článok ostáva v DB
-  - článok z google.com/goto sa preradí na skutočnú doménu (source_relink.py), duplikát → soft delete
+  - článok z google.com/goto sa preradí na skutočnú doménu (source_relink.py)
+  - duplikát podľa URL (url_hash / final_url_hash) → novší sa soft-deletne (source_relink.py)
 
 Použitie:
     python extract_bulk.py [--limit N] [--dry-run]
@@ -38,7 +39,7 @@ from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_cli, init_context
 from translate import translate_ar_fr
 from classify_ai import ClassificationStopped, classify_and_mark, classify_pending
-from source_relink import relink_source
+from source_relink import mark_url_duplicate, relink_source
 
 s, paths = init_context()
 logger = logging.getLogger("extract_bulk")
@@ -191,12 +192,15 @@ def save_result(
             "final_url_hash": result.final_url_hash,
             "id": article_id,
         })
-        relinked = relink_source(conn, article_id, result.final_url, result.final_url_hash)
-        if relinked and relinked.deleted:
-            conn.execute(text("""
-                UPDATE articles SET fetched_at = NOW(), http_status = :http_status WHERE id = :id
-            """), {"http_status": result.http_status, "id": article_id})
-            return "duplicate"
+        relink_source(conn, article_id, result.final_url)
+
+    # Duplikát podľa URL (napr. google.com/goto a priamy odkaz na ten istý článok) — aj keď prišiel ako druhý
+    dup = mark_url_duplicate(conn, article_id)
+    if dup and dup.deleted and dup.delete_id == article_id:
+        conn.execute(text("""
+            UPDATE articles SET fetched_at = NOW(), http_status = :http_status WHERE id = :id
+        """), {"http_status": result.http_status, "id": article_id})
+        return "duplicate"
 
     if result.extraction_ok and result.no_slovak_context:
         conn.execute(text("""

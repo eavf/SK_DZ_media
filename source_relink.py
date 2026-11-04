@@ -3,11 +3,14 @@ source_relink.py — Preradenie článkov z presmerovacích domén (google.com/g
 
 SerpAPI pri niektorých výsledkoch vracia len Google presmerovanie, takže ingest zaradí článok pod
 `google.com`. Skutočná URL sa zistí až pri fetchi (`final_url`) — vtedy sa článok preradí na jej doménu.
-Ak už v DB existuje iný aktívny článok s rovnakou URL, presmerovaný článok sa označí ako duplikát (soft delete).
+
+Duplikáty podľa URL (mark_url_duplicate): ten istý článok môže prísť raz ako google.com/goto a inokedy
+priamo — url_hash sa líši, zhodu odhalí až final_url_hash. Pri zhode sa novší článok soft-deletne
+s poznámkou `auto: duplikát #<id>` (ak má ručné hodnotenie len novší, zmaže sa starší; ak oba, nič).
 
 Volá sa z extract_bulk.py a refetch_article.py. Ako CLI dorovná existujúce články:
     python source_relink.py           # dry-run: zobrazí čo by sa zmenilo
-    python source_relink.py --apply   # skutočne preradí
+    python source_relink.py --apply   # skutočne preradí a vyradí duplikáty
 """
 from __future__ import annotations
 
@@ -28,15 +31,18 @@ logger = logging.getLogger("source_relink")
 
 REDIRECT_DOMAINS = {"google.com", "news.google.com"}
 
+# final_url = titulná stránka webu (zmazaný článok presmeruje na homepage) → nepovažuje sa za zhodu
+_NOT_ROOT = "{col} NOT REGEXP '^https?://[^/]+/?$'"
+
 # URL v texte chyby requests: "403 Client Error: Forbidden for url: https://..."
 _ERROR_URL_RE = re.compile(r"for url: (\S+)")
 
 
 @dataclass
-class RelinkResult:
-    domain: str
-    duplicate_of: int | None = None
-    deleted: bool = False  # duplikát bol soft-deletnutý (nemal ručné hodnotenie)
+class DuplicateResult:
+    keep_id: int
+    delete_id: int
+    deleted: bool  # False = oba články majú ručné hodnotenie, nič sa nezmazalo
 
 
 def domain_of(url: str | None) -> str:
@@ -56,17 +62,17 @@ def is_redirect_domain(domain: str) -> bool:
     return domain in REDIRECT_DOMAINS
 
 
-def relink_source(conn, article_id: int, final_url: str | None, final_url_hash: str | None = None) -> RelinkResult | None:
+def relink_source(conn, article_id: int, final_url: str | None) -> str | None:
     """Ak je článok pod presmerovacou doménou a final_url vedie inam, preradí ho na skutočnú doménu.
 
-    Vracia None ak sa nič nemenilo. Duplikát sa označí soft delete len ak nemá ručné hodnotenie.
+    Vracia novú doménu, alebo None ak sa nič nemenilo.
     """
     new_domain = domain_of(final_url)
     if not new_domain or is_redirect_domain(new_domain):
         return None
 
     row = conn.execute(text("""
-        SELECT s.domain, a.relevance FROM articles a JOIN sources s ON s.id = a.source_id WHERE a.id = :id
+        SELECT s.domain FROM articles a JOIN sources s ON s.id = a.source_id WHERE a.id = :id
     """), {"id": article_id}).mappings().fetchone()
     if not row or not is_redirect_domain(row["domain"]):
         return None
@@ -79,29 +85,52 @@ def relink_source(conn, article_id: int, final_url: str | None, final_url_hash: 
     conn.execute(text("""
         UPDATE articles SET source_id = (SELECT id FROM sources WHERE domain = :domain) WHERE id = :id
     """), {"domain": new_domain, "id": article_id})
-    result = RelinkResult(domain=new_domain)
 
-    if final_url_hash:
-        dup = conn.execute(text("""
-            SELECT id FROM articles
-            WHERE id <> :id AND deleted_at IS NULL
-              AND (url_hash = :h OR final_url_hash = :h)
-            ORDER BY id LIMIT 1
-        """), {"id": article_id, "h": final_url_hash}).fetchone()
-        if dup:
-            result.duplicate_of = dup[0]
-            if row["relevance"] is None:
-                conn.execute(text("""
-                    UPDATE articles
-                    SET deleted_at = NOW(),
-                        relevance_note = COALESCE(relevance_note, :note)
-                    WHERE id = :id
-                """), {"id": article_id, "note": f"auto: duplikát #{dup[0]}"})
-                result.deleted = True
+    logger.info("id=%s: %s → %s", article_id, row["domain"], new_domain)
+    return new_domain
 
-    logger.info("id=%s: google.com → %s%s", article_id, new_domain,
-                f" (duplikát #{result.duplicate_of})" if result.duplicate_of else "")
-    return result
+
+def mark_url_duplicate(conn, article_id: int) -> DuplicateResult | None:
+    """Nájde iný aktívny článok s rovnakou URL (url_hash / final_url_hash v ľubovoľnej kombinácii).
+
+    Zmaže sa novší z dvojice; ak má ručné hodnotenie len novší, zmaže sa starší; ak oba, nič.
+    Vracia None ak duplikát neexistuje.
+    """
+    row = conn.execute(text("""
+        SELECT a.relevance AS a_rel, o.id AS o_id, o.relevance AS o_rel
+        FROM articles a
+        JOIN articles o
+          ON o.id <> a.id AND o.deleted_at IS NULL
+         AND ((o.url_hash = a.final_url_hash AND {a_not_root})
+              OR (o.final_url_hash = a.url_hash AND {o_not_root})
+              OR (o.final_url_hash = a.final_url_hash AND {a_not_root}))
+        WHERE a.id = :id AND a.deleted_at IS NULL
+        ORDER BY o.id
+        LIMIT 1
+    """.format(a_not_root=_NOT_ROOT.format(col="a.final_url_canonical"),
+               o_not_root=_NOT_ROOT.format(col="o.final_url_canonical"))),
+        {"id": article_id}).mappings().fetchone()
+    if not row:
+        return None
+
+    rel = {article_id: row["a_rel"], row["o_id"]: row["o_rel"]}
+    older, newer = sorted(rel)
+    if rel[newer] is None:
+        keep_id, delete_id = older, newer
+    elif rel[older] is None:
+        keep_id, delete_id = newer, older
+    else:
+        logger.info("id=%s: duplikát #%s, oba ručne hodnotené — ponechávam", newer, older)
+        return DuplicateResult(keep_id=older, delete_id=newer, deleted=False)
+
+    conn.execute(text("""
+        UPDATE articles
+        SET deleted_at = NOW(),
+            relevance_note = COALESCE(relevance_note, :note)
+        WHERE id = :id
+    """), {"id": delete_id, "note": f"auto: duplikát #{keep_id}"})
+    logger.info("id=%s: vyradený ako duplikát #%s", delete_id, keep_id)
+    return DuplicateResult(keep_id=keep_id, delete_id=delete_id, deleted=True)
 
 
 def backfill(apply: bool) -> dict:
@@ -109,7 +138,7 @@ def backfill(apply: bool) -> dict:
     from extract_articles_reworked import canonicalize_url
 
     engine = get_db_engine()
-    counts = {"relinked": 0, "duplicates": 0, "unresolved": 0}
+    counts = {"relinked": 0, "unresolved": 0}
     with engine.begin() as conn:
         rows = conn.execute(text("""
             SELECT a.id, a.final_url, a.final_url_hash, a.fetch_error
@@ -138,26 +167,49 @@ def backfill(apply: bool) -> dict:
                     """), {"u": final_url, "c": canon, "h": final_hash, "id": r["id"]})
 
             if apply:
-                res = relink_source(conn, r["id"], final_url, final_hash)
+                if relink_source(conn, r["id"], final_url):
+                    counts["relinked"] += 1
             else:
-                res = RelinkResult(domain=domain_of(final_url))
-                logger.info("[DRY-RUN] id=%s → %s", r["id"], res.domain)
-            if res:
+                logger.info("[DRY-RUN] id=%s → %s", r["id"], domain_of(final_url))
                 counts["relinked"] += 1
-                counts["duplicates"] += 1 if res.duplicate_of else 0
     return counts
+
+
+def backfill_duplicates(apply: bool) -> int:
+    """Vyradí existujúce duplikáty podľa URL (napr. google.com/goto + priamy odkaz na ten istý článok)."""
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        # novší článok z každej dvojice; tri samostatné JOINy (namiesto OR) sú rýchlejšie
+        ids = sorted({r[0] for r in conn.execute(text("""
+            SELECT GREATEST(a.id, o.id) FROM articles a
+            JOIN articles o ON o.id <> a.id AND (
+                 o.url_hash = a.final_url_hash
+              OR o.final_url_hash = a.final_url_hash)
+            WHERE a.deleted_at IS NULL AND o.deleted_at IS NULL AND {a_not_root}
+        """.format(a_not_root=_NOT_ROOT.format(col="a.final_url_canonical")))).fetchall()})
+
+        count = 0
+        for article_id in ids:
+            if apply:
+                res = mark_url_duplicate(conn, article_id)
+                count += 1 if res and res.deleted else 0
+            else:
+                logger.info("[DRY-RUN] id=%s: duplikát podľa URL", article_id)
+                count += 1
+    return count
 
 
 def main() -> int:
     init_cli("source_relink")
-    p = argparse.ArgumentParser(description="Preradí články z google.com na skutočný zdroj podľa final_url.")
+    p = argparse.ArgumentParser(description="Preradí články z google.com na skutočný zdroj a vyradí duplikáty podľa URL.")
     p.add_argument("--apply", action="store_true", help="Skutočne zapíše zmeny (inak dry-run)")
     args = p.parse_args()
 
     counts = backfill(args.apply)
-    logger.info("%sHotovo: preradených=%s, z toho duplikátov=%s, bez známej cieľovej URL=%s",
+    duplicates = backfill_duplicates(args.apply)
+    logger.info("%sHotovo: preradených=%s, bez známej cieľovej URL=%s, vyradených duplikátov=%s",
                 "" if args.apply else "[DRY-RUN] ",
-                counts["relinked"], counts["duplicates"], counts["unresolved"])
+                counts["relinked"], counts["unresolved"], duplicates)
     return 0
 
 

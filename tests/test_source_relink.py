@@ -10,11 +10,11 @@ import requests
 
 from extract_articles_reworked import CandidateArticle, extract_candidate
 import extract_articles_reworked
-from source_relink import domain_of, relink_source, url_from_fetch_error
+from source_relink import domain_of, mark_url_duplicate, relink_source, url_from_fetch_error
 
 
-def _conn(current_domain: str, relevance=None, duplicate_id=None):
-    """Mock spojenia: 1. SELECT vráti aktuálnu doménu článku, SELECT duplikátu vráti duplicate_id."""
+def _conn(current_domain: str = "google.com", dup_row: dict | None = None):
+    """Mock spojenia: SELECT domény vráti current_domain, SELECT duplikátu vráti dup_row."""
     conn = MagicMock()
     calls = []
 
@@ -23,9 +23,9 @@ def _conn(current_domain: str, relevance=None, duplicate_id=None):
         calls.append((sql, params))
         res = MagicMock()
         if "JOIN sources" in sql:
-            res.mappings.return_value.fetchone.return_value = {"domain": current_domain, "relevance": relevance}
-        elif "url_hash = :h" in sql:
-            res.fetchone.return_value = (duplicate_id,) if duplicate_id else None
+            res.mappings.return_value.fetchone.return_value = {"domain": current_domain}
+        elif "JOIN articles o" in sql:
+            res.mappings.return_value.fetchone.return_value = dup_row
         return res
 
     conn.execute.side_effect = execute
@@ -56,20 +56,18 @@ class TestHelpers:
 class TestRelinkSource:
     def test_relinks_google_article(self):
         conn = _conn("google.com")
-        res = relink_source(conn, 7, "https://www.al24news.dz/clanok", "h1")
-        assert res.domain == "al24news.dz"
-        assert res.duplicate_of is None and res.deleted is False
+        assert relink_source(conn, 7, "https://www.al24news.dz/clanok") == "al24news.dz"
         assert any("INSERT INTO sources" in q for q in _sqls(conn))
         assert any("SET source_id" in q for q in _sqls(conn))
 
     def test_skips_non_redirect_source(self):
         conn = _conn("aps.dz")
-        assert relink_source(conn, 7, "https://www.al24news.dz/clanok", "h1") is None
+        assert relink_source(conn, 7, "https://www.al24news.dz/clanok") is None
         assert not any("SET source_id" in q for q in _sqls(conn))
 
     def test_skips_when_final_url_is_still_google(self):
         conn = _conn("google.com")
-        assert relink_source(conn, 7, "https://www.google.com/goto?url=abc", "h1") is None
+        assert relink_source(conn, 7, "https://www.google.com/goto?url=abc") is None
         assert conn.execute.call_count == 0
 
     def test_skips_without_final_url(self):
@@ -79,22 +77,55 @@ class TestRelinkSource:
 
     def test_preferred_flag(self):
         conn = _conn("google.com")
-        relink_source(conn, 7, "https://aps.dz/x", None)
+        relink_source(conn, 7, "https://aps.dz/x")
         params = next(p for q, p in conn.calls if "INSERT INTO sources" in q)
         assert params == {"domain": "aps.dz", "is_preferred": 1}
 
-    def test_duplicate_without_manual_label_is_soft_deleted(self):
-        conn = _conn("google.com", relevance=None, duplicate_id=42)
-        res = relink_source(conn, 7, "https://al24news.dz/x", "h1")
-        assert res.duplicate_of == 42 and res.deleted is True
-        params = next(p for q, p in conn.calls if "deleted_at = NOW()" in q)
-        assert params == {"id": 7, "note": "auto: duplikát #42"}
-
-    def test_duplicate_with_manual_label_is_kept(self):
-        conn = _conn("google.com", relevance=2, duplicate_id=42)
-        res = relink_source(conn, 7, "https://al24news.dz/x", "h1")
-        assert res.duplicate_of == 42 and res.deleted is False
+    def test_does_not_delete(self):
+        conn = _conn("google.com")
+        relink_source(conn, 7, "https://al24news.dz/x")
         assert not any("deleted_at = NOW()" in q for q in _sqls(conn))
+
+
+class TestMarkUrlDuplicate:
+    @staticmethod
+    def _deleted(conn):
+        return [p for q, p in conn.calls if "deleted_at = NOW()" in q]
+
+    def test_no_duplicate(self):
+        conn = _conn(dup_row=None)
+        assert mark_url_duplicate(conn, 7) is None
+        assert self._deleted(conn) == []
+
+    def test_newer_unlabeled_is_deleted(self):
+        # #3630 (priamy odkaz) prišiel po #3604 (google.com/goto) → zmaže sa #3630
+        conn = _conn(dup_row={"a_rel": None, "o_id": 3604, "o_rel": None})
+        res = mark_url_duplicate(conn, 3630)
+        assert (res.keep_id, res.delete_id, res.deleted) == (3604, 3630, True)
+        assert self._deleted(conn) == [{"id": 3630, "note": "auto: duplikát #3604"}]
+
+    def test_current_older_deletes_other(self):
+        conn = _conn(dup_row={"a_rel": None, "o_id": 50, "o_rel": None})
+        res = mark_url_duplicate(conn, 7)
+        assert (res.keep_id, res.delete_id) == (7, 50)
+        assert self._deleted(conn) == [{"id": 50, "note": "auto: duplikát #7"}]
+
+    def test_labeled_newer_is_kept_older_deleted(self):
+        conn = _conn(dup_row={"a_rel": 2, "o_id": 42, "o_rel": None})
+        res = mark_url_duplicate(conn, 99)
+        assert (res.keep_id, res.delete_id, res.deleted) == (99, 42, True)
+
+    def test_both_labeled_nothing_deleted(self):
+        conn = _conn(dup_row={"a_rel": 1, "o_id": 42, "o_rel": 2})
+        res = mark_url_duplicate(conn, 99)
+        assert res.deleted is False
+        assert self._deleted(conn) == []
+
+    def test_ignores_homepage_final_url(self):
+        conn = _conn(dup_row=None)
+        mark_url_duplicate(conn, 7)
+        sql = next(q for q in _sqls(conn) if "JOIN articles o" in q)
+        assert "NOT REGEXP" in sql
 
 
 class TestHttpErrorFinalUrl:

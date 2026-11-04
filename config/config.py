@@ -7,10 +7,10 @@ import os
 from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Optional
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from sqlalchemy.engine import Engine
 
 # -----------------------------------------------------------------------------
@@ -23,8 +23,8 @@ BUNDLE_DIR = PROJECT_ROOT / "bundle"
 RUNS_DIR = BUNDLE_DIR / "runs"
 LOGS_DIR_DEFAULT = PROJECT_ROOT / "logs"
 
-BUNDLE_DIR.mkdir(parents=True, exist_ok=True)
-RUNS_DIR.mkdir(parents=True, exist_ok=True)
+_log = logging.getLogger("config")
+
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -34,7 +34,7 @@ def load_json(path: Path, default: Any):
         if path.exists():
             return json.loads(path.read_text(encoding="utf-8"))
     except Exception as e:
-        logging.getLogger("config").warning(f"Failed to load JSON: {path} ({e})")
+        _log.warning(f"Failed to load JSON: {path} ({e})")
     return default
 
 
@@ -64,25 +64,34 @@ def _csv_set(val: Optional[str]) -> set[str]:
     return {x.strip().lower() for x in val.split(",") if x.strip()}
 
 
+def _env_str(name: str, default: str = "") -> str:
+    """Env value stripped of whitespace; empty/missing → default."""
+    return (os.getenv(name) or "").strip() or default
+
+
+def _env_path(name: str, default: Path) -> Path:
+    """Path from env (relative paths resolve against PROJECT_ROOT); missing → default."""
+    raw = _env_str(name)
+    if not raw:
+        return default.resolve()
+    p = Path(raw).expanduser()
+    if not p.is_absolute():
+        p = PROJECT_ROOT / p
+    return p.resolve()
+
+
 def _ensure_dir(p: Path) -> Path:
     p.mkdir(parents=True, exist_ok=True)
     return p
 
 
-def _normalize_domain_list(v: Any) -> set[str]:
+def _normalize_string_list(v: Any) -> set[str]:
     """
-    Accept list/tuple/set of strings -> lowercased set
+    Accept list/tuple/set of strings -> lowercased set (blank items skipped).
     """
-    if not v:
+    if not v or not isinstance(v, (list, tuple, set)):
         return set()
-    if not isinstance(v, (list, tuple, set)):
-        return set()
-    out = set()
-    for x in v:
-        s = str(x).strip().lower()
-        if s:
-            out.add(s)
-    return out
+    return {s for s in (str(x).strip().lower() for x in v) if s}
 
 
 def _normalize_rank_map(v: Any) -> dict[str, int]:
@@ -118,45 +127,13 @@ def _normalize_topics(v: Any) -> dict[str, list[str]]:
         t = str(topic).strip().lower()
         if not t:
             continue
-        cleaned = [str(w) for w in words if str(w).strip()]
-        out[t] = cleaned
+        out[t] = [str(w) for w in words if str(w).strip()]
     return out
-
-
-def _normalize_string_list(v: Any) -> set[str]:
-    if not v or not isinstance(v, (list, tuple, set)):
-        return set()
-    out = set()
-    for x in v:
-        s = str(x).strip().lower()
-        if s:
-            out.add(s)
-    return out
-
-
-def init_context() -> tuple[Settings, ProjectPaths]:
-    """
-    Shared app/script context without reconfiguring root logging.
-    Safe for Flask imports.
-    """
-    s = get_settings()
-    return s, s.paths
-
-
-def init_cli(name: str) -> tuple[Settings, ProjectPaths, logging.Logger]:
-    """
-    CLI initializer with root logging configuration.
-    Use only from standalone scripts.
-    """
-    s = get_settings()
-    logger = configure_root_logging(s, name=name)
-    return s, s.paths, logger
 
 
 # -----------------------------------------------------------------------------
 # Paths
 # -----------------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class ProjectPaths:
     project_root: Path
@@ -232,6 +209,7 @@ class Settings:
     log_level: str
     log_max_bytes: int
     log_backup_count: int
+    log_prefix: str
 
     # --- SMTP notifikácie ---
     smtp_host: str
@@ -242,6 +220,61 @@ class Settings:
 
 
 _CACHED: Optional[Settings] = None
+
+
+def _load_env(dotenv_path: Optional[str]) -> None:
+    load_dotenv(dotenv_path=dotenv_path)
+    # .env.local prepíše hodnoty z .env (lokálny dev override); SKIP_ENV_LOCAL=1 → produkčné hodnoty z .env
+    if not _to_bool(os.getenv("SKIP_ENV_LOCAL")):
+        load_dotenv(dotenv_path=PROJECT_ROOT / ".env.local", override=True)
+
+
+def _build_paths() -> ProjectPaths:
+    bundle_dir = _ensure_dir(_env_path("BUNDLE_DIR", BUNDLE_DIR))
+    runs_dir = _ensure_dir(_env_path("RUNS_DIR", RUNS_DIR))
+    log_dir = _ensure_dir(_env_path("LOG_DIR", LOGS_DIR_DEFAULT))
+
+    latest_dir = bundle_dir / "latest"
+    latest_bundle_path = _env_path("LATEST_BUNDLE_PATH", latest_dir / "news_bundle.json")
+    _log.debug("Latest bundle path: %s", latest_bundle_path)
+
+    return ProjectPaths(
+        project_root=PROJECT_ROOT,
+        config_dir=CONFIG_DIR,
+        bundle_dir=bundle_dir,
+        runs_dir=runs_dir,
+        latest_dir=latest_dir,
+        latest_bundle_path=latest_bundle_path,
+        log_dir=log_dir,
+        search_terms_path=CONFIG_DIR / "search_terms.json",
+        queries_path=CONFIG_DIR / "queries.json",
+    )
+
+
+def _load_json_configs(paths: ProjectPaths) -> dict[str, Any]:
+    """Load JSON configs from CONFIG_DIR → kwargs for Settings."""
+    sources_cfg = load_json(CONFIG_DIR / "sources.json", {}) or {}
+    ranking_cfg = load_json(CONFIG_DIR / "ranking.json", {})
+    topics_cfg = load_json(CONFIG_DIR / "topics.json", {})
+    url_cleanup_cfg = load_json(CONFIG_DIR / "url_cleanup.json", {}) or {}
+    search_terms_cfg = load_json(paths.search_terms_path, {})
+
+    preferred_domains = (
+        _normalize_string_list(sources_cfg.get("preferred"))
+        or _csv_set(os.getenv("PREFERRED_DOMAINS"))
+    )
+
+    return dict(
+        preferred_domains=preferred_domains,
+        drop_query_keys=_normalize_string_list(url_cleanup_cfg.get("drop_query_keys")),
+        blocklist_domains=_normalize_string_list(url_cleanup_cfg.get("blocklist_domains")),
+        ecom_path_markers=_normalize_string_list(url_cleanup_cfg.get("ecom_path_markers")),
+        bad_path_markers=_normalize_string_list(url_cleanup_cfg.get("bad_path_markers")),
+        title_bad_words=_normalize_string_list(url_cleanup_cfg.get("title_bad_words")),
+        source_rank=_normalize_rank_map(ranking_cfg),
+        topic_keywords=_normalize_topics(topics_cfg),
+        search_terms=_normalize_topics(search_terms_cfg),
+    )
 
 
 def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = None) -> Settings:
@@ -255,141 +288,55 @@ def get_settings(*, force_reload: bool = False, dotenv_path: Optional[str] = Non
     if _CACHED is not None and not force_reload:
         return _CACHED
 
-    load_dotenv(dotenv_path=dotenv_path)
-    # .env.local prepíše hodnoty z .env (lokálny dev override); SKIP_ENV_LOCAL=1 → produkčné hodnoty z .env
-    if os.getenv("SKIP_ENV_LOCAL", "").strip().lower() not in ("1", "true", "yes"):
-        load_dotenv(dotenv_path=PROJECT_ROOT / ".env.local", override=True)
-
-    def _resolve_path_from_env(env_name: str, default_path: Path) -> Path:
-        raw = os.getenv(env_name)
-        if raw and raw.strip():
-            p = Path(raw).expanduser()
-            if not p.is_absolute():
-                p = PROJECT_ROOT / p
-            return p.resolve()
-        return default_path.resolve()
-
-    # -------------------------------------------------------------------------
-    # Directories / bundle paths
-    # -------------------------------------------------------------------------
-    bundle_dir = _resolve_path_from_env("BUNDLE_DIR", BUNDLE_DIR)
-    runs_dir = _resolve_path_from_env("RUNS_DIR", RUNS_DIR)
-    log_dir = _resolve_path_from_env("LOG_DIR", LOGS_DIR_DEFAULT)
-
-    _ensure_dir(bundle_dir)
-    _ensure_dir(runs_dir)
-    _ensure_dir(log_dir)
-
-    latest_dir = bundle_dir / "latest"
-
-    latest_bundle_env = os.getenv("LATEST_BUNDLE_PATH")
-    if latest_bundle_env and latest_bundle_env.strip():
-        p = Path(latest_bundle_env).expanduser()
-        if not p.is_absolute():
-            p = PROJECT_ROOT / p
-        latest_bundle_path = p.resolve()
-    else:
-        latest_bundle_path = (latest_dir / "news_bundle.json").resolve()
-
-    logging.getLogger("config").info("Latest bundle path: %s", latest_bundle_path)
-
-    paths = ProjectPaths(
-        project_root=PROJECT_ROOT,
-        config_dir=CONFIG_DIR,
-        bundle_dir=bundle_dir,
-        runs_dir=runs_dir,
-        latest_dir=latest_dir,
-        latest_bundle_path=latest_bundle_path,
-        log_dir=log_dir,
-        search_terms_path=CONFIG_DIR / "search_terms.json",
-        queries_path=CONFIG_DIR / "queries.json",
-    )
-
-    # -------------------------------------------------------------------------
-    # JSON configs
-    # -------------------------------------------------------------------------
-    sources_path = CONFIG_DIR / "sources.json"
-    ranking_path = CONFIG_DIR / "ranking.json"
-    topics_path = CONFIG_DIR / "topics.json"
-    url_cleanup_path = CONFIG_DIR / "url_cleanup.json"
-    search_terms_path = CONFIG_DIR / "search_terms.json"
-
-    sources_cfg = load_json(sources_path, {})
-    ranking_cfg = load_json(ranking_path, {})
-    topics_cfg = load_json(topics_path, {})
-    url_cleanup_cfg = load_json(url_cleanup_path, {})
-    search_terms_cfg = load_json(search_terms_path, {})
-
-    preferred_from_json = _normalize_domain_list((sources_cfg or {}).get("preferred"))
-    preferred_from_env = _csv_set(os.getenv("PREFERRED_DOMAINS"))
-    preferred_domains = preferred_from_json or preferred_from_env
-
-    drop_query_keys = _normalize_string_list((url_cleanup_cfg or {}).get("drop_query_keys"))
-    blocklist_domains = set(_normalize_string_list((url_cleanup_cfg or {}).get("blocklist_domains")))
-    ecom_path_markers = _normalize_string_list((url_cleanup_cfg or {}).get("ecom_path_markers"))
-    bad_path_markers = _normalize_string_list((url_cleanup_cfg or {}).get("bad_path_markers"))
-    title_bad_words = _normalize_string_list((url_cleanup_cfg or {}).get("title_bad_words"))
-
-    source_rank = _normalize_rank_map(ranking_cfg)
-    topic_keywords = _normalize_topics(topics_cfg)
+    _load_env(dotenv_path)
+    paths = _build_paths()
 
     s = Settings(
         # Flask
         flask_port=_to_int(os.getenv("FLASK_PORT"), 5088),
-        flask_secret_key=os.getenv("FLASK_SECRET_KEY", "").strip(),
+        flask_secret_key=_env_str("FLASK_SECRET_KEY"),
 
         # DB
-        db_host=os.getenv("DB_HOST", "127.0.0.1"),
+        db_host=_env_str("DB_HOST", "127.0.0.1"),
         db_port=_to_int(os.getenv("DB_PORT"), 3306),
-        db_name=os.getenv("DB_NAME", "dz_news"),
-        db_user=os.getenv("DB_USER", "").strip(),
-        db_pass=os.getenv("DB_PASS", "").strip(),
+        db_name=_env_str("DB_NAME", "dz_news"),
+        db_user=_env_str("DB_USER"),
+        db_pass=_env_str("DB_PASS"),
 
         # DeepL
-        deepl_api_key=os.getenv("DEEPL_API_KEY", "").strip(),
+        deepl_api_key=_env_str("DEEPL_API_KEY"),
 
         # SerpAPI
-        serpapi_key=os.getenv("SERPAPI_KEY", "").strip(),
-        serp_hl=os.getenv("SERP_HL", "fr"),
-        serp_gl=os.getenv("SERP_GL", "dz"),
+        serpapi_key=_env_str("SERPAPI_KEY"),
+        serp_hl=_env_str("SERP_HL", "fr"),
+        serp_gl=_env_str("SERP_GL", "dz"),
         serp_num=_to_int(os.getenv("SERP_NUM"), 10),
-        serp_when=os.getenv("SERP_WHEN", "7d").strip() or "7d",
-        serp_engine=os.getenv("SERP_ENGINE", "").strip(),
+        serp_when=_env_str("SERP_WHEN", "7d"),
+        serp_engine=_env_str("SERP_ENGINE"),
 
         # Paths
         paths=paths,
-
-        # URL normalization
-        drop_query_keys=drop_query_keys,
 
         # Extraction
         extract_max=_to_int(os.getenv("EXTRACT_MAX"), 50),
         extract_only_missing=_to_bool(os.getenv("EXTRACT_ONLY_MISSING"), True),
 
-        # Preferences
-        preferred_domains=preferred_domains,
-
-        # JSON configs
-        source_rank=source_rank,
-        topic_keywords=topic_keywords,
-        search_terms=_normalize_topics(search_terms_cfg),
-        blocklist_domains=blocklist_domains,
-        ecom_path_markers=ecom_path_markers,
-        bad_path_markers=bad_path_markers,
-        title_bad_words=title_bad_words,
+        # JSON configs (+ preferred domains, URL normalization)
+        **_load_json_configs(paths),
 
         # Logging
-        log_file=os.getenv("LOG_FILE", "app.log").strip() or "app.log",
-        log_level=os.getenv("LOG_LEVEL", "INFO").strip() or "INFO",
+        log_file=_env_str("LOG_FILE", "app.log"),
+        log_level=_env_str("LOG_LEVEL", "INFO"),
         log_max_bytes=_to_int(os.getenv("LOG_MAX_BYTES"), 5 * 1024 * 1024),
         log_backup_count=_to_int(os.getenv("LOG_BACKUP_COUNT"), 5),
+        log_prefix=_env_str("LOG_PREFIX", "dznews"),
 
         # SMTP
-        smtp_host=os.getenv("SMTP_HOST", "").strip(),
+        smtp_host=_env_str("SMTP_HOST"),
         smtp_port=_to_int(os.getenv("SMTP_PORT"), 587),
-        smtp_user=os.getenv("SMTP_USER", "").strip(),
-        smtp_pass=os.getenv("SMTP_PASS", "").strip(),
-        notify_to=os.getenv("NOTIFY_TO", "").strip(),
+        smtp_user=_env_str("SMTP_USER"),
+        smtp_pass=_env_str("SMTP_PASS"),
+        notify_to=_env_str("NOTIFY_TO"),
     )
 
     _CACHED = s
@@ -406,11 +353,26 @@ def require(value: str, name: str) -> str:
     return v
 
 
-def build_preferred_site_or(domains: Iterable[str]) -> str:
-    d = sorted({x.strip().lower() for x in domains if x and x.strip()})
-    if not d:
-        raise ValueError("Preferred domains set is empty (sources.json preferred / PREFERRED_DOMAINS).")
-    return "(" + " OR ".join(f"site:{x}" for x in d) + ")"
+# -----------------------------------------------------------------------------
+# Init entry points
+# -----------------------------------------------------------------------------
+def init_context() -> tuple[Settings, ProjectPaths]:
+    """
+    Shared app/script context without reconfiguring root logging.
+    Safe for Flask imports.
+    """
+    s = get_settings()
+    return s, s.paths
+
+
+def init_cli(name: str) -> tuple[Settings, ProjectPaths, logging.Logger]:
+    """
+    CLI initializer with root logging configuration.
+    Use only from standalone scripts.
+    """
+    s = get_settings()
+    logger = configure_root_logging(s, name=name)
+    return s, s.paths, logger
 
 
 # -----------------------------------------------------------------------------
@@ -431,13 +393,15 @@ def get_db_engine(*, force_new: bool = False) -> Engine:
 
     s = get_settings()
 
-    if not s.db_user:
-        raise SystemExit("Missing DB_USER in .env / environment.")
-
-    url = (
-        f"mysql+pymysql://{s.db_user}:{s.db_pass}"
-        f"@{s.db_host}:{s.db_port}/{s.db_name}"
-        "?charset=utf8mb4"
+    # URL.create escapes special characters (@ / : #) in user/password
+    url = URL.create(
+        "mysql+pymysql",
+        username=require(s.db_user, "DB_USER"),
+        password=s.db_pass,
+        host=s.db_host,
+        port=s.db_port,
+        database=s.db_name,
+        query={"charset": "utf8mb4"},
     )
 
     _DB_ENGINE = create_engine(
@@ -459,11 +423,10 @@ def configure_root_logging(settings: Settings, *, name: str = "cli") -> logging.
     - Also logs to stderr (handy for cron)
     Returns a named logger.
     """
-    settings.paths.log_dir.mkdir(parents=True, exist_ok=True)
-    prefix = os.getenv("LOG_PREFIX", "dznews")
-    log_path = settings.paths.log_dir / f"{prefix}.{name}.log"
+    log_dir = _ensure_dir(settings.paths.log_dir)
+    log_path = log_dir / f"{settings.log_prefix}.{name}.log"
 
-    level = getattr(logging, settings.log_level.upper(), logging.ERROR)
+    level = getattr(logging, settings.log_level.upper(), logging.INFO)
 
     fmt = logging.Formatter(
         "%(asctime)s [%(levelname)s] %(name)s: %(message)s in %(pathname)s:%(lineno)d"
@@ -479,14 +442,11 @@ def configure_root_logging(settings: Settings, *, name: str = "cli") -> logging.
         backupCount=settings.log_backup_count,
         encoding="utf-8",
     )
-    file_handler.setLevel(level)
-    file_handler.setFormatter(fmt)
-
     stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(level)
-    stream_handler.setFormatter(fmt)
 
-    root.addHandler(file_handler)
-    root.addHandler(stream_handler)
+    for h in (file_handler, stream_handler):
+        h.setLevel(level)
+        h.setFormatter(fmt)
+        root.addHandler(h)
 
     return logging.getLogger(name)

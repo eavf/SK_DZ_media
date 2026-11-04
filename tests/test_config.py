@@ -8,7 +8,6 @@ import pytest
 
 from config.config import (
     _csv_set,
-    _normalize_domain_list,
     _normalize_rank_map,
     _normalize_string_list,
     _normalize_topics,
@@ -89,33 +88,6 @@ class TestCsvSet:
         assert _csv_set("a,,b") == {"a", "b"}
 
 
-# ── _normalize_domain_list ────────────────────────────────────────────────────
-
-class TestNormalizeDomainList:
-    def test_basic_list(self):
-        assert _normalize_domain_list(["Foo.com", "BAR.org"]) == {"foo.com", "bar.org"}
-
-    def test_strips_whitespace(self):
-        assert _normalize_domain_list(["  aps.dz  "]) == {"aps.dz"}
-
-    def test_none_returns_empty(self):
-        assert _normalize_domain_list(None) == set()
-
-    def test_empty_list(self):
-        assert _normalize_domain_list([]) == set()
-
-    def test_non_list_returns_empty(self):
-        assert _normalize_domain_list("not a list") == set()
-        assert _normalize_domain_list(42) == set()
-
-    def test_skips_blank_entries(self):
-        assert _normalize_domain_list(["aps.dz", "", "  "]) == {"aps.dz"}
-
-    def test_set_input(self):
-        result = _normalize_domain_list({"A.com", "B.com"})
-        assert result == {"a.com", "b.com"}
-
-
 # ── _normalize_rank_map ───────────────────────────────────────────────────────
 
 class TestNormalizeRankMap:
@@ -184,3 +156,12 @@ class TestNormalizeStringList:
 
     def test_non_list_returns_empty(self):
         assert _normalize_string_list("not-a-list") == set()
+
+    def test_lowercases_and_strips(self):
+        assert _normalize_string_list(["  Foo.com ", "BAR.org"]) == {"foo.com", "bar.org"}
+
+    def test_non_list_scalar_returns_empty(self):
+        assert _normalize_string_list(42) == set()
+
+    def test_set_input(self):
+        assert _normalize_string_list({"A.com", "B.com"}) == {"a.com", "b.com"}

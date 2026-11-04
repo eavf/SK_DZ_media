@@ -121,6 +121,16 @@ class TestMarkUrlDuplicate:
         assert res.deleted is False
         assert self._deleted(conn) == []
 
+    def test_dry_run_decides_but_does_not_write(self):
+        conn = _conn(dup_row={"a_rel": None, "o_id": 3604, "o_rel": None})
+        res = mark_url_duplicate(conn, 3630, apply=False)
+        assert (res.keep_id, res.delete_id, res.deleted) == (3604, 3630, True)
+        assert self._deleted(conn) == []
+
+    def test_dry_run_both_labeled_not_counted(self):
+        conn = _conn(dup_row={"a_rel": 1, "o_id": 42, "o_rel": 1})
+        assert mark_url_duplicate(conn, 99, apply=False).deleted is False
+
     def test_ignores_homepage_final_url(self):
         conn = _conn(dup_row=None)
         mark_url_duplicate(conn, 7)

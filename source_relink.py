@@ -90,10 +90,11 @@ def relink_source(conn, article_id: int, final_url: str | None) -> str | None:
     return new_domain
 
 
-def mark_url_duplicate(conn, article_id: int) -> DuplicateResult | None:
+def mark_url_duplicate(conn, article_id: int, *, apply: bool = True) -> DuplicateResult | None:
     """Nájde iný aktívny článok s rovnakou URL (url_hash / final_url_hash v ľubovoľnej kombinácii).
 
     Zmaže sa novší z dvojice; ak má ručné hodnotenie len novší, zmaže sa starší; ak oba, nič.
+    apply=False: len rozhodne a zaloguje, nič nezapíše (deleted = čo by sa zmazalo).
     Vracia None ak duplikát neexistuje.
     """
     row = conn.execute(text("""
@@ -120,16 +121,18 @@ def mark_url_duplicate(conn, article_id: int) -> DuplicateResult | None:
     elif rel[older] is None:
         keep_id, delete_id = newer, older
     else:
-        logger.info("id=%s: duplikát #%s, oba ručne hodnotené — ponechávam", newer, older)
+        logger.info("%sid=%s: duplikát #%s, oba ručne hodnotené — ponechávam",
+                    "" if apply else "[DRY-RUN] ", newer, older)
         return DuplicateResult(keep_id=older, delete_id=newer, deleted=False)
 
-    conn.execute(text("""
-        UPDATE articles
-        SET deleted_at = NOW(),
-            relevance_note = COALESCE(relevance_note, :note)
-        WHERE id = :id
-    """), {"id": delete_id, "note": f"auto: duplikát #{keep_id}"})
-    logger.info("id=%s: vyradený ako duplikát #%s", delete_id, keep_id)
+    if apply:
+        conn.execute(text("""
+            UPDATE articles
+            SET deleted_at = NOW(),
+                relevance_note = COALESCE(relevance_note, :note)
+            WHERE id = :id
+        """), {"id": delete_id, "note": f"auto: duplikát #{keep_id}"})
+    logger.info("%sid=%s: vyradený ako duplikát #%s", "" if apply else "[DRY-RUN] ", delete_id, keep_id)
     return DuplicateResult(keep_id=keep_id, delete_id=delete_id, deleted=True)
 
 
@@ -179,7 +182,7 @@ def backfill_duplicates(apply: bool) -> int:
     """Vyradí existujúce duplikáty podľa URL (napr. google.com/goto + priamy odkaz na ten istý článok)."""
     engine = get_db_engine()
     with engine.begin() as conn:
-        # novší článok z každej dvojice; tri samostatné JOINy (namiesto OR) sú rýchlejšie
+        # novší článok z každej dvojice (symetrický self-join pokrýva aj o.final_url_hash = a.url_hash)
         ids = sorted({r[0] for r in conn.execute(text("""
             SELECT GREATEST(a.id, o.id) FROM articles a
             JOIN articles o ON o.id <> a.id AND (
@@ -188,15 +191,13 @@ def backfill_duplicates(apply: bool) -> int:
             WHERE a.deleted_at IS NULL AND o.deleted_at IS NULL AND {a_not_root}
         """.format(a_not_root=_NOT_ROOT.format(col="a.final_url_canonical")))).fetchall()})
 
-        count = 0
+        # dry-run používa to isté rozhodovanie ako --apply → počíta len články, ktoré sa naozaj zmažú
+        deleted: set[int] = set()
         for article_id in ids:
-            if apply:
-                res = mark_url_duplicate(conn, article_id)
-                count += 1 if res and res.deleted else 0
-            else:
-                logger.info("[DRY-RUN] id=%s: duplikát podľa URL", article_id)
-                count += 1
-    return count
+            res = mark_url_duplicate(conn, article_id, apply=apply)
+            if res and res.deleted:
+                deleted.add(res.delete_id)
+    return len(deleted)
 
 
 def main() -> int:

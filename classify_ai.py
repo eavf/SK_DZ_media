@@ -5,7 +5,7 @@ Používa NVIDIA API (build.nvidia.com), ktoré je OpenAI-kompatibilné.
 
 Konfigurácia (.env):
   - NVIDIA_API_KEY       — API kľúč z build.nvidia.com (bez kľúča je klasifikácia vypnutá)
-  - NVIDIA_MODEL         — model (default meta/llama-3.2-11b-vision-instruct)
+  - NVIDIA_MODEL         — model (default nvidia/nemotron-3.5-bolt-e4b)
   - NVIDIA_BASE_URL      — default https://integrate.api.nvidia.com/v1
   - AI_CLASSIFY_ENABLED  — 0 = vypnuté aj keď je kľúč nastavený (default 1)
   - AI_CLASSIFY_DELAY    — min. sekúnd medzi volaniami (default 1.5, free tier má rate limit)
@@ -52,7 +52,7 @@ def _api_key() -> str:
 
 
 def _model() -> str:
-    return os.getenv("NVIDIA_MODEL", "").strip() or "meta/llama-3.2-11b-vision-instruct"
+    return os.getenv("NVIDIA_MODEL", "").strip() or "nvidia/nemotron-3.5-bolt-e4b"
 
 
 def _base_url() -> str:

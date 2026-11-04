@@ -95,7 +95,7 @@ Key `.env` variables:
 | `FLASK_PORT` | Web server port (default: `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Email notifications (optional) |
 | `NVIDIA_API_KEY` | NVIDIA API key for the AI sports filter (optional — filter is disabled without it) |
-| `NVIDIA_MODEL` | LLM model (default: `meta/llama-3.2-11b-vision-instruct`) |
+| `NVIDIA_MODEL` | LLM model (default: `nvidia/nemotron-3.5-bolt-e4b`) |
 | `NVIDIA_TRANSLATE_MODEL` | LLM model for `TRANSLATOR_BACKEND=nvidia` (default: `nvidia/nemotron-3-super-120b-a12b`) |
 | `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Turn the AI filter off (`0`) / min. seconds between API calls (default `1.5`) |
 
@@ -425,7 +425,7 @@ Kľúčové premenné v `.env`:
 | `FLASK_PORT` | Port webservera (default: `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Emailové notifikácie (voliteľné) |
 | `NVIDIA_API_KEY` | NVIDIA API kľúč pre AI filter športu (voliteľné — bez neho je filter vypnutý) |
-| `NVIDIA_MODEL` | LLM model (default: `meta/llama-3.2-11b-vision-instruct`) |
+| `NVIDIA_MODEL` | LLM model (default: `nvidia/nemotron-3.5-bolt-e4b`) |
 | `NVIDIA_TRANSLATE_MODEL` | LLM model pre `TRANSLATOR_BACKEND=nvidia` (default: `nvidia/nemotron-3-super-120b-a12b`) |
 | `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Vypnutie AI filtra (`0`) / min. sekúnd medzi volaniami API (default `1.5`) |
 
@@ -745,7 +745,7 @@ Variables clés dans `.env` :
 | `FLASK_PORT` | Port du serveur web (défaut : `5088`) |
 | `SMTP_HOST / SMTP_USER / SMTP_PASS / NOTIFY_TO` | Notifications e-mail (optionnel) |
 | `NVIDIA_API_KEY` | Clé API NVIDIA pour le filtre IA du sport (optionnel — filtre désactivé sans clé) |
-| `NVIDIA_MODEL` | Modèle LLM (par défaut : `meta/llama-3.2-11b-vision-instruct`) |
+| `NVIDIA_MODEL` | Modèle LLM (par défaut : `nvidia/nemotron-3.5-bolt-e4b`) |
 | `NVIDIA_TRANSLATE_MODEL` | Modèle LLM pour `TRANSLATOR_BACKEND=nvidia` (par défaut : `nvidia/nemotron-3-super-120b-a12b`) |
 | `AI_CLASSIFY_ENABLED / AI_CLASSIFY_DELAY` | Désactiver le filtre IA (`0`) / secondes min. entre appels API (par défaut `1.5`) |
 

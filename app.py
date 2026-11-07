@@ -354,10 +354,10 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
 
 def browse_q_from_request():
     """
-    Vytiahne len browse filtre (days/ok/sk/rel/del/av) z requestu.
+    Vytiahne len browse filtre (days/extraction/sk/rel/del/av/run/rstate) z requestu.
     Funguje pre GET aj POST, lebo request.values = args + form.
     """
-    allowed = {"days", "ok", "sk", "rel", "del", "av", "run", "rstate"}
+    allowed = {"days", "extraction", "sk", "rel", "del", "av", "run", "rstate"}
     q = request.values.to_dict(flat=True)
     return {k: v for k, v in q.items() if k in allowed}
 

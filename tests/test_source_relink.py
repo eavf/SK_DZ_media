@@ -10,7 +10,7 @@ import requests
 
 from extract_articles_reworked import CandidateArticle, extract_candidate
 import extract_articles_reworked
-from source_relink import domain_of, is_listing_url, mark_url_duplicate, relink_source, url_from_fetch_error
+from source_relink import domain_of, is_listing_url, mark_content_duplicate, mark_url_duplicate, relink_source, url_from_fetch_error
 
 
 def _conn(current_domain: str = "google.com", dup_row: dict | None = None):
@@ -245,3 +245,34 @@ class TestIsListingUrl:
     ])
     def test_article(self, url):
         assert not is_listing_url(url)
+
+
+class TestMarkContentDuplicate:
+    @staticmethod
+    def _deleted(conn):
+        return [p for q, p in conn.calls if "deleted_at = NOW()" in q]
+
+    def test_no_duplicate(self):
+        conn = _conn(dup_row=None)
+        assert mark_content_duplicate(conn, 7) is None
+        assert self._deleted(conn) == []
+
+    def test_newer_deleted_with_text_note(self):
+        # pressbee: AMP verzia (#2996) a pôvodná (#2970) s rovnakým textom
+        conn = _conn(dup_row={"a_rel": None, "o_id": 2970, "o_rel": None})
+        res = mark_content_duplicate(conn, 2996)
+        assert (res.keep_id, res.delete_id, res.deleted) == (2970, 2996, True)
+        assert self._deleted(conn) == [{"id": 2996, "note": "auto: duplikát #2970 (text)"}]
+
+    def test_both_labeled_kept(self):
+        conn = _conn(dup_row={"a_rel": 1, "o_id": 184, "o_rel": 1})
+        assert mark_content_duplicate(conn, 188).deleted is False
+        assert self._deleted(conn) == []
+
+    def test_same_domain_and_min_length_in_query(self):
+        import source_relink
+        conn = _conn(dup_row=None)
+        mark_content_duplicate(conn, 7)
+        sql, params = next((q, p) for q, p in conn.calls if "JOIN articles o" in q)
+        assert "o.source_id = a.source_id" in sql and "o.content_hash = a.content_hash" in sql
+        assert params["min_chars"] == source_relink.MIN_DUP_TEXT_CHARS == 500

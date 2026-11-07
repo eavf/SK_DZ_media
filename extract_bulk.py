@@ -9,6 +9,7 @@ Pre každý článok kde content_text IS NULL a deleted_at IS NULL:
   - ak extrakcia zlyhala → zapíše chybu, článok ostáva v DB
   - článok z google.com/goto sa preradí na skutočnú doménu (source_relink.py)
   - duplikát podľa URL (url_hash / final_url_hash) → novší sa soft-deletne (source_relink.py)
+  - duplikát podľa textu (rovnaký content_hash na tej istej doméne) → novší sa soft-deletne
 
 Použitie:
     python extract_bulk.py [--limit N] [--dry-run]
@@ -39,7 +40,7 @@ from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_cli, init_context
 from translate import translate_ar_fr
 from classify_ai import ClassificationStopped, classify_and_mark, classify_pending
-from source_relink import mark_url_duplicate, relink_source
+from source_relink import mark_content_duplicate, mark_url_duplicate, relink_source
 
 s, paths = init_context()
 logger = logging.getLogger("extract_bulk")
@@ -398,6 +399,13 @@ def main() -> int:
 
         with engine.begin() as conn:
             status = save_result(conn, article_id, result, row.get("published_at_real"), row.get("published_at_text"))
+
+        # Ten istý článok pod inou URL (AMP, iná kategória) — pred AI a prekladom, nech sa za duplikát neplatí
+        if status == "ok":
+            with engine.begin() as conn:
+                dup = mark_content_duplicate(conn, article_id)
+            if dup and dup.deleted and dup.delete_id == article_id:
+                status = "duplicate"
 
         # AI klasifikácia pred prekladom — športové články neprekladáme
         if status == "ok" and not ai_stopped:

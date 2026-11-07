@@ -13,6 +13,7 @@ Volá sa z extract_bulk.py a refetch_article.py. Ako CLI dorovná existujúce č
      od Google, cieľový web sa neotvára) — staré články stiahnuté pred 13.10.2026 final_url neuložili
   2. preradí články pod google.com podľa final_url (alebo URL z fetch_error)
   3. vyradí duplikáty podľa URL
+  4. vyradí duplikáty podľa textu (rovnaký content_hash na tej istej doméne, text ≥ MIN_DUP_TEXT_CHARS)
 
     python source_relink.py           # dry-run: všetko prebehne v transakcii a na konci sa vráti (rollback)
     python source_relink.py --apply   # skutočne zapíše
@@ -53,6 +54,9 @@ _LISTING_PY = re.compile(LISTING_RE, re.IGNORECASE)
 def is_listing_url(canon: str | None) -> bool:
     """True pre titulnú/jazykovú stránku alebo výpis — taká final_url nie je dôkaz duplikátu."""
     return bool(canon and _LISTING_PY.search(canon))
+
+# kratší „text“ býva zlá extrakcia (cookie lišta, pätička) — rovnaký u rôznych článkov
+MIN_DUP_TEXT_CHARS = 500
 
 RESOLVE_DELAY = 1.0     # s medzi požiadavkami na Google (nech nezačne blokovať)
 RESOLVE_TIMEOUT = (10, 20)
@@ -137,6 +141,33 @@ def mark_url_duplicate(conn, article_id: int, *, apply: bool = True) -> Duplicat
     if not row:
         return None
 
+    return _resolve_pair(conn, article_id, row, apply=apply, note_suffix="")
+
+
+def mark_content_duplicate(conn, article_id: int, *, apply: bool = True) -> DuplicateResult | None:
+    """Nájde iný aktívny článok z tej istej domény s rovnakým textom (content_hash).
+
+    Zachytí ten istý článok pod inou URL (AMP, iná kategória, iný slug). Text kratší ako
+    MIN_DUP_TEXT_CHARS sa neporovnáva. Pravidlá mazania ako pri mark_url_duplicate.
+    """
+    row = conn.execute(text("""
+        SELECT a.relevance AS a_rel, o.id AS o_id, o.relevance AS o_rel
+        FROM articles a
+        JOIN articles o
+          ON o.id <> a.id AND o.deleted_at IS NULL
+         AND o.source_id = a.source_id AND o.content_hash = a.content_hash
+        WHERE a.id = :id AND a.deleted_at IS NULL AND a.content_hash IS NOT NULL
+          AND CHAR_LENGTH(a.content_text) >= :min_chars
+        ORDER BY o.id
+        LIMIT 1
+    """), {"id": article_id, "min_chars": MIN_DUP_TEXT_CHARS}).mappings().fetchone()
+    if not row:
+        return None
+    return _resolve_pair(conn, article_id, row, apply=apply, note_suffix=" (text)")
+
+
+def _resolve_pair(conn, article_id: int, row, *, apply: bool, note_suffix: str) -> DuplicateResult:
+    """Rozhodne, ktorý z dvojice sa zmaže (novší; ak má ručné hodnotenie len novší, tak starší; ak oba, nič)."""
     rel = {article_id: row["a_rel"], row["o_id"]: row["o_rel"]}
     older, newer = sorted(rel)
     if rel[newer] is None:
@@ -144,8 +175,8 @@ def mark_url_duplicate(conn, article_id: int, *, apply: bool = True) -> Duplicat
     elif rel[older] is None:
         keep_id, delete_id = newer, older
     else:
-        logger.info("%sid=%s: duplikát #%s, oba ručne hodnotené — ponechávam",
-                    "" if apply else "[DRY-RUN] ", newer, older)
+        logger.info("%sid=%s: duplikát #%s%s, oba ručne hodnotené — ponechávam",
+                    "" if apply else "[DRY-RUN] ", newer, older, note_suffix)
         return DuplicateResult(keep_id=older, delete_id=newer, deleted=False)
 
     if apply:
@@ -154,8 +185,9 @@ def mark_url_duplicate(conn, article_id: int, *, apply: bool = True) -> Duplicat
             SET deleted_at = NOW(),
                 relevance_note = COALESCE(relevance_note, :note)
             WHERE id = :id
-        """), {"id": delete_id, "note": f"auto: duplikát #{keep_id}"})
-    logger.info("%sid=%s: vyradený ako duplikát #%s", "" if apply else "[DRY-RUN] ", delete_id, keep_id)
+        """), {"id": delete_id, "note": f"auto: duplikát #{keep_id}{note_suffix}"})
+    logger.info("%sid=%s: vyradený ako duplikát #%s%s", "" if apply else "[DRY-RUN] ",
+                delete_id, keep_id, note_suffix)
     return DuplicateResult(keep_id=keep_id, delete_id=delete_id, deleted=True)
 
 
@@ -254,6 +286,23 @@ def backfill_duplicates(conn) -> int:
     return len(deleted)
 
 
+def backfill_content_duplicates(conn) -> int:
+    """Vyradí existujúce duplikáty podľa textu (rovnaký content_hash na tej istej doméne)."""
+    ids = sorted({r[0] for r in conn.execute(text("""
+        SELECT GREATEST(a.id, o.id) FROM articles a
+        JOIN articles o ON o.id <> a.id AND o.source_id = a.source_id AND o.content_hash = a.content_hash
+        WHERE a.deleted_at IS NULL AND o.deleted_at IS NULL
+          AND CHAR_LENGTH(a.content_text) >= :min_chars
+    """), {"min_chars": MIN_DUP_TEXT_CHARS}).fetchall()})
+
+    deleted: set[int] = set()
+    for article_id in ids:
+        res = mark_content_duplicate(conn, article_id)
+        if res and res.deleted:
+            deleted.add(res.delete_id)
+    return len(deleted)
+
+
 def main() -> int:
     init_cli("source_relink")
     p = argparse.ArgumentParser(description="Preradí články z google.com na skutočný zdroj a vyradí duplikáty podľa URL.")
@@ -269,6 +318,7 @@ def main() -> int:
             resolved = resolve_missing(conn)
             counts = backfill(conn)
             duplicates = backfill_duplicates(conn)
+            content_duplicates = backfill_content_duplicates(conn)
         except Exception:
             tx.rollback()
             raise
@@ -278,9 +328,9 @@ def main() -> int:
             tx.rollback()
 
     logger.info("%sHotovo: zistených presmerovaní=%s (nezistených=%s), preradených=%s, "
-                "bez známej cieľovej URL=%s, vyradených duplikátov=%s",
+                "bez známej cieľovej URL=%s, vyradených duplikátov podľa URL=%s, podľa textu=%s",
                 prefix, resolved["resolved"], resolved["failed"], counts["relinked"],
-                counts["unresolved"], duplicates)
+                counts["unresolved"], duplicates, content_duplicates)
     return 0
 
 

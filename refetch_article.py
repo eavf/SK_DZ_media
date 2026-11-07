@@ -20,7 +20,7 @@ from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_context
 from translate import translate_ar_fr
 from classify_ai import classify_and_mark
-from source_relink import mark_url_duplicate, relink_source
+from source_relink import mark_content_duplicate, mark_url_duplicate, relink_source
 
 s, paths = init_context()
 logger = logging.getLogger("refetch_article")
@@ -127,6 +127,13 @@ def main() -> int:
     if dup and dup.deleted and dup.delete_id == article_id:
         logger.info("OK: id=%s, vyradený ako duplikát #%s", article_id, dup.keep_id)
         return 0
+
+    if result.extraction_ok:
+        with get_db_engine().begin() as conn:
+            dup = mark_content_duplicate(conn, article_id)
+        if dup and dup.deleted and dup.delete_id == article_id:
+            logger.info("OK: id=%s, vyradený ako duplikát #%s (text)", article_id, dup.keep_id)
+            return 0
 
     if result.extraction_ok:
         # AI klasifikácia (len ak článok ešte nebol klasifikovaný ani ručne označený)

@@ -1506,15 +1506,55 @@ def search_mfa_run():
                            mfa_articles=mfa_articles, mfa_when=when)
 
 
+def _run_db_stats() -> dict[str, dict]:
+    """Štatistiky ingestov podľa runs.bundle_filename ('run_XXX/news_bundle.json').
+
+    ingests / last_ingest — koľkokrát a kedy naposledy bol bundle ingestovaný
+    linked     — článkov prepojených s runom (run_articles)
+    new        — články, ktoré do DB prvýkrát pridal tento bundle (najstarší run článku patrí jemu)
+    extracted / errors / pending — aktívne články s textom / s chybou fetchu / ešte nestiahnuté
+    removed    — soft-deleted (bez SK kontextu, duplikát, šport, ručne)
+    """
+    try:
+        with get_db_engine().connect() as conn:
+            rows = conn.execute(text(r"""
+                SELECT r.bundle_filename AS bf,
+                       COUNT(DISTINCT r.id) AS ingests,
+                       MAX(r.started_at) AS last_ingest,
+                       COUNT(DISTINCT a.id) AS linked,
+                       COUNT(DISTINCT CASE WHEN f.first_run = ra.run_id THEN a.id END) AS new,
+                       COUNT(DISTINCT CASE WHEN a.deleted_at IS NULL AND a.content_text IS NOT NULL
+                                           THEN a.id END) AS extracted,
+                       COUNT(DISTINCT CASE WHEN a.deleted_at IS NULL AND a.content_text IS NULL
+                                            AND a.fetch_error IS NOT NULL THEN a.id END) AS errors,
+                       COUNT(DISTINCT CASE WHEN a.deleted_at IS NULL AND a.content_text IS NULL
+                                            AND a.fetch_error IS NULL THEN a.id END) AS pending,
+                       COUNT(DISTINCT CASE WHEN a.deleted_at IS NOT NULL THEN a.id END) AS removed
+                FROM runs r
+                LEFT JOIN run_articles ra ON ra.run_id = r.id
+                LEFT JOIN articles a ON a.id = ra.article_id
+                LEFT JOIN (SELECT article_id, MIN(run_id) AS first_run
+                           FROM run_articles GROUP BY article_id) f ON f.article_id = a.id
+                WHERE r.bundle_filename LIKE '%/%'
+                GROUP BY r.bundle_filename
+            """)).mappings().fetchall()
+    except Exception:
+        logger.exception("Process: štatistiky runov z DB sa nepodarilo načítať")
+        return {}
+    return {row["bf"]: dict(row) for row in rows}
+
+
 def _list_runs() -> list[dict]:
-    """Vráti zoznam runov zoradených od najnovšieho."""
+    """Vráti zoznam runov zoradených od najnovšieho, so štatistikou ingestu z DB (entry["db"], None = neingestovaný)."""
     import json as _json
+    db_stats = _run_db_stats()
     runs = []
     for run_dir in sorted(paths.runs_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
         bundle = run_dir / "news_bundle.json"
         if not bundle.exists():
             continue
-        entry = {"run_id": run_dir.name, "bundle_path": str(bundle), "articles": 0, "timestamp": "", "hl": "", "gl": ""}
+        entry = {"run_id": run_dir.name, "bundle_path": str(bundle), "articles": 0, "timestamp": "", "hl": "", "gl": "",
+                 "db": db_stats.get(f"{run_dir.name}/{bundle.name}")}
         try:
             data = _json.loads(bundle.read_text(encoding="utf-8"))
             rc = data.get("responses_clean") or {}

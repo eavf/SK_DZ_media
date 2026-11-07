@@ -17,6 +17,9 @@
     margin-bottom: 10px;
   }
   .result-summary { margin-top: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .run-table td.num, .run-table th.num { text-align: right; white-space: nowrap; }
+  .run-table tr.not-ingested td { background: rgba(255,204,102,.05); }
+  .run-table .zero { opacity: .35; }
 </style>
 {% endblock %}
 
@@ -56,7 +59,10 @@
 
   <div class="box">
     <h2>Spracovanie surových dát</h2>
-    <div class="sub">Vyber run a spusti ingest do DB (ingest_to_dz_news_reworked.py).</div>
+    <div class="sub">Vyber run a spusti ingest do DB (ingest_to_dz_news_reworked.py).
+      Stĺpce vpravo sú z DB: <b>Nové</b> = články, ktoré do DB pridal prvýkrát tento run;
+      <b>Extrah.</b> / <b>Chyby</b> / <b>Čaká</b> = aktívne články s textom / s chybou sťahovania / ešte nestiahnuté;
+      <b>Vyrad.</b> = soft-deleted (bez SK kontextu, duplikát, šport).</div>
 
     {% if runs %}
       <form method="post" action="/process/ingest_latest" id="ingestForm">
@@ -90,15 +96,25 @@
               <th>Run</th>
               <th style="width:120px">Čas</th>
               <th style="width:80px">hl / gl</th>
-              <th style="width:80px">Články</th>
+              <th class="num" style="width:70px" title="Počet výsledkov v bundli">Články</th>
+              <th style="width:150px">Ingest</th>
+              <th class="num" title="Články, ktoré do DB pridal prvýkrát tento run">Nové</th>
+              <th class="num" title="Aktívne články s textom">Extrah.</th>
+              <th class="num" title="Aktívne články s chybou sťahovania">Chyby</th>
+              <th class="num" title="Aktívne články, ktoré ešte neboli stiahnuté">Čaká</th>
+              <th class="num" title="Soft-deleted: bez SK kontextu, duplikát, šport, ručne">Vyrad.</th>
             </tr>
           </thead>
           <tbody>
+            {# predvolene vybraný najnovší neingestovaný run, inak najnovší #}
+            {% set pending_runs = runs | selectattr("db", "none") | list %}
+            {% set default_path = (pending_runs[0] if pending_runs else runs[0]).bundle_path %}
             {% for r in runs %}
-              <tr class="trow {% if r.bundle_path == ingested_bundle|default('') %}ok{% endif %}">
+              {% set d = r.db %}
+              <tr class="trow {% if r.bundle_path == ingested_bundle|default('') %}ok{% elif not d %}not-ingested{% endif %}">
                 <td>
                   <input type="radio" name="bundle_path" value="{{ r.bundle_path }}"
-                    {% if loop.first %}checked{% endif %}>
+                    {% if r.bundle_path == default_path %}checked{% endif %}>
                 </td>
                 <td>
                   <span class="mono small">{{ r.run_id }}</span>
@@ -107,7 +123,22 @@
                 </td>
                 <td><div class="small">{{ r.timestamp|ts_human if r.timestamp else "-" }}</div></td>
                 <td><div class="small">{{ r.hl or "-" }} / {{ r.gl or "-" }}</div></td>
-                <td><span class="pill">{{ r.articles }}</span></td>
+                <td class="num"><span class="pill">{{ r.articles }}</span></td>
+                {% if d %}
+                  <td>
+                    <span class="pill ok" title="Posledný ingest">✓ {{ d.last_ingest.strftime("%d.%m. %H:%M") }}</span>
+                    {% if d.ingests > 1 %}<span class="small muted" title="Počet ingestov tohto bundlu">{{ d.ingests }}×</span>{% endif %}
+                  </td>
+                  {% for key in ["new", "extracted", "errors", "pending", "removed"] %}
+                    <td class="num">
+                      {% if d[key] %}
+                        <span class="pill {{ {'errors': 'bad', 'pending': 'warn'}.get(key, '') }}">{{ d[key] }}</span>
+                      {% else %}<span class="small zero">0</span>{% endif %}
+                    </td>
+                  {% endfor %}
+                {% else %}
+                  <td colspan="6"><span class="pill warn">neingestovaný</span></td>
+                {% endif %}
               </tr>
             {% endfor %}
           </tbody>

@@ -646,6 +646,16 @@ def preload_article_ids_by_url_hash(conn, url_hashes: set[str]) -> dict[str, int
 # Orchestration
 # ---------------------------------------------------------------------------
 
+def bundle_label(bundle_path: Path) -> str:
+    """Hodnota pre runs.bundle_filename: '<priečinok runu>/<súbor>', napr. 'run_20261104_004531/news_bundle.json'.
+
+    Symlink bundle/latest sa rozbalí na skutočný priečinok runu — stránka Process podľa toho páruje
+    priečinky v bundle/runs/ so záznamami v DB.
+    """
+    p = bundle_path.resolve()
+    return f"{p.parent.name}/{p.name}"
+
+
 def process_file(bundle_path: Path, *, use_clean: bool = True) -> tuple[int, int, int]:
     default_query_id = _infer_query_id_from_name(bundle_path)
 
@@ -663,12 +673,12 @@ def process_file(bundle_path: Path, *, use_clean: bool = True) -> tuple[int, int
     with engine.begin() as conn:
         run_data = payload.get("run") if isinstance(payload, dict) else None
         if isinstance(run_data, dict) and run_data:
-            run_id = insert_run(conn, run_data, bundle_path.name)
+            run_id = insert_run(conn, run_data, bundle_label(bundle_path))
         else:
             run_id = insert_minimal_run(
                 conn,
                 engine=_engine_from_payload(payload),
-                bundle_filename=bundle_path.name,
+                bundle_filename=bundle_label(bundle_path),
             )
 
         # 1. preload existing sources once

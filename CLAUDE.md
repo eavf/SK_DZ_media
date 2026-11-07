@@ -58,6 +58,7 @@ python classify_existing.py [--apply] [--limit N]  # Backfill AI sport classific
 python source_relink.py [--apply]              # Relink google.com/goto articles to their real domain + remove URL duplicates (dry-run by default)
 python translate_missing.py [--apply] [--limit N]  # Translate AR articles that have content_text but no content_text_fr (dry-run by default)
 python normalize_url_scheme.py [--apply]        # Recompute stored url/final_url canonical+hash after canonicalization change http→https (dry-run by default)
+python backfill_run_bundles.py [--apply]        # Fill run folder into runs.bundle_filename for old ingests (matches by article url_hash + time; dry-run by default)
 python scheduler.py                            # Daily pipeline at 15:00 + email notification
 python setup_db.py                             # One-time DB init + first admin user
 python create_admin.py [--role user|power|admin]
@@ -95,7 +96,7 @@ Web dashboard              (browse, label, translate, export)
 - **app.py** — Flask app with ~53 routes. Uses SQLAlchemy `text()` queries directly (no ORM models). Filter state is built as SQL fragments via helper functions. Route groups:
   - browse / stats / export (CSV, Word), errors
   - article detail, label, edit, fetch, translate, set_content, delete/undelete
-  - search (SerpAPI, MFA) and process (ingest, extract_bulk as background jobs, `/process/job/<id>`)
+  - search (SerpAPI, MFA) and process (ingest, extract_bulk as background jobs, `/process/job/<id>`); the Process run table joins `bundle/runs/<run>/news_bundle.json` with `runs.bundle_filename` (`run_XXX/news_bundle.json`, written by ingest via `bundle_label()`) and shows per run: ingest count/time, new, extracted, errors, pending, removed articles
   - sources (create, note, avoid/unavoid), users
   - `/admin/queries`, `/admin/search-terms`, `/admin/maintenance` (translator backend, fix-dates, DB backup/restore)
 - **api.py** — Read-only JSON API blueprint (`/api`) for AI agents. Auth: `API_KEYS` from `.env` (comma-separated) via `Authorization: Bearer <key>` or `X-API-Key`; without keys the API returns 503. Endpoints: `GET /api/articles` (period `from`/`to`, default last 7 days, `date_field=found|published`, filters `relevance`, `topic` (computed from `topics.json` keywords), `lang`, `source`, `has_text`, `include_text`, `limit`/`offset`), `GET /api/articles/<id>` (full text), `GET /api/meta`, `GET /api/openapi.json` (public). Deleted articles are never returned.

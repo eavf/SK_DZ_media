@@ -126,13 +126,17 @@
                 <td class="num"><span class="pill">{{ r.articles }}</span></td>
                 {% if d %}
                   <td>
-                    <span class="pill ok" title="Posledný ingest">✓ {{ d.last_ingest.strftime("%d.%m. %H:%M") }}</span>
+                    <a class="pill ok" title="Posledný ingest — zobraziť všetky články runu ({{ d.linked }})"
+                       href="/browse?run={{ r.run_id }}&days=0&extraction=all&rel=all&del=1&av=1&sk=0">✓ {{ d.last_ingest.strftime("%d.%m. %H:%M") }}</a>
                     {% if d.ingests > 1 %}<span class="small muted" title="Počet ingestov tohto bundlu">{{ d.ingests }}×</span>{% endif %}
                   </td>
                   {% for key in ["new", "extracted", "errors", "pending", "removed"] %}
                     <td class="num">
                       {% if d[key] %}
-                        <span class="pill {{ {'errors': 'bad', 'pending': 'warn'}.get(key, '') }}">{{ d[key] }}</span>
+                        {# všetky stavy vrátane zmazaných a skrytých zdrojov — čísla sedia so štatistikou #}
+                        <a class="pill {{ {'errors': 'bad', 'pending': 'warn'}.get(key, '') }}"
+                           href="/browse?run={{ r.run_id }}&rstate={{ key }}&days=0&extraction=all&rel=all&del=1&av=1&sk=0"
+                           title="Zobraziť články">{{ d[key] }}</a>
                       {% else %}<span class="small zero">0</span>{% endif %}
                     </td>
                   {% endfor %}

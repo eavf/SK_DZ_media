@@ -255,8 +255,31 @@ def parse_del_mode(value: str) -> tuple[bool, bool]:
     return value in ("1", "ai"), value == "ai"
 
 
+# Filter podľa runu (preklik zo stránky Process): run = priečinok runu, rstate = stĺpec štatistiky
+RUN_NAME_RE = re.compile(r"^[\w.-]+$")
+RUN_STATES = {
+    # rovnaké definície ako _run_db_stats()
+    "new": """a.id IN (SELECT ra2.article_id FROM run_articles ra2 JOIN runs r2 ON r2.id = ra2.run_id
+                       WHERE r2.bundle_filename = :run_bf
+                         AND ra2.run_id = (SELECT MIN(x.run_id) FROM run_articles x WHERE x.article_id = ra2.article_id))""",
+    "extracted": "a.deleted_at IS NULL AND a.content_text IS NOT NULL",
+    "errors": "a.deleted_at IS NULL AND a.content_text IS NULL AND a.fetch_error IS NOT NULL",
+    "pending": "a.deleted_at IS NULL AND a.content_text IS NULL AND a.fetch_error IS NULL",
+    "removed": "a.deleted_at IS NOT NULL",
+}
+RUN_STATE_LABELS = {"new": "nové", "extracted": "extrahované", "errors": "chyby", "pending": "čaká", "removed": "vyradené"}
+
+
+def parse_run_filter(run: str | None, rstate: str | None) -> tuple[str | None, str | None]:
+    """Validuje parametre run/rstate z requestu; neplatné hodnoty ignoruje."""
+    run = (run or "").strip()
+    run = run if run and RUN_NAME_RE.match(run) else None
+    rstate = rstate if run and rstate in RUN_STATES else None
+    return run, rstate
+
+
 def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str, include_deleted: bool, include_avoided: bool,
-                  only_ai_sport: bool = False):
+                  only_ai_sport: bool = False, run: str | None = None, run_state: str | None = None):
     """
     Zostaví WHERE klauzulu pre browse/export.
 
@@ -265,6 +288,8 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
     include_deleted: True  → zahrnie záznamy so soft-delete (deleted_at IS NOT NULL)
     include_avoided: True  → zahrnie záznamy zo zdrojov s is_avoided=1
     only_ai_sport:   True  → len články vyradené AI ako šport (ai_label='sport')
+    run:             priečinok runu (run_XXX) → len články prepojené s jeho ingestami (run_articles)
+    run_state:       new | extracted | errors | pending | removed — ako stĺpce na stránke Process
 
     Tlačítká na browse.html:
       Reset        — days=0, extraction=all, rel=1_or_null, del=0, av=0  (default pri /browse)
@@ -287,6 +312,13 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
 
     if only_ai_sport:
         where.append("a.ai_label = 'sport'")
+
+    if run:
+        params["run_bf"] = f"{run}/news_bundle.json"
+        where.append("""a.id IN (SELECT ra.article_id FROM run_articles ra JOIN runs r ON r.id = ra.run_id
+                                 WHERE r.bundle_filename = :run_bf)""")
+        if run_state:
+            where.append(f"({RUN_STATES[run_state]})")
 
     if extraction == "unextracted":
         where.append("a.content_text IS NULL")
@@ -325,7 +357,7 @@ def browse_q_from_request():
     Vytiahne len browse filtre (days/ok/sk/rel/del/av) z requestu.
     Funguje pre GET aj POST, lebo request.values = args + form.
     """
-    allowed = {"days", "ok", "sk", "rel", "del", "av"}
+    allowed = {"days", "ok", "sk", "rel", "del", "av", "run", "rstate"}
     q = request.values.to_dict(flat=True)
     return {k: v for k, v in q.items() if k in allowed}
 
@@ -443,8 +475,10 @@ def browse():
     del_mode = request.args.get("del", "0")
     include_deleted, only_ai_sport = parse_del_mode(del_mode)
     include_avoided = request.args.get("av", "0") == "1"
+    run, rstate = parse_run_filter(request.args.get("run"), request.args.get("rstate"))
 
-    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided, only_ai_sport)
+    where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided, only_ai_sport,
+                                      run=run, run_state=rstate)
 
     limit = 300 if days > 0 or extraction == "all" else 100
     sql = f"""
@@ -511,6 +545,9 @@ def browse():
         limit=limit,
         stats=stats,
         port=settings.flask_port,
+        run=run,
+        rstate=rstate,
+        rstate_label=RUN_STATE_LABELS.get(rstate),
     )
 
 

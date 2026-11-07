@@ -52,6 +52,11 @@
   {% if relevance != 'all' %}<span class="pill {% if relevance == '1' or relevance == '1_or_null' %}ok{% else %}warn{% endif %}">{% if relevance == '1' %}relevantné{% elif relevance == '1_or_null' %}rel + neoznačené{% elif relevance == '0' %}nerelevantné{% elif relevance == '0_or_null' %}irel + neoznačené{% elif relevance == 'null' %}neoznačené{% endif %}</span>{% endif %}
   {% if del_mode == 'ai' %}<span class="pill warn">vyradené AI (šport)</span>{% elif include_deleted %}<span class="pill warn">+ zmazané</span>{% endif %}
   {% if include_avoided %}<span class="pill warn">+ skryté</span>{% endif %}
+  {% if run %}
+    <span class="pill info" title="Články z runu {{ run }}">run: {{ run }}{% if rstate_label %} · {{ rstate_label }}{% endif %}</span>
+    <a class="pill pill-btn" href="/browse?days={{ days }}&extraction={{ extraction }}&sk={{ 1 if only_slovak else 0 }}&rel={{ relevance }}&del={{ del_mode }}&av={{ 1 if include_avoided else 0 }}" title="Zrušiť filter runu">× run</a>
+    <a class="pill pill-btn" href="/process" title="Späť na zoznam runov">Process</a>
+  {% endif %}
 {% endblock %}
 
 {% block content %}
@@ -65,6 +70,7 @@
     <div class="box">
       <h2>Filtre</h2>
       <form method="get" action="/browse" style="margin-top: 0">
+        {% if run %}<input type="hidden" name="run" value="{{ run }}"><input type="hidden" name="rstate" value="{{ rstate or '' }}">{% endif %}
         <div class="filter-list">
           <div class="filter-item">
             <label for="f-days">Počet dní (0 = všetky)</label>
@@ -180,6 +186,7 @@
   <input type="hidden" name="rel" value="{{ relevance }}">
   <input type="hidden" name="del" value="{{ del_mode }}">
   <input type="hidden" name="av" value="{{ 1 if include_avoided else 0 }}">
+  {% if run %}<input type="hidden" name="run" value="{{ run }}"><input type="hidden" name="rstate" value="{{ rstate or '' }}">{% endif %}
 
   <table class="table">
     <thead>
@@ -325,7 +332,8 @@
         f.action = "/label/" + d.id;
         f.style.display = "none";
         [["relevance", d.rel], ["days", d.days], ["extraction", d.extraction],
-         ["sk", d.sk], ["rel", d.relfilter], ["del", d.del], ["av", d.av]
+         ["sk", d.sk], ["rel", d.relfilter], ["del", d.del], ["av", d.av],
+         ["run", {{ (run or "") | tojson }}], ["rstate", {{ (rstate or "") | tojson }}]
         ].forEach(function([name, value]){
           const i = document.createElement("input");
           i.type = "hidden"; i.name = name; i.value = value;

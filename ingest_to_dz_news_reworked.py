@@ -8,13 +8,14 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import urlparse
 
 from sqlalchemy import text
 
 import logging
 
 from config.config import get_db_engine, init_context, init_cli
+from extract_articles_reworked import DROP_QUERY_KEYS, canonicalize_url  # jedna definícia pre ingest aj extrakciu
 from translate import translate_ar_fr
 from text_filters import find_bad_word
 
@@ -30,7 +31,6 @@ logger = logging.getLogger("ingest_to_dz_news")
 # Only configs needed for ingestion / dedupe
 PREFERRED_DOMAINS = s.preferred_domains
 SOURCE_RANK = s.source_rank
-DROP_QUERY_KEYS = set(s.drop_query_keys or set())
 BLOCKLIST_DOMAINS = s.blocklist_domains or set()
 BAD_PATH_MARKERS = s.bad_path_markers or set()
 TITLE_BAD_WORDS = s.title_bad_words or set()
@@ -58,32 +58,6 @@ def domain_of(url: str) -> str:
     if host.startswith("www."):
         host = host[4:]
     return host
-
-
-def canonicalize_url(url: str) -> str:
-    if not url:
-        return ""
-
-    p = urlparse(url.strip())
-    scheme = (p.scheme or "https").lower()
-
-    netloc = (p.netloc or "").lower()
-    if netloc.startswith("www."):
-        netloc = netloc[4:]
-
-    q = []
-    for k, v in parse_qsl(p.query, keep_blank_values=True):
-        if k in DROP_QUERY_KEYS:
-            continue
-        q.append((k, v))
-    q.sort()
-    query = urlencode(q, doseq=True)
-
-    path = p.path or "/"
-    if path != "/" and path.endswith("/"):
-        path = path[:-1]
-
-    return urlunparse((scheme, netloc, path, "", query, ""))
 
 
 def sha256_hex(s: str) -> str:
@@ -876,13 +850,12 @@ def get_url_hash_duplicates(conn) -> list[dict]:
 
 def main():
 
-    global s, paths, logger, PREFERRED_DOMAINS, SOURCE_RANK, DROP_QUERY_KEYS
+    global s, paths, logger, PREFERRED_DOMAINS, SOURCE_RANK
 
     s, paths, logger = init_cli("ingest_to_dz_news")
 
     PREFERRED_DOMAINS = s.preferred_domains
     SOURCE_RANK = s.source_rank
-    DROP_QUERY_KEYS = set(s.drop_query_keys or set())
 
     logger.info(
         "Config loaded: %s preferred domains, %s ranked sources, %s URL cleanup keys",

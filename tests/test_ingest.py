@@ -67,6 +67,11 @@ class TestIngestCanonicalizeUrl:
     def test_empty_returns_empty(self):
         assert canonicalize_url("") == ""
 
+    def test_same_function_as_extraction(self):
+        # ingest a extrakcia musia počítať url_hash rovnako
+        import extract_articles_reworked
+        assert canonicalize_url is extract_articles_reworked.canonicalize_url
+
 
 # ── normalize_title ───────────────────────────────────────────────────────────
 

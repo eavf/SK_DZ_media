@@ -103,6 +103,14 @@ class TestCanonicalizeUrl:
     def test_empty_string_returns_empty(self):
         assert canonicalize_url("") == ""
 
+    def test_http_becomes_https(self):
+        # http a https verzia toho istého článku musia mať rovnaký url_hash
+        assert canonicalize_url("http://news.radioalgerie.dz/ar/node/93990") == \
+            canonicalize_url("https://news.radioalgerie.dz/ar/node/93990")
+
+    def test_http_www_same_as_https(self):
+        assert canonicalize_url("http://www.entv.dz/ar/news/x") == "https://entv.dz/ar/news/x"
+
     def test_lowercases_scheme_and_host(self):
         result = canonicalize_url("HTTPS://EXAMPLE.COM/Path")
         assert result.startswith("https://example.com")

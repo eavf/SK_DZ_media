@@ -34,7 +34,8 @@ log = logging.getLogger("extract_articles")
 DEBUG_HTML_DIR = s.paths.bundle_dir / "debug_html"
 DEBUG_HTML_DIR.mkdir(parents=True, exist_ok=True)
 
-DROP_QUERY_KEYS = {
+# Parametre odstránené z URL pred dedupom — z config/url_cleanup.json, fallback ak chýba
+DROP_QUERY_KEYS = set(s.drop_query_keys or ()) or {
     "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
     "gclid", "fbclid", "yclid", "mc_cid", "mc_eid", "ref", "ref_src",
 }
@@ -129,10 +130,17 @@ def domain_root(netloc: str) -> str:
 
 
 def canonicalize_url(url: str) -> str:
+    """Kľúč pre dedup (url_hash / final_url_hash), nie adresa na fetch.
+
+    https (aj pre http), bez www., bez trackovacích parametrov, zoradené query, bez koncovej lomky.
+    Pri zmene pravidiel treba prepočítať uložené hashe (pozri normalize_url_scheme.py).
+    """
     if not url:
         return ""
     p = urlparse(url.strip())
     scheme = (p.scheme or "https").lower()
+    if scheme == "http":
+        scheme = "https"
 
     netloc = (p.netloc or "").lower()
     if netloc.startswith("www."):

@@ -433,24 +433,21 @@ def dashboard():
               AND deleted_at IS NULL
         """)).scalar()
 
-        # čaká na spracovanie (príklad: extraction_ok = 0 a nie je deleted a nie je z avoided source)
-        pending = conn.execute(text("""
-            SELECT COUNT(*)
+        # Aktívne články bez textu z neskrytých zdrojov — rovnaké pravidlá ako extract_bulk.fetch_pending:
+        #   pending = ešte nestiahnuté + prechodné chyby (denný beh ich spracuje / zopakuje)
+        #   failed  = trvalé chyby (403, 404, PDF, EXTRACTION_EMPTY, …) — automaticky sa neopakujú, len ručne
+        from extract_bulk import TRANSIENT_ERROR_SQL
+        counts = conn.execute(text(f"""
+            SELECT
+                SUM(a.fetched_at IS NULL OR {TRANSIENT_ERROR_SQL}) AS pending,
+                SUM(a.fetched_at IS NOT NULL AND NOT {TRANSIENT_ERROR_SQL}) AS failed
             FROM articles a
             JOIN sources s ON s.id = a.source_id
             WHERE a.deleted_at IS NULL
               AND s.is_avoided = 0
-              AND (a.extraction_ok = 0 OR a.extraction_ok IS NULL)
-        """)).scalar()
-
-        # chyby fetch/extract (len orientačne)
-        errors = conn.execute(text("""
-            SELECT COUNT(*)
-            FROM articles
-            WHERE deleted_at IS NULL
-              AND fetch_error IS NOT NULL
-              AND TRIM(fetch_error) <> ''
-        """)).scalar()
+              AND a.content_text IS NULL
+        """)).mappings().fetchone()
+        pending, failed = counts["pending"], counts["failed"]
 
     # formátovanie času na text (jednoducho, nech to v šablóne nie je None)
     last_update_str = ""
@@ -466,7 +463,7 @@ def dashboard():
         sources_count=sources_count or 0,
         found_24h=found_24h or 0,
         pending_count=pending or 0,
-        errors_count=errors or 0,
+        failed_count=failed or 0,
         port=settings.flask_port,
     )
 

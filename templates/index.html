@@ -35,8 +35,11 @@
       <div class="meta">
         <div class="row"><div class="k">Posledná aktualizácia</div><div class="v">{{ last_update or "—" }}</div></div>
         <div class="row"><div class="k">Nájdené (24h)</div><div class="v">{{ found_24h or 0 }}</div></div>
-        <div class="row"><div class="k">Čaká na spracovanie</div><div class="v">{{ pending_count or 0 }}</div></div>
-        <div class="row"><div class="k">Chyby</div><div class="v">{{ errors_count or 0 }}</div></div>
+        <div class="row" title="Ešte nestiahnuté články a prechodné chyby (sieť, timeout, 5xx) — spracuje ich denný beh">
+          <div class="k">Čaká na extrakciu</div><div class="v">{{ pending_count or 0 }}</div></div>
+        <div class="row" title="Trvalé chyby (403, 404, PDF, prázdna extrakcia) — automaticky sa neopakujú, treba ručný fetch alebo vložiť text">
+          <div class="k">Neúspešná extrakcia</div>
+          <div class="v">{% if failed_count %}<a href="/errors">{{ failed_count }}</a>{% else %}0{% endif %}</div></div>
       </div>
     </div>
 

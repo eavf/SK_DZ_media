@@ -57,6 +57,10 @@ def _to_mysql_dt(iso: str | None) -> str | None:
 
 
 RETRY_AFTER_DAYS = 7  # prechodné chyby (timeout, sieť, 5xx) sa skúsia znova najskôr po N dňoch
+# Prechodná chyba = zopakuje sa automaticky; ostatné chyby sú trvalé (len ručne). Používa aj úvodná stránka app.py.
+# (COALESCE: chýbajúca chyba / status nesmie dať NULL, inak by článok vypadol z oboch skupín)
+TRANSIENT_ERROR_SQL = ("(COALESCE(a.fetch_error IN ('TIMEOUT', 'NETWORK_UNREACHABLE'), 0)"
+                       " OR COALESCE(a.http_status, 0) >= 500)")
 
 
 def fetch_pending(conn, limit: int) -> list[dict]:
@@ -66,7 +70,7 @@ def fetch_pending(conn, limit: int) -> list[dict]:
     inak by najstaršie neúspešné články zabrali celý limit a nové by sa nikdy nedostali na rad.
     Ručne sa dajú zopakovať cez refetch v detaile článku.
     """
-    rows = conn.execute(text("""
+    rows = conn.execute(text(f"""
         SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
                a.title_fr, a.snippet_fr, a.language,
                a.published_at_real, a.published_at_text, a.relevance
@@ -77,7 +81,7 @@ def fetch_pending(conn, limit: int) -> list[dict]:
           AND s.is_avoided = 0
           AND (
                 a.fetched_at IS NULL
-             OR ((a.fetch_error IN ('TIMEOUT', 'NETWORK_UNREACHABLE') OR a.http_status >= 500)
+             OR ({TRANSIENT_ERROR_SQL}
                  AND a.fetched_at < NOW() - INTERVAL :retry_days DAY)
           )
         ORDER BY a.fetched_at IS NOT NULL, a.id DESC

@@ -10,7 +10,7 @@ import requests
 
 from extract_articles_reworked import CandidateArticle, extract_candidate
 import extract_articles_reworked
-from source_relink import domain_of, is_listing_url, mark_content_duplicate, mark_url_duplicate, relink_source, url_from_fetch_error
+from source_relink import domain_of, is_listing_url, mark_content_duplicate, mark_url_duplicate, titles_match, relink_source, url_from_fetch_error
 
 
 def _conn(current_domain: str = "google.com", dup_row: dict | None = None):
@@ -26,6 +26,7 @@ def _conn(current_domain: str = "google.com", dup_row: dict | None = None):
             res.mappings.return_value.fetchone.return_value = {"domain": current_domain}
         elif "JOIN articles o" in sql:
             res.mappings.return_value.fetchone.return_value = dup_row
+            res.mappings.return_value.fetchall.return_value = [dup_row] if dup_row else []
         return res
 
     conn.execute.side_effect = execute
@@ -259,13 +260,15 @@ class TestMarkContentDuplicate:
 
     def test_newer_deleted_with_text_note(self):
         # pressbee: AMP verzia (#2996) a pôvodná (#2970) s rovnakým textom
-        conn = _conn(dup_row={"a_rel": None, "o_id": 2970, "o_rel": None})
+        conn = _conn(dup_row={"a_rel": None, "o_id": 2970, "o_rel": None,
+                              "a_title": "المصارع المصري محمد الشامي.. لماذا هرب من بعثة مصر؟",
+                              "o_title": "المصارع المصري محمد الشامي.. لماذا هرب من بعثة مصر؟ - pressbee"})
         res = mark_content_duplicate(conn, 2996)
         assert (res.keep_id, res.delete_id, res.deleted) == (2970, 2996, True)
         assert self._deleted(conn) == [{"id": 2996, "note": "auto: duplikát #2970 (text)"}]
 
     def test_both_labeled_kept(self):
-        conn = _conn(dup_row={"a_rel": 1, "o_id": 184, "o_rel": 1})
+        conn = _conn(dup_row={"a_rel": 1, "o_id": 184, "o_rel": 1, "a_title": "Same title", "o_title": "Same title"})
         assert mark_content_duplicate(conn, 188).deleted is False
         assert self._deleted(conn) == []
 
@@ -276,3 +279,28 @@ class TestMarkContentDuplicate:
         sql, params = next((q, p) for q, p in conn.calls if "JOIN articles o" in q)
         assert "o.source_id = a.source_id" in sql and "o.content_hash = a.content_hash" in sql
         assert params["min_chars"] == source_relink.MIN_DUP_TEXT_CHARS == 500
+
+    def test_same_text_different_title_not_duplicate(self):
+        # alaraby.co.uk: extrakcia vrátila menu webu → rovnaký text pre rôzne zápasy
+        conn = _conn(dup_row={"a_rel": None, "o_id": 184, "o_rel": None,
+                              "a_title": "مباراة سلوفاكيا ضد كوسوفو: الأهداف وتشكيلة الفريقين",
+                              "o_title": "مباراة سلوفاكيا ضد مولدوفا: الأهداف وتشكيلة الفريقين"})
+        assert mark_content_duplicate(conn, 188) is None
+        assert self._deleted(conn) == []
+
+
+class TestTitlesMatch:
+    def test_identical(self):
+        assert titles_match("LES VERTS DÉCIDÉS À RELEVER LE DÉFI", "Les verts décidés à relever le défi !")
+
+    def test_suffix_differs(self):
+        assert titles_match("CALL IS NOW OPEN FOR ERASMUS + MOBILITY FOR International Credit Mobility",
+                            "CALL IS NOW OPEN FOR ERASMUS + MOBILITY FOR Internships 2026")
+
+    def test_alaraby_matches_differ(self):
+        assert not titles_match("مباراة سلوفاكيا ضد كوسوفو: الأهداف وتشكيلة الفريقين",
+                                "مباراة سلوفاكيا ضد أوكرانيا: الأهداف وتشكيلة الفريقين")
+
+    def test_empty_title(self):
+        assert not titles_match(None, "x")
+        assert not titles_match("", "")

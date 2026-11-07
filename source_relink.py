@@ -13,7 +13,8 @@ Volá sa z extract_bulk.py a refetch_article.py. Ako CLI dorovná existujúce č
      od Google, cieľový web sa neotvára) — staré články stiahnuté pred 13.10.2026 final_url neuložili
   2. preradí články pod google.com podľa final_url (alebo URL z fetch_error)
   3. vyradí duplikáty podľa URL
-  4. vyradí duplikáty podľa textu (rovnaký content_hash na tej istej doméne, text ≥ MIN_DUP_TEXT_CHARS)
+  4. vyradí duplikáty podľa textu (rovnaký content_hash na tej istej doméne, text ≥ MIN_DUP_TEXT_CHARS,
+     zhodný začiatok titulku — TITLE_PREFIX_CHARS)
 
     python source_relink.py           # dry-run: všetko prebehne v transakcii a na konci sa vráti (rollback)
     python source_relink.py --apply   # skutočne zapíše
@@ -57,6 +58,9 @@ def is_listing_url(canon: str | None) -> bool:
 
 # kratší „text“ býva zlá extrakcia (cookie lišta, pätička) — rovnaký u rôznych článkov
 MIN_DUP_TEXT_CHARS = 500
+# rovnaký text nestačí: zle extrahovaná stránka (menu webu) je rovnaká pre rôzne články (alaraby.co.uk) →
+# musí sedieť aj začiatok normalizovaného titulku (prípona / koniec titulku sa môže líšiť)
+TITLE_PREFIX_CHARS = 40
 
 RESOLVE_DELAY = 1.0     # s medzi požiadavkami na Google (nech nezačne blokovať)
 RESOLVE_TIMEOUT = (10, 20)
@@ -144,14 +148,22 @@ def mark_url_duplicate(conn, article_id: int, *, apply: bool = True) -> Duplicat
     return _resolve_pair(conn, article_id, row, apply=apply, note_suffix="")
 
 
+def titles_match(t1: str | None, t2: str | None) -> bool:
+    """Prvých TITLE_PREFIX_CHARS znakov normalizovaného titulku je zhodných (prázdny titulok → False)."""
+    from ingest_to_dz_news_reworked import normalize_title
+    n1, n2 = normalize_title(t1), normalize_title(t2)
+    return bool(n1 and n2) and n1[:TITLE_PREFIX_CHARS] == n2[:TITLE_PREFIX_CHARS]
+
+
 def mark_content_duplicate(conn, article_id: int, *, apply: bool = True) -> DuplicateResult | None:
-    """Nájde iný aktívny článok z tej istej domény s rovnakým textom (content_hash).
+    """Nájde iný aktívny článok z tej istej domény s rovnakým textom (content_hash) a podobným titulkom.
 
     Zachytí ten istý článok pod inou URL (AMP, iná kategória, iný slug). Text kratší ako
-    MIN_DUP_TEXT_CHARS sa neporovnáva. Pravidlá mazania ako pri mark_url_duplicate.
+    MIN_DUP_TEXT_CHARS sa neporovnáva; titulky musia mať zhodný začiatok (titles_match).
+    Pravidlá mazania ako pri mark_url_duplicate.
     """
-    row = conn.execute(text("""
-        SELECT a.relevance AS a_rel, o.id AS o_id, o.relevance AS o_rel
+    rows = conn.execute(text("""
+        SELECT a.relevance AS a_rel, a.title AS a_title, o.id AS o_id, o.relevance AS o_rel, o.title AS o_title
         FROM articles a
         JOIN articles o
           ON o.id <> a.id AND o.deleted_at IS NULL
@@ -159,8 +171,8 @@ def mark_content_duplicate(conn, article_id: int, *, apply: bool = True) -> Dupl
         WHERE a.id = :id AND a.deleted_at IS NULL AND a.content_hash IS NOT NULL
           AND CHAR_LENGTH(a.content_text) >= :min_chars
         ORDER BY o.id
-        LIMIT 1
-    """), {"id": article_id, "min_chars": MIN_DUP_TEXT_CHARS}).mappings().fetchone()
+    """), {"id": article_id, "min_chars": MIN_DUP_TEXT_CHARS}).mappings().fetchall()
+    row = next((r for r in rows if titles_match(r["a_title"], r["o_title"])), None)
     if not row:
         return None
     return _resolve_pair(conn, article_id, row, apply=apply, note_suffix=" (text)")

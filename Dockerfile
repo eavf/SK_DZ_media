@@ -13,7 +13,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Používateľ pred COPY: --chown nastaví vlastníka hneď pri kopírovaní
+# (chown -R po COPY by v novej vrstve zduplikoval všetky súbory)
+RUN useradd -m appuser && chown appuser:appuser /app
+COPY --chown=appuser:appuser . .
+RUN chmod +x /app/entrypoint.sh
 
 # Verzia (nastavuje deploy.sh: --build-arg GIT_COMMIT=... --build-arg BUILD_DATE=...)
 ARG GIT_COMMIT=
@@ -21,7 +25,6 @@ ARG BUILD_DATE=
 ENV GIT_COMMIT=${GIT_COMMIT} \
     BUILD_DATE=${BUILD_DATE}
 
-RUN useradd -m appuser && chown -R appuser:appuser /app && chmod +x /app/entrypoint.sh
 USER appuser
 
 EXPOSE 5088

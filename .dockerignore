@@ -11,3 +11,7 @@ Archive/
 debug_html/
 *.md
 tests/
+# lokálne prostredie — kontajner si balíky inštaluje sám (pip install)
+.venv/
+.idea/
+.pytest_cache/

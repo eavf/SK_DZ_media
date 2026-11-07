@@ -216,13 +216,18 @@ def _parse_ingest_summary(out: str) -> dict | None:
     return None
 
 
+_EXTRACT_SUMMARY_KEYS = ("ok", "soft_deleted", "commercial", "failed", "duplicate", "ai_sport")
+
+
 def _parse_extract_summary(out: str) -> dict | None:
-    m = re.search(r'ok=(\d+), soft_deleted=(\d+), commercial=(\d+), failed=(\d+)(?:, ai_sport=(\d+))?', out)
-    if m:
-        return {"ok": int(m.group(1)), "soft_deleted": int(m.group(2)),
-                "commercial": int(m.group(3)), "failed": int(m.group(4)),
-                "ai_sport": int(m.group(5) or 0)}
-    return None
+    """Čísla z riadku 'Hotovo: ok=…, soft_deleted=…, …' z extract_bulk.py (poradie ani nové kľúče nevadia)."""
+    m = re.search(r"Hotovo: (.*)", out or "")
+    if not m:
+        return None
+    found = {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", m.group(1))}
+    if "ok" not in found:
+        return None
+    return {k: found.get(k, 0) for k in _EXTRACT_SUMMARY_KEYS}
 
 
 def split_sentences(text_: str):

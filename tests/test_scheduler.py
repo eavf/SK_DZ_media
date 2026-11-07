@@ -28,3 +28,22 @@ class TestEmailFilterSql:
         assert "deleted_at IS NULL" in _EMAIL_FILTER_SQL
         assert "COALESCE(a.relevance, 1) <> 0" in _EMAIL_FILTER_SQL
         assert "'sport'" in _EMAIL_FILTER_SQL
+
+
+class TestParseExtractSummary:
+    """app._parse_extract_summary — súhrn hromadnej extrakcie na stránke Process."""
+
+    def test_current_format_with_duplicate(self):
+        from app import _parse_extract_summary
+        out = "… [INFO] extract_bulk: Hotovo: ok=15, soft_deleted=3, commercial=0, failed=1, duplicate=2, ai_sport=4 in /app/x.py:1"
+        assert _parse_extract_summary(out) == {"ok": 15, "soft_deleted": 3, "commercial": 0, "failed": 1,
+                                               "duplicate": 2, "ai_sport": 4}
+
+    def test_old_format_without_new_keys(self):
+        from app import _parse_extract_summary
+        assert _parse_extract_summary("Hotovo: ok=1, soft_deleted=0, commercial=0, failed=0") == {
+            "ok": 1, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0}
+
+    def test_no_summary(self):
+        from app import _parse_extract_summary
+        assert _parse_extract_summary("Žiadne články na extrakciu.") is None

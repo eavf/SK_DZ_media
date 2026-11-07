@@ -189,6 +189,7 @@
               `<span class="pill bad">${s.failed} failed</span>` +
               (s.soft_deleted ? ` <span class="pill">${s.soft_deleted} soft-deleted</span>` : "") +
               (s.commercial   ? ` <span class="pill">${s.commercial} commercial</span>` : "") +
+              (s.duplicate    ? ` <span class="pill">${s.duplicate} duplikát</span>` : "") +
               (s.ai_sport     ? ` <span class="pill">${s.ai_sport} šport (AI)</span>` : "");
           }
           if(data.out){

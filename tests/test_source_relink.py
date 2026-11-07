@@ -156,3 +156,61 @@ class TestHttpErrorFinalUrl:
 
         result = extract_candidate(CandidateArticle(url="https://aps.dz/x", title="t", snippet=""))
         assert result.final_url is None
+
+
+class TestResolveRedirect:
+    def test_returns_location(self, monkeypatch):
+        import source_relink
+        resp = MagicMock(is_redirect=True, headers={"Location": "https://www.algerie360.com/x/"})
+        get = MagicMock(return_value=resp)
+        monkeypatch.setattr(source_relink.requests, "get", get)
+        assert source_relink.resolve_redirect("https://www.google.com/goto?url=abc") == "https://www.algerie360.com/x/"
+        assert get.call_args.kwargs["allow_redirects"] is False  # cieľový web sa neotvára
+
+    def test_relative_location(self, monkeypatch):
+        import source_relink
+        resp = MagicMock(is_redirect=True, headers={"Location": "/sorry"})
+        monkeypatch.setattr(source_relink.requests, "get", MagicMock(return_value=resp))
+        assert source_relink.resolve_redirect("https://www.google.com/goto?url=abc") == "https://www.google.com/sorry"
+
+    def test_no_redirect(self, monkeypatch):
+        import source_relink
+        resp = MagicMock(is_redirect=False, headers={})
+        monkeypatch.setattr(source_relink.requests, "get", MagicMock(return_value=resp))
+        assert source_relink.resolve_redirect("https://www.google.com/goto?url=abc") is None
+
+    def test_network_error(self, monkeypatch):
+        import source_relink
+        monkeypatch.setattr(source_relink.requests, "get", MagicMock(side_effect=requests.ConnectionError("x")))
+        assert source_relink.resolve_redirect("https://www.google.com/goto?url=abc") is None
+
+
+class TestResolveMissing:
+    def _conn(self, rows):
+        conn = MagicMock()
+        conn.updates = []
+
+        def execute(stmt, params=None):
+            sql = str(stmt)
+            res = MagicMock()
+            if "a.final_url IS NULL" in sql:
+                res.mappings.return_value.fetchall.return_value = rows
+            elif "UPDATE articles SET final_url" in sql:
+                conn.updates.append(params)
+            return res
+
+        conn.execute.side_effect = execute
+        return conn
+
+    def test_saves_final_url(self, monkeypatch):
+        import source_relink
+        monkeypatch.setattr(source_relink, "RESOLVE_DELAY", 0)
+        monkeypatch.setattr(source_relink, "resolve_redirect",
+                            lambda u: {"g1": "http://www.bola.dz/a.pdf", "g2": None,
+                                       "g3": "https://www.google.com/sorry"}[u])
+        conn = self._conn([{"id": 1, "url": "g1"}, {"id": 2, "url": "g2"}, {"id": 3, "url": "g3"}])
+        assert source_relink.resolve_missing(conn) == {"resolved": 1, "failed": 2}
+        assert len(conn.updates) == 1
+        u = conn.updates[0]
+        assert u["id"] == 1 and u["u"] == "http://www.bola.dz/a.pdf"
+        assert u["c"] == "https://bola.dz/a.pdf"  # kanonický tvar (https, bez www)

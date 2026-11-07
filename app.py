@@ -274,6 +274,16 @@ RUN_STATES = {
 }
 RUN_STATE_LABELS = {"new": "nové", "extracted": "extrahované", "errors": "chyby", "pending": "čaká", "removed": "vyradené"}
 
+# Stav extrakcie v celej DB (preklik z úvodnej stránky) — rovnaké pravidlá ako extract_bulk.fetch_pending
+EXTRACT_STATE_LABELS = {"pending": "čaká na extrakciu", "failed": "neúspešná extrakcia"}
+
+
+def _extract_state_sql(state: str) -> str:
+    from extract_bulk import TRANSIENT_ERROR_SQL
+    if state == "pending":
+        return f"a.content_text IS NULL AND (a.fetched_at IS NULL OR {TRANSIENT_ERROR_SQL})"
+    return f"a.content_text IS NULL AND a.fetched_at IS NOT NULL AND NOT {TRANSIENT_ERROR_SQL}"
+
 
 def parse_run_filter(run: str | None, rstate: str | None) -> tuple[str | None, str | None]:
     """Validuje parametre run/rstate z requestu; neplatné hodnoty ignoruje."""
@@ -284,7 +294,8 @@ def parse_run_filter(run: str | None, rstate: str | None) -> tuple[str | None, s
 
 
 def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str, include_deleted: bool, include_avoided: bool,
-                  only_ai_sport: bool = False, run: str | None = None, run_state: str | None = None):
+                  only_ai_sport: bool = False, run: str | None = None, run_state: str | None = None,
+                  extract_state: str | None = None):
     """
     Zostaví WHERE klauzulu pre browse/export.
 
@@ -295,6 +306,7 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
     only_ai_sport:   True  → len články vyradené AI ako šport (ai_label='sport')
     run:             priečinok runu (run_XXX) → len články prepojené s jeho ingestami (run_articles)
     run_state:       new | extracted | errors | pending | removed — ako stĺpce na stránke Process
+    extract_state:   pending | failed — ako „Čaká na extrakciu“ / „Neúspešná extrakcia“ na úvodnej stránke
 
     Tlačítká na browse.html:
       Reset        — days=0, extraction=all, rel=1_or_null, del=0, av=0  (default pri /browse)
@@ -305,9 +317,9 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
     params = {}
 
     if days > 0:
-        cutoff = datetime.now() - timedelta(days=days)
-        where.append("a.last_seen_at >= :cutoff")
-        params["cutoff"] = cutoff
+        # čas DB (last_seen_at zapisuje DB cez NOW()); kontajner môže mať iné časové pásmo
+        where.append("a.last_seen_at >= NOW() - INTERVAL :days DAY")
+        params["days"] = days
 
     if not include_deleted:
         where.append("a.deleted_at IS NULL")
@@ -324,6 +336,9 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
                                  WHERE r.bundle_filename = :run_bf)""")
         if run_state:
             where.append(f"({RUN_STATES[run_state]})")
+
+    if extract_state in EXTRACT_STATE_LABELS:
+        where.append(f"({_extract_state_sql(extract_state)})")
 
     if extraction == "unextracted":
         where.append("a.content_text IS NULL")
@@ -362,7 +377,7 @@ def browse_q_from_request():
     Vytiahne len browse filtre (days/extraction/sk/rel/del/av/run/rstate) z requestu.
     Funguje pre GET aj POST, lebo request.values = args + form.
     """
-    allowed = {"days", "extraction", "sk", "rel", "del", "av", "run", "rstate"}
+    allowed = {"days", "extraction", "sk", "rel", "del", "av", "run", "rstate", "state"}
     q = request.values.to_dict(flat=True)
     return {k: v for k, v in q.items() if k in allowed}
 
@@ -478,9 +493,10 @@ def browse():
     include_deleted, only_ai_sport = parse_del_mode(del_mode)
     include_avoided = request.args.get("av", "0") == "1"
     run, rstate = parse_run_filter(request.args.get("run"), request.args.get("rstate"))
+    state = request.args.get("state") if request.args.get("state") in EXTRACT_STATE_LABELS else None
 
     where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided, only_ai_sport,
-                                      run=run, run_state=rstate)
+                                      run=run, run_state=rstate, extract_state=state)
 
     limit = 300 if days > 0 or extraction == "all" else 100
     sql = f"""
@@ -550,6 +566,8 @@ def browse():
         run=run,
         rstate=rstate,
         rstate_label=RUN_STATE_LABELS.get(rstate),
+        state=state,
+        state_label=EXTRACT_STATE_LABELS.get(state),
     )
 
 

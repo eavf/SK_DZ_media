@@ -10,7 +10,7 @@ import requests
 
 from extract_articles_reworked import CandidateArticle, extract_candidate
 import extract_articles_reworked
-from source_relink import domain_of, mark_url_duplicate, relink_source, url_from_fetch_error
+from source_relink import domain_of, is_listing_url, mark_url_duplicate, relink_source, url_from_fetch_error
 
 
 def _conn(current_domain: str = "google.com", dup_row: dict | None = None):
@@ -214,3 +214,34 @@ class TestResolveMissing:
         u = conn.updates[0]
         assert u["id"] == 1 and u["u"] == "http://www.bola.dz/a.pdf"
         assert u["c"] == "https://bola.dz/a.pdf"  # kanonický tvar (https, bez www)
+
+
+class TestIsListingUrl:
+    import pytest as _pytest
+
+    @_pytest.mark.parametrize("url", [
+        "https://site.dz/",
+        "https://site.dz",
+        "https://embbratislava.mfa.gov.dz/fr",
+        "https://site.dz/ar/",
+        "https://elmawkie.dz/fr/category/uncategorized",
+        "https://site.dz/tag/slovaquie",
+        "https://site.dz/rubrique/politique",
+        "https://site.dz/author/admin",
+        "https://site.dz/page/2",
+        "https://site.dz/archives",
+        "https://SITE.dz/Category/x",
+    ])
+    def test_listing(self, url):
+        assert is_listing_url(url)
+
+    @_pytest.mark.parametrize("url", [
+        "https://www.algerie360.com/visa-schengen-2026-pays-plus-faciles",
+        "https://cdn.lespoir.dz/wp-content/uploads/2026/08/26-08-2026.pdf",
+        "https://www.arpce.dz/fr/service/agr/cc/h2c0s1",
+        "https://site.dz/fr/actualite/tags-et-categories-du-jour",  # slovo v slugu, nie segment
+        "https://site.dz/frontpage",
+        None,
+    ])
+    def test_article(self, url):
+        assert not is_listing_url(url)

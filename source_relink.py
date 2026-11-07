@@ -38,8 +38,21 @@ logger = logging.getLogger("source_relink")
 
 REDIRECT_DOMAINS = {"google.com", "news.google.com"}
 
-# final_url = titulná stránka webu (zmazaný článok presmeruje na homepage) → nepovažuje sa za zhodu
-_NOT_ROOT = "{col} NOT REGEXP '^https?://[^/]+/?$'"
+# final_url = titulná / jazyková stránka webu alebo výpis (kategória, tag, rubrika, archív, stránkovanie):
+# zmazaný článok často presmeruje sem → dva rôzne články by mali rovnakú final_url, nepovažuje sa za zhodu.
+# Rovnaký regex beží v MariaDB (REGEXP, bez ohľadu na veľkosť písmen) aj v Pythone (is_listing_url).
+LISTING_RE = (
+    r"^https?://[^/]+(/(fr|ar|en))?/?$"
+    r"|/(category|categorie|categories|tag|tags|rubrique|rubriques|section|author|auteur"
+    r"|archive|archives|page)(/|$)"
+)
+_NOT_LISTING = "{col} NOT REGEXP '" + LISTING_RE + "'"
+_LISTING_PY = re.compile(LISTING_RE, re.IGNORECASE)
+
+
+def is_listing_url(canon: str | None) -> bool:
+    """True pre titulnú/jazykovú stránku alebo výpis — taká final_url nie je dôkaz duplikátu."""
+    return bool(canon and _LISTING_PY.search(canon))
 
 RESOLVE_DELAY = 1.0     # s medzi požiadavkami na Google (nech nezačne blokovať)
 RESOLVE_TIMEOUT = (10, 20)
@@ -112,14 +125,14 @@ def mark_url_duplicate(conn, article_id: int, *, apply: bool = True) -> Duplicat
         FROM articles a
         JOIN articles o
           ON o.id <> a.id AND o.deleted_at IS NULL
-         AND ((o.url_hash = a.final_url_hash AND {a_not_root})
-              OR (o.final_url_hash = a.url_hash AND {o_not_root})
-              OR (o.final_url_hash = a.final_url_hash AND {a_not_root}))
+         AND ((o.url_hash = a.final_url_hash AND {a_not_listing})
+              OR (o.final_url_hash = a.url_hash AND {o_not_listing})
+              OR (o.final_url_hash = a.final_url_hash AND {a_not_listing}))
         WHERE a.id = :id AND a.deleted_at IS NULL
         ORDER BY o.id
         LIMIT 1
-    """.format(a_not_root=_NOT_ROOT.format(col="a.final_url_canonical"),
-               o_not_root=_NOT_ROOT.format(col="o.final_url_canonical"))),
+    """.format(a_not_listing=_NOT_LISTING.format(col="a.final_url_canonical"),
+               o_not_listing=_NOT_LISTING.format(col="o.final_url_canonical"))),
         {"id": article_id}).mappings().fetchone()
     if not row:
         return None
@@ -230,8 +243,8 @@ def backfill_duplicates(conn) -> int:
         JOIN articles o ON o.id <> a.id AND (
              o.url_hash = a.final_url_hash
           OR o.final_url_hash = a.final_url_hash)
-        WHERE a.deleted_at IS NULL AND o.deleted_at IS NULL AND {a_not_root}
-    """.format(a_not_root=_NOT_ROOT.format(col="a.final_url_canonical")))).fetchall()})
+        WHERE a.deleted_at IS NULL AND o.deleted_at IS NULL AND {a_not_listing}
+    """.format(a_not_listing=_NOT_LISTING.format(col="a.final_url_canonical")))).fetchall()})
 
     deleted: set[int] = set()
     for article_id in ids:

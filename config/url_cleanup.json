@@ -35,7 +35,8 @@
     "/opac/",
     "/company-location/",
     "/embassys-locations-list",
-    "/?m="
+    "/?m=",
+    "/match-results/"
   ],
   "title_bad_words": [
     "promo", "promotion", "prix", "offre", "forfait", "roaming",

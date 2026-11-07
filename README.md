@@ -982,6 +982,24 @@ docker pull eavfeavf/dz-news:latest
 
 ## Changelog
 
+### 2026-11-04 – 2026-11-08
+- **Refaktoring `config.py`**: bez vedľajších efektov pri importe, `URL.create()` pre DB (heslo so špeciálnymi znakmi), `_env_str`/`_env_path`, `log_prefix` v `Settings`, neplatný `LOG_LEVEL` → `INFO`
+- **AI klasifikácia športu**: model `nvidia/nemotron-3.5-bolt-e4b` (pôvodný `llama-3.2-11b-vision` vracia 404)
+- **Deduplikácia** (`source_relink.py`):
+  - duplikát podľa URL v oboch smeroch (`url_hash` / `final_url_hash`, aj priamy odkaz po `google.com/goto`); novší sa soft-deletne, ručne hodnotené sa nemažú
+  - `http` a `https` majú rovnaký `url_hash` (jedna `canonicalize_url()` pre ingest aj extrakciu); prepočet starých záznamov `normalize_url_scheme.py`
+  - starým článkom pod `google.com` sa doplní skutočná URL z presmerovania (37 preradených)
+  - duplikát podľa textu: rovnaký `content_hash` + zhodný začiatok titulku na tej istej doméne, text ≥ 500 znakov
+  - poistka proti falošnej zhode: titulná/jazyková stránka a výpisy (kategória, tag, archív…) ako `final_url` sa ignorujú
+  - CLI `source_relink.py [--apply]`: dry-run beží v transakcii s rollbackom (výpis = čo urobí `--apply`)
+- **Filter** stránok so zápasmi `alaraby.co.uk/…/match-results/` (v HTML len menu webu)
+- **Stránka Process**: stav ingestu a štatistiky každého runu (nové / extrahované / chyby / čaká / vyradené) s preklikom na články; ingest ukladá priečinok runu do `runs.bundle_filename`, staré ingesty dorovnal `backfill_run_bundles.py`; súhrn extrakcie aj s duplikátmi a športom
+- **Úvodná stránka**: „Čaká na extrakciu“ vs. „Neúspešná extrakcia“ (rovnaké pravidlá ako `extract_bulk`), čísla sú odkazy na zoznam článkov
+- **Prehľad článkov**: filtre `run`/`rstate` a `state`; filter extrakcie sa nestráca po označení článku; „Počet dní“ podľa času DB
+- **Detail článku**: sekcia „Možné duplikáty“; ručný fetch a vložený text nič nemažú, len upozornia (vložený text: `content_hash` SHA-256 namiesto MD5)
+- **Farebné hlásenia** aj pre kategórie `ok` / `bad` / `warn`
+- **Docker image** 1,26 GB → 447 MB (bez `.venv`, `COPY --chown`); deploy cez zdieľané SSH spojenie (`ControlMaster`)
+
 ### 2026-10-17
 - **Read-only API pre AI** (`api.py`): `GET /api/articles` (obdobie, default 7 dní; filtre relevancia, téma, jazyk, zdroj; voliteľne text), `GET /api/articles/<id>`, `GET /api/meta`, `GET /api/openapi.json`; autentifikácia kľúčom z `API_KEYS`
 - **MCP server** (`mcp_server.py`, `requirements-mcp.txt`) pre Claude Desktop / Claude Code nad týmto API

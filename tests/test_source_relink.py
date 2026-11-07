@@ -304,3 +304,17 @@ class TestTitlesMatch:
     def test_empty_title(self):
         assert not titles_match(None, "x")
         assert not titles_match("", "")
+
+
+class TestFormatDuplicatesFlash:
+    def test_only_active(self):
+        from source_relink import format_duplicates_flash
+        dups = [{"id": 1, "deleted_at": "2026-11-07", "reasons": ["url"]},
+                {"id": 2, "deleted_at": None, "reasons": ["text", "title"]}]
+        assert format_duplicates_flash(dups) == \
+            "⚠ Možný duplikát: #2 (rovnaký text, podobný titulok) — pozri sekciu Možné duplikáty."
+
+    def test_none_when_all_deleted(self):
+        from source_relink import format_duplicates_flash
+        assert format_duplicates_flash([{"id": 1, "deleted_at": "x", "reasons": ["url"]}]) is None
+        assert format_duplicates_flash([]) is None

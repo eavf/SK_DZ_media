@@ -203,6 +203,78 @@ def _resolve_pair(conn, article_id: int, row, *, apply: bool, note_suffix: str) 
     return DuplicateResult(keep_id=keep_id, delete_id=delete_id, deleted=True)
 
 
+DUP_REASON_LABELS = {"url": "rovnaká URL", "text": "rovnaký text", "title": "podobný titulok"}
+
+
+def find_possible_duplicates(conn, article_id: int, limit: int = 10) -> list[dict]:
+    """Možné duplikáty článku na zobrazenie (nič nemaže) — aj zmazané články.
+
+    Dôvody: 'url' (url_hash / final_url_hash, bez titulky a výpisov), 'text' (rovnaký content_hash
+    na tej istej doméne, text ≥ MIN_DUP_TEXT_CHARS), 'title' (titles_match na tej istej doméne).
+    Vracia [{id, title, domain, relevance, deleted_at, reasons: [...]}] zoradené od najsilnejšej zhody.
+    """
+    a = conn.execute(text("""
+        SELECT id, source_id, title, url_hash, final_url_hash, final_url_canonical, content_hash,
+               CHAR_LENGTH(content_text) AS text_len
+        FROM articles WHERE id = :id
+    """), {"id": article_id}).mappings().fetchone()
+    if not a:
+        return []
+
+    found: dict[int, set[str]] = {}
+
+    final_ok = a["final_url_hash"] and not is_listing_url(a["final_url_canonical"])
+    for r in conn.execute(text("""
+        SELECT o.id, o.final_url_canonical, o.url_hash = :fh AS by_url_final,
+               o.final_url_hash = :fh AS by_final_final, o.final_url_hash = :uh AS by_final_url
+        FROM articles o
+        WHERE o.id <> :id AND (o.url_hash = :fh OR o.final_url_hash = :fh OR o.final_url_hash = :uh)
+    """), {"id": article_id, "uh": a["url_hash"], "fh": a["final_url_hash"] if final_ok else "-"}).mappings():
+        if r["by_final_url"] and is_listing_url(r["final_url_canonical"]):
+            if not (r["by_url_final"] or r["by_final_final"]):
+                continue
+        found.setdefault(r["id"], set()).add("url")
+
+    if a["content_hash"] and (a["text_len"] or 0) >= MIN_DUP_TEXT_CHARS:
+        for r in conn.execute(text("""
+            SELECT id FROM articles
+            WHERE id <> :id AND source_id = :sid AND content_hash = :ch
+        """), {"id": article_id, "sid": a["source_id"], "ch": a["content_hash"]}):
+            found.setdefault(r[0], set()).add("text")
+
+    if a["title"]:
+        for r in conn.execute(text("""
+            SELECT id, title FROM articles WHERE id <> :id AND source_id = :sid AND title IS NOT NULL
+        """), {"id": article_id, "sid": a["source_id"]}).mappings():
+            if titles_match(a["title"], r["title"]):
+                found.setdefault(r["id"], set()).add("title")
+
+    if not found:
+        return []
+    order = {"url": 0, "text": 1, "title": 2}
+    ids = sorted(found, key=lambda i: (min(order[x] for x in found[i]), -len(found[i]), i))[:limit]
+    rows = {r["id"]: dict(r) for r in conn.execute(text("""
+        SELECT a.id, a.title, s.domain, a.relevance, a.deleted_at, a.relevance_note
+        FROM articles a JOIN sources s ON s.id = a.source_id WHERE a.id IN :ids
+    """).bindparams(bindparam("ids", expanding=True)), {"ids": ids}).mappings()}
+    out = []
+    for i in ids:
+        if i in rows:
+            row = rows[i]
+            row["reasons"] = sorted(found[i], key=order.get)
+            out.append(row)
+    return out
+
+
+def format_duplicates_flash(dups: list[dict]) -> str | None:
+    """Krátke upozornenie pre flash po ručnej akcii (len aktívne články)."""
+    active = [d for d in dups if not d["deleted_at"]]
+    if not active:
+        return None
+    parts = [f"#{d['id']} ({', '.join(DUP_REASON_LABELS[x] for x in d['reasons'])})" for d in active[:5]]
+    return "⚠ Možný duplikát: " + "; ".join(parts) + " — pozri sekciu Možné duplikáty."
+
+
 def resolve_redirect(url: str) -> str | None:
     """Cieľ presmerovania z hlavičky Location (jedna požiadavka, cieľový web sa neotvára)."""
     from extract_articles_reworked import REQUEST_HEADERS

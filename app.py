@@ -1266,6 +1266,8 @@ def article_detail(article_id: int):
         snippet_hl=snippet_hl,
         content_text_fr_hl=content_text_fr_hl,
         snippet_fr_hl=snippet_fr_hl,
+        possible_duplicates=_possible_duplicates(article_id),
+        dup_reason_labels=__import__("source_relink").DUP_REASON_LABELS,
     )
 
 
@@ -1351,10 +1353,12 @@ def article_unexclude_domain(article_id: int):
 @app.post("/article/<int:article_id>/fetch")
 @user_required
 def fetch_extract_article(article_id: int):
-    code, out = run_script([PYTHON_BIN, "refetch_article.py", "--article-id", str(article_id)])
+    # ručná akcia: duplikáty sa nemažú, len sa zobrazí upozornenie
+    code, out = run_script([PYTHON_BIN, "refetch_article.py", "--article-id", str(article_id), "--keep-duplicates"])
     if code == 0:
         logger.info("Article fetch OK: id=%s", article_id)
         flash("Fetch & extract OK.", "success")
+        _flash_possible_duplicates(article_id)
     else:
         logger.error("Article fetch failed: id=%s\n%s", article_id, out)
         flash("Fetch & extract FAIL — pozri log.", "error")
@@ -1438,6 +1442,24 @@ def article_delete_translation(article_id: int):
     return redirect(url_for("article_detail", article_id=article_id))
 
 
+def _possible_duplicates(article_id: int) -> list[dict]:
+    from source_relink import find_possible_duplicates
+    try:
+        with get_db_engine().connect() as conn:
+            return find_possible_duplicates(conn, article_id)
+    except Exception:
+        logger.exception("Kontrola možných duplikátov zlyhala: id=%s", article_id)
+        return []
+
+
+def _flash_possible_duplicates(article_id: int) -> None:
+    """Po ručnom fetchi / vložení textu upozorní na možné duplikáty (nič nemaže)."""
+    from source_relink import format_duplicates_flash
+    msg = format_duplicates_flash(_possible_duplicates(article_id))
+    if msg:
+        flash(msg, "warn")
+
+
 @app.post("/article/<int:article_id>/set_content")
 @power_required
 def article_set_content(article_id: int):
@@ -1451,7 +1473,7 @@ def article_set_content(article_id: int):
         conn.execute(text("""
             UPDATE articles
             SET content_text   = :content,
-                content_hash   = MD5(:content),
+                content_hash   = SHA2(:content, 256),
                 extraction_ok  = 1,
                 fetch_error    = NULL,
                 fetched_at     = NOW()
@@ -1460,6 +1482,7 @@ def article_set_content(article_id: int):
 
     logger.info("Article content set manually: id=%s, chars=%s", article_id, len(content))
     flash("Obsah uložený.", "ok")
+    _flash_possible_duplicates(article_id)
     return redirect(url_for("article_detail", article_id=article_id))
 
 

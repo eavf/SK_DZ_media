@@ -49,7 +49,7 @@ def fetch_article_url(article_id: int) -> dict | None:
     return dict(row) if row else None
 
 
-def save_extraction(article_id: int, result):
+def save_extraction(article_id: int, result, *, delete_duplicates: bool = True):
     """Uloží výsledok extrakcie; článok z google.com/goto preradí na skutočnú doménu.
 
     Vracia DuplicateResult ak je článok duplikát iného podľa URL, inak None.
@@ -93,12 +93,14 @@ def save_extraction(article_id: int, result):
             "id":                  article_id,
         })
         relink_source(conn, article_id, result.final_url)
-        return mark_url_duplicate(conn, article_id)
+        return mark_url_duplicate(conn, article_id) if delete_duplicates else None
 
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Re-fetch a single article by DB ID.")
     p.add_argument("--article-id", type=int, required=True, help="articles.id to refetch")
+    p.add_argument("--keep-duplicates", action="store_true",
+                   help="Duplikáty nemazať (ručný fetch z UI — aplikácia ich len zobrazí ako upozornenie)")
     args = p.parse_args()
 
     article_id = args.article_id
@@ -123,12 +125,12 @@ def main() -> int:
     logger.info("Fetching: %s", url)
     result = extract_candidate(candidate)
 
-    dup = save_extraction(article_id, result)
+    dup = save_extraction(article_id, result, delete_duplicates=not args.keep_duplicates)
     if dup and dup.deleted and dup.delete_id == article_id:
         logger.info("OK: id=%s, vyradený ako duplikát #%s", article_id, dup.keep_id)
         return 0
 
-    if result.extraction_ok:
+    if result.extraction_ok and not args.keep_duplicates:
         with get_db_engine().begin() as conn:
             dup = mark_content_duplicate(conn, article_id)
         if dup and dup.deleted and dup.delete_id == article_id:

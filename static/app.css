@@ -137,15 +137,20 @@ code{
   margin:0 0 12px 0;
   font-size:13px;
 }
-.banner.success{
+.banner.success, .banner.ok{
   border-color:rgba(69,212,131,.35);
   background:rgba(69,212,131,.10);
   color:#c8f7dc;
 }
-.banner.error{
+.banner.error, .banner.bad{
   border-color:rgba(255,107,107,.35);
   background:rgba(255,107,107,.10);
   color:#ffd0d0;
+}
+.banner.warn{
+  border-color:rgba(255,204,102,.35);
+  background:rgba(255,204,102,.10);
+  color:#ffe4a6;
 }
 
 /* ---- Index list/table helpers ---- */

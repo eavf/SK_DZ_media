@@ -982,6 +982,14 @@ docker pull eavfeavf/dz-news:latest
 
 ## Changelog
 
+### 2026-11-08 – 2026-11-09
+- **Nečitateľné PDF** (`PDF_EXTRACTION_EMPTY` = sken, `PDF_LEGACY_ENCODING` = staré arabské fonty QuarkXPress AXt): `extract_bulk` ich soft-deletne s `relevance=0` a poznámkou `auto: PDF bez textu (…)`; ručne hodnotené sa nemenia. OCR (tesseract ara) otestované a zamietnuté — +100 MB image, minúty na PDF, vo vzorkách (univerzitné plagáty, noviny Sawt al-Ahrar / El Aane) žiadna zmienka o Slovensku. 45 starých článkov uzavretých SQL.
+- **DSpace 7** (univerzitné repozitáre Tiaret, Batna, Chlef…): odkaz na súbor vracal prázdnu Angular stránku → `EXTRACTION_EMPTY`; súbor sa teraz sťahuje cez REST API (`/server/api/core/bitstreams/<uuid>/content`, pri `/bitstream/handle/…` cez `search/byItemHandle`). 15 článkov vrátených do fronty.
+- **Nežiaduca URL po `google.com/goto`** (`/match-results/`, `/tag/` …): `extract_bulk` po zistení `final_url` kontroluje `bad_path_markers` ako ingest (spoločná `find_bad_path_marker()`) → `relevance=0`, bez AI a prekladu; nový stav `bad_url`.
+- **Časové pásmo DB**: každé spojenie nastaví `time_zone` podľa `TZ` aplikácie (Africa/Algiers) — čas ingestu na stránke Process sedí s názvom runu aj v lete (MariaDB na Synology beží v CET/CEST).
+- **Process**: súhrn extrakcie ukazuje aj „PDF bez textu“ a „nežiaduca URL“.
+- **`deploy.sh --check`**: pri nedostupnom serveri falošne hlásil OK → teraz deploy zastaví (aj `deploy.sh.example`).
+
 ### 2026-11-04 – 2026-11-08
 - **Refaktoring `config.py`**: bez vedľajších efektov pri importe, `URL.create()` pre DB (heslo so špeciálnymi znakmi), `_env_str`/`_env_path`, `log_prefix` v `Settings`, neplatný `LOG_LEVEL` → `INFO`
 - **AI klasifikácia športu**: model `nvidia/nemotron-3.5-bolt-e4b` (pôvodný `llama-3.2-11b-vision` vracia 404)

@@ -37,12 +37,12 @@ class TestParseExtractSummary:
         from app import _parse_extract_summary
         out = "… [INFO] extract_bulk: Hotovo: ok=15, soft_deleted=3, commercial=0, failed=1, duplicate=2, ai_sport=4 in /app/x.py:1"
         assert _parse_extract_summary(out) == {"ok": 15, "soft_deleted": 3, "commercial": 0, "failed": 1,
-                                               "duplicate": 2, "ai_sport": 4}
+                                               "duplicate": 2, "ai_sport": 4, "pdf_unreadable": 0}
 
     def test_old_format_without_new_keys(self):
         from app import _parse_extract_summary
         assert _parse_extract_summary("Hotovo: ok=1, soft_deleted=0, commercial=0, failed=0") == {
-            "ok": 1, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0}
+            "ok": 1, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0, "pdf_unreadable": 0}
 
     def test_no_summary(self):
         from app import _parse_extract_summary

@@ -7,6 +7,7 @@ Pre každý článok kde content_text IS NULL a deleted_at IS NULL:
   - ak text je komerčný → relevance=0
   - ak AI vyhodnotí článok ako šport → soft delete + relevance=0 (classify_ai.py)
   - ak extrakcia zlyhala → zapíše chybu, článok ostáva v DB
+  - PDF bez čitateľného textu (sken, staré arabské kódovanie AXt) → soft delete + relevance=0
   - článok z google.com/goto sa preradí na skutočnú doménu (source_relink.py)
   - duplikát podľa URL (url_hash / final_url_hash) → novší sa soft-deletne (source_relink.py)
   - duplikát podľa textu (rovnaký content_hash na tej istej doméne) → novší sa soft-deletne
@@ -59,6 +60,13 @@ def _to_mysql_dt(iso: str | None) -> str | None:
 RETRY_AFTER_DAYS = 7  # prechodné chyby (timeout, sieť, 5xx) sa skúsia znova najskôr po N dňoch
 # Prechodná chyba = zopakuje sa automaticky; ostatné chyby sú trvalé (len ručne). Používa aj úvodná stránka app.py.
 # (COALESCE: chýbajúca chyba / status nesmie dať NULL, inak by článok vypadol z oboch skupín)
+# PDF bez čitateľného textu: sken bez textovej vrstvy alebo staré arabské fonty (QuarkXPress AXt).
+# OCR sa neoplatí (test 11/2026: univerzitné plagáty, noviny bez zmienky o Slovensku) → automaticky vyradiť.
+UNREADABLE_PDF_ERRORS = {
+    "PDF_EXTRACTION_EMPTY": "auto: PDF bez textu (sken)",
+    "PDF_LEGACY_ENCODING": "auto: PDF bez textu (staré kódovanie)",
+}
+
 TRANSIENT_ERROR_SQL = ("(COALESCE(a.fetch_error IN ('TIMEOUT', 'NETWORK_UNREACHABLE'), 0)"
                        " OR COALESCE(a.http_status, 0) >= 500)")
 
@@ -153,7 +161,7 @@ def save_result(
     existing_published_at_real: str | None = None,
     existing_published_at_text: str | None = None,
 ) -> str:
-    """Uloží výsledok extrakcie. Vracia: 'ok', 'soft_deleted', 'commercial', 'failed', 'duplicate'.
+    """Uloží výsledok extrakcie. Vracia: 'ok', 'soft_deleted', 'commercial', 'failed', 'duplicate', 'pdf_unreadable'.
 
     existing_published_at_real: hodnota published_at_real z DB pred extrakciou (zo SerpAPI ingesta).
     Ak HTML dátum je novší ako SerpAPI dátum, SerpAPI dátum má prednosť — HTML môže obsahovať
@@ -288,6 +296,17 @@ def save_result(
         "fetch_error": result.fetch_error,
         "id": article_id,
     })
+
+    # Nečitateľné PDF — vyradiť; ručne hodnotené články (relevance nastavená) sa nemažú
+    note = UNREADABLE_PDF_ERRORS.get(result.fetch_error or "")
+    if note:
+        res = conn.execute(text("""
+            UPDATE articles
+            SET deleted_at = NOW(), relevance = 0, relevance_note = :note
+            WHERE id = :id AND relevance IS NULL
+        """), {"note": note, "id": article_id})
+        if res.rowcount:
+            return "pdf_unreadable"
     return "failed"
 
 
@@ -364,7 +383,8 @@ def main() -> int:
 
     logger.info("Pending: %s článkov (limit=%s)", len(pending), args.limit)
 
-    counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0}
+    counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0,
+              "pdf_unreadable": 0}
     ai_stopped = False
     translation_stopped = False
     last_domain_fetch: dict[str, float] = {}
@@ -397,6 +417,8 @@ def main() -> int:
                 status = "soft_deleted"
             elif result.extraction_ok and result.is_commercial:
                 status = "commercial"
+            elif result.fetch_error in UNREADABLE_PDF_ERRORS and row.get("relevance") is None:
+                status = "pdf_unreadable"
             logger.info("[DRY-RUN] id=%s → %s", article_id, status)
             counts[status] += 1
             continue
@@ -435,9 +457,9 @@ def main() -> int:
         counts["ai_sport"] += classify_pending(limit=args.limit)["sport"]
 
     logger.info(
-        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, duplicate=%s, ai_sport=%s",
+        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, duplicate=%s, ai_sport=%s, pdf_unreadable=%s",
         counts["ok"], counts["soft_deleted"], counts["commercial"], counts["failed"], counts["duplicate"],
-        counts["ai_sport"]
+        counts["ai_sport"], counts["pdf_unreadable"]
     )
 
     translated = translate_missing_titles(args.limit, args.dry_run)

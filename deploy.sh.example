@@ -55,6 +55,13 @@ check_remote() {
   tmp="$(mktemp -d)"
   echo "--> Kontrolujem rozdiely lokál ↔ ${SYNOLOGY_HOST}:${REMOTE_DIR} ..."
 
+  # Bez spojenia by všetko vyzeralo ako "len lokálne" a kontrola by falošne hlásila OK
+  if ! ssh -o BatchMode=yes -o ConnectTimeout=10 "${SYNOLOGY_HOST}" "test -f ${REMOTE_DIR}/.env"; then
+    echo "!! Server ${SYNOLOGY_HOST} je nedostupný alebo chýba ${REMOTE_DIR}/.env — kontrola zlyhala, deploy zastavený." >&2
+    rm -rf "${tmp}"
+    exit 2
+  fi
+
   # .env
   _env_hashes < "${LOCAL_DIR}/.env" > "${tmp}/env_l"
   ssh -o BatchMode=yes "${SYNOLOGY_HOST}" "cat ${REMOTE_DIR}/.env 2>/dev/null" | _env_hashes > "${tmp}/env_r"

@@ -134,7 +134,7 @@ Static config files in `config/`:
 
 ### Database
 
-MySQL with utf8mb4 (MariaDB 11.4). Main tables: `articles`, `sources`, `runs`, `run_articles`, `users`. Schema and migrations live in `migrations/` (`000_init_schema.sql`, `001_add_users.sql`, `002_user_roles.sql`, `003_ai_classification.sql`). The app uses soft-delete (`deleted_at` timestamp) and domain muting (`sources.is_avoided`).
+MySQL with utf8mb4 (MariaDB 11.4). Every connection sets `time_zone` to the process' UTC offset (`TZ`, `Africa/Algiers`) in `get_db_engine()`, so `NOW()` matches run folder names (MariaDB on Synology runs in CET/CEST; rows written before 11/2026 in summer are 1 h ahead). Main tables: `articles`, `sources`, `runs`, `run_articles`, `users`. Schema and migrations live in `migrations/` (`000_init_schema.sql`, `001_add_users.sql`, `002_user_roles.sql`, `003_ai_classification.sql`). The app uses soft-delete (`deleted_at` timestamp) and domain muting (`sources.is_avoided`).
 
 #### Table: `articles`
 

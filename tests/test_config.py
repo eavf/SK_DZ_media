@@ -165,3 +165,23 @@ class TestNormalizeStringList:
 
     def test_set_input(self):
         assert _normalize_string_list({"A.com", "B.com"}) == {"a.com", "b.com"}
+
+
+class TestSessionTimeZone:
+    def test_local_utc_offset_format(self, monkeypatch):
+        import time
+        from config.config import local_utc_offset
+        monkeypatch.setenv("TZ", "Africa/Algiers")
+        time.tzset()
+        try:
+            assert local_utc_offset() == "+01:00"
+        finally:
+            monkeypatch.undo()
+            time.tzset()
+
+    def test_set_session_time_zone_executes(self):
+        from unittest.mock import MagicMock
+        from config.config import _set_session_time_zone, local_utc_offset
+        conn = MagicMock()
+        _set_session_time_zone(conn, None)
+        conn.cursor.return_value.execute.assert_called_once_with("SET time_zone = %s", (local_utc_offset(),))

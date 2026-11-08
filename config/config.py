@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Any, Optional
 
 from dotenv import load_dotenv
-from sqlalchemy import URL, create_engine
+from datetime import datetime
+
+from sqlalchemy import URL, create_engine, event
 from sqlalchemy.engine import Engine
 
 # -----------------------------------------------------------------------------
@@ -410,7 +412,28 @@ def get_db_engine(*, force_new: bool = False) -> Engine:
         pool_recycle=3600,
         future=True,
     )
+    event.listen(_DB_ENGINE, "connect", _set_session_time_zone)
     return _DB_ENGINE
+
+
+def local_utc_offset() -> str:
+    """Aktuálny posun miestneho času procesu (TZ) od UTC vo formáte MySQL, napr. '+01:00'."""
+    z = datetime.now().astimezone().strftime("%z")  # '+0100'
+    return f"{z[:3]}:{z[3:]}"
+
+
+def _set_session_time_zone(dbapi_conn, _record) -> None:
+    """NOW() v DB v rovnakom pásme ako aplikácia (TZ kontajnera).
+
+    MariaDB na Synology beží v CET/CEST, aplikácia v Africa/Algiers — v lete by sa časy v DB
+    (runs.started_at, first_seen_at, …) líšili od názvov runov o hodinu. Číselný posun nepotrebuje
+    časové tabuľky v MariaDB; počíta sa pri každom novom spojení (pool_recycle 1 h).
+    """
+    cur = dbapi_conn.cursor()
+    try:
+        cur.execute("SET time_zone = %s", (local_utc_offset(),))
+    finally:
+        cur.close()
 
 
 # -----------------------------------------------------------------------------

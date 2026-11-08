@@ -7,6 +7,7 @@ Pre každý článok kde content_text IS NULL a deleted_at IS NULL:
   - ak text je komerčný → relevance=0
   - ak AI vyhodnotí článok ako šport → soft delete + relevance=0 (classify_ai.py)
   - ak extrakcia zlyhala → zapíše chybu, článok ostáva v DB
+  - nežiaduca URL zistená až po presmerovaní (google.com/goto → /match-results/ …) → relevance=0
   - PDF bez čitateľného textu (sken, staré arabské kódovanie AXt) → soft delete + relevance=0
   - článok z google.com/goto sa preradí na skutočnú doménu (source_relink.py)
   - duplikát podľa URL (url_hash / final_url_hash) → novší sa soft-deletne (source_relink.py)
@@ -37,7 +38,7 @@ _RELATIVE_TEXT_RE = re.compile(
 
 from sqlalchemy import text
 
-from extract_articles_reworked import CandidateArticle, extract_candidate
+from extract_articles_reworked import CandidateArticle, extract_candidate, find_bad_path_marker
 from config.config import get_db_engine, init_cli, init_context
 from translate import translate_ar_fr
 from classify_ai import ClassificationStopped, classify_and_mark, classify_pending
@@ -161,7 +162,8 @@ def save_result(
     existing_published_at_real: str | None = None,
     existing_published_at_text: str | None = None,
 ) -> str:
-    """Uloží výsledok extrakcie. Vracia: 'ok', 'soft_deleted', 'commercial', 'failed', 'duplicate', 'pdf_unreadable'.
+    """Uloží výsledok extrakcie. Vracia: 'ok', 'soft_deleted', 'commercial', 'failed', 'duplicate', 'pdf_unreadable',
+    'bad_url' (text uložený, ale URL je nežiaduca → relevance=0, bez AI a prekladu).
 
     existing_published_at_real: hodnota published_at_real z DB pred extrakciou (zo SerpAPI ingesta).
     Ak HTML dátum je novší ako SerpAPI dátum, SerpAPI dátum má prednosť — HTML môže obsahovať
@@ -214,6 +216,16 @@ def save_result(
             UPDATE articles SET fetched_at = NOW(), http_status = :http_status WHERE id = :id
         """), {"http_status": result.http_status, "id": article_id})
         return "duplicate"
+
+    # Nežiaduca URL (zápasy, vyhľadávanie, tagy…) zistená až teraz — článok prišiel cez google.com/goto,
+    # takže ingest ju nevidel. Rovnako ako ingest: relevance=0 + poznámka (ručné hodnotenie sa nemení).
+    bad_url = False
+    bad_marker = find_bad_path_marker(result.final_url)
+    if bad_marker:
+        res = conn.execute(text("""
+            UPDATE articles SET relevance = 0, relevance_note = :note WHERE id = :id AND relevance IS NULL
+        """), {"note": f"auto: URL ({bad_marker})", "id": article_id})
+        bad_url = bool(res.rowcount)
 
     if result.extraction_ok and result.no_slovak_context:
         conn.execute(text("""
@@ -281,7 +293,7 @@ def save_result(
             "lang_detected": result.lang_detected,
             "id": article_id,
         })
-        return "ok"
+        return "bad_url" if bad_url else "ok"
 
     # extrakcia zlyhala
     conn.execute(text("""
@@ -384,7 +396,7 @@ def main() -> int:
     logger.info("Pending: %s článkov (limit=%s)", len(pending), args.limit)
 
     counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0,
-              "pdf_unreadable": 0}
+              "pdf_unreadable": 0, "bad_url": 0}
     ai_stopped = False
     translation_stopped = False
     last_domain_fetch: dict[str, float] = {}
@@ -419,6 +431,8 @@ def main() -> int:
                 status = "commercial"
             elif result.fetch_error in UNREADABLE_PDF_ERRORS and row.get("relevance") is None:
                 status = "pdf_unreadable"
+            elif result.extraction_ok and row.get("relevance") is None and find_bad_path_marker(result.final_url):
+                status = "bad_url"
             logger.info("[DRY-RUN] id=%s → %s", article_id, status)
             counts[status] += 1
             continue
@@ -457,9 +471,9 @@ def main() -> int:
         counts["ai_sport"] += classify_pending(limit=args.limit)["sport"]
 
     logger.info(
-        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, duplicate=%s, ai_sport=%s, pdf_unreadable=%s",
+        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, duplicate=%s, ai_sport=%s, pdf_unreadable=%s, bad_url=%s",
         counts["ok"], counts["soft_deleted"], counts["commercial"], counts["failed"], counts["duplicate"],
-        counts["ai_sport"], counts["pdf_unreadable"]
+        counts["ai_sport"], counts["pdf_unreadable"], counts["bad_url"]
     )
 
     translated = translate_missing_titles(args.limit, args.dry_run)

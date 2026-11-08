@@ -216,7 +216,7 @@ def _parse_ingest_summary(out: str) -> dict | None:
     return None
 
 
-_EXTRACT_SUMMARY_KEYS = ("ok", "soft_deleted", "commercial", "failed", "duplicate", "ai_sport", "pdf_unreadable")
+_EXTRACT_SUMMARY_KEYS = ("ok", "soft_deleted", "commercial", "failed", "duplicate", "ai_sport", "pdf_unreadable", "bad_url")
 
 
 def _parse_extract_summary(out: str) -> dict | None:

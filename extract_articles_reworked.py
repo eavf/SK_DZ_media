@@ -129,6 +129,14 @@ def domain_root(netloc: str) -> str:
     return n
 
 
+def find_bad_path_marker(url: str | None) -> str | None:
+    """Prvý marker z url_cleanup.json → bad_path_markers v kanonickej URL (vyhľadávanie, tagy, zápasy…), inak None."""
+    if not url:
+        return None
+    low = canonicalize_url(url).lower()
+    return next((m for m in sorted(s.bad_path_markers or ()) if m in low), None)
+
+
 def canonicalize_url(url: str) -> str:
     """Kľúč pre dedup (url_hash / final_url_hash), nie adresa na fetch.
 

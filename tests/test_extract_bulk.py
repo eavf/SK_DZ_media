@@ -14,6 +14,7 @@ def _result(fetch_error):
 def eb(monkeypatch):
     import extract_bulk
     monkeypatch.setattr(extract_bulk, "mark_url_duplicate", lambda conn, article_id: None)
+    monkeypatch.setattr(extract_bulk, "relink_source", lambda conn, article_id, final_url: None)
     return extract_bulk
 
 
@@ -48,3 +49,31 @@ def test_other_error_not_deleted(eb):
     conn = _conn(1)
     assert eb.save_result(conn, 7, _result("EXTRACTION_EMPTY")) == "failed"
     assert not any("deleted_at" in q for q in _sqls(conn))
+
+
+# ── nežiaduca URL zistená až po presmerovaní (google.com/goto) ────────────────
+
+def _ok_result(final_url):
+    return SimpleNamespace(final_url=final_url, final_url_canonical=final_url, final_url_hash="h",
+                           extraction_ok=True, fetch_error=None, http_status=200, no_slovak_context=False,
+                           is_commercial=False, published_at_real=None, content_text="text", content_hash="c",
+                           lang_detected="fr")
+
+
+def test_bad_url_after_redirect_marked(eb):
+    conn = _conn(1)
+    assert eb.save_result(conn, 7, _ok_result("https://www.alaraby.co.uk/tag/sport")) == "bad_url"
+    marks = [c for c in conn.execute.call_args_list if "relevance = 0" in str(c.args[0])]
+    assert marks and marks[0].args[1] == {"note": "auto: URL (/tag/)", "id": 7}
+    assert "relevance IS NULL" in str(marks[0].args[0])
+
+
+def test_bad_url_manually_labeled_stays_ok(eb):
+    conn = _conn(0)  # relevance už nastavená → nič sa nezmení, článok sa spracuje normálne
+    assert eb.save_result(conn, 7, _ok_result("https://www.alaraby.co.uk/tag/sport")) == "ok"
+
+
+def test_normal_url_ok(eb):
+    conn = _conn(1)
+    assert eb.save_result(conn, 7, _ok_result("https://www.alaraby.co.uk/politics/article-1")) == "ok"
+    assert not any("relevance = 0" in q for q in _sqls(conn))

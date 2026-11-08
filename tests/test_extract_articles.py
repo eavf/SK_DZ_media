@@ -441,3 +441,18 @@ class TestDspace:
     def test_other_url_none(self):
         from extract_articles_reworked import dspace_content_url
         assert dspace_content_url("https://www.elwatan.dz/article/123") is None
+
+
+class TestFindBadPathMarker:
+    def test_marker_found(self):
+        from extract_articles_reworked import find_bad_path_marker
+        assert find_bad_path_marker("https://www.aps.dz/tag/politique") == "/tag/"
+
+    def test_case_insensitive_and_canonical(self):
+        from extract_articles_reworked import find_bad_path_marker
+        assert find_bad_path_marker("http://WWW.APS.DZ/Search?q=x&utm_source=y") == "/search"
+
+    def test_none_and_clean(self):
+        from extract_articles_reworked import find_bad_path_marker
+        assert find_bad_path_marker(None) is None
+        assert find_bad_path_marker("https://www.aps.dz/politique/article-1") is None

@@ -191,7 +191,8 @@
               (s.commercial   ? ` <span class="pill">${s.commercial} commercial</span>` : "") +
               (s.duplicate    ? ` <span class="pill">${s.duplicate} duplikát</span>` : "") +
               (s.ai_sport     ? ` <span class="pill">${s.ai_sport} šport (AI)</span>` : "") +
-              (s.pdf_unreadable ? ` <span class="pill">${s.pdf_unreadable} PDF bez textu</span>` : "");
+              (s.pdf_unreadable ? ` <span class="pill">${s.pdf_unreadable} PDF bez textu</span>` : "") +
+              (s.bad_url      ? ` <span class="pill">${s.bad_url} nežiaduca URL</span>` : "");
           }
           if(data.out){
             logEl.textContent = data.out;

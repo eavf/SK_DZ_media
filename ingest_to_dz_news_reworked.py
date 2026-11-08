@@ -15,7 +15,7 @@ from sqlalchemy import text
 import logging
 
 from config.config import get_db_engine, init_context, init_cli
-from extract_articles_reworked import DROP_QUERY_KEYS, canonicalize_url  # jedna definícia pre ingest aj extrakciu
+from extract_articles_reworked import DROP_QUERY_KEYS, canonicalize_url, find_bad_path_marker  # jedna definícia pre ingest aj extrakciu
 from translate import translate_ar_fr
 from text_filters import find_bad_word
 
@@ -32,7 +32,6 @@ logger = logging.getLogger("ingest_to_dz_news")
 PREFERRED_DOMAINS = s.preferred_domains
 SOURCE_RANK = s.source_rank
 BLOCKLIST_DOMAINS = s.blocklist_domains or set()
-BAD_PATH_MARKERS = s.bad_path_markers or set()
 TITLE_BAD_WORDS = s.title_bad_words or set()
 
 logger.info(
@@ -353,8 +352,7 @@ def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, pr
     normalized_title = normalize_title(title)
     title_hash = sha256_hex(normalized_title) if normalized_title else ""
 
-    low_url = canon.lower()
-    bad_marker = next((m for m in BAD_PATH_MARKERS if m in low_url), None)
+    bad_marker = find_bad_path_marker(canon)
     bad_word = find_bad_word(f"{title or ''} {item.get('snippet') or ''}", TITLE_BAD_WORDS)
     if dom in BLOCKLIST_DOMAINS:
         auto_note = "auto: blokovaná doména"

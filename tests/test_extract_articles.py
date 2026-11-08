@@ -398,3 +398,46 @@ class TestImpersonatedFallback:
         cffi = self._patch(monkeypatch, 200, self._cffi_resp(200))
         assert resolve_and_fetch("https://site.dz/a")[1] == 200
         cffi.get.assert_not_called()
+
+
+# ── DSpace 7 (univerzitné repozitáre) ─────────────────────────────────────────
+
+class TestDspace:
+    SHELL = '<!DOCTYPE html><html><head><meta charset="UTF-8"><base href="/"><title>DSpace</title></head><body><ds-app></ds-app></body></html>'
+
+    def test_shell_detected(self):
+        from extract_articles_reworked import is_dspace_shell
+        assert is_dspace_shell(self.SHELL)
+
+    def test_normal_page_not_shell(self):
+        from extract_articles_reworked import is_dspace_shell
+        assert not is_dspace_shell("<html><title>DSpace</title>" + "x" * 6000 + "</html>")
+        assert not is_dspace_shell("<html><title>El Watan</title></html>")
+
+    def test_bitstream_download_url(self):
+        from extract_articles_reworked import dspace_content_url
+        url = "https://dspace.univ-tiaret.dz/bitstreams/c5402fb7-f7e9-45e3-a20e-961dbf31cf38/download"
+        assert dspace_content_url(url) == (
+            "https://dspace.univ-tiaret.dz/server/api/core/bitstreams/c5402fb7-f7e9-45e3-a20e-961dbf31cf38/content")
+
+    def test_handle_url_uses_rest_search(self, monkeypatch):
+        import extract_articles_reworked as ear
+        calls = {}
+
+        class Resp:
+            def raise_for_status(self): pass
+            def json(self): return {"_links": {"content": {"href": "https://x.dz/server/api/core/bitstreams/u/content"}}}
+
+        def fake_get(url, params=None, **kw):
+            calls.update(url=url, params=params)
+            return Resp()
+
+        monkeypatch.setattr(ear.requests, "get", fake_get)
+        url = "https://dspace.univ-chlef.dz/bitstream/handle/123456789/2095/a.pdf?sequence=2&isAllowed=y"
+        assert ear.dspace_content_url(url) == "https://x.dz/server/api/core/bitstreams/u/content"
+        assert calls["url"] == "https://dspace.univ-chlef.dz/server/api/core/bitstreams/search/byItemHandle"
+        assert calls["params"] == {"handle": "123456789/2095", "sequence": "2"}
+
+    def test_other_url_none(self):
+        from extract_articles_reworked import dspace_content_url
+        assert dspace_content_url("https://www.elwatan.dz/article/123") is None

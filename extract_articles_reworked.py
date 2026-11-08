@@ -8,7 +8,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import parse_qs, parse_qsl, urlencode, urlparse, urlunparse
 
 import urllib3
 import requests
@@ -226,6 +226,37 @@ def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple
     return resp.url, resp.status_code, resp.text, content_type, resp.content
 
 
+_DSPACE_BITSTREAM_RE = re.compile(r"/bitstreams/([0-9a-f-]{36})/download", re.I)
+_DSPACE_HANDLE_RE = re.compile(r"/bitstream/handle/(\d+/\d+)/", re.I)
+
+
+def is_dspace_shell(html: str) -> bool:
+    """DSpace 7 (Angular) vráti na odkaz na súbor len prázdnu stránku s <title>DSpace</title>."""
+    h = (html or "").lower()
+    return len(h) < 5000 and "<title>dspace</title>" in h
+
+
+def dspace_content_url(url: str, timeout: tuple[int, int] | None = None) -> str | None:
+    """URL súboru cez REST API DSpace 7 pre odkaz z univerzitného repozitára (inak None).
+
+    /bitstreams/<uuid>/download            → /server/api/core/bitstreams/<uuid>/content
+    /bitstream/handle/<h>/<name>?sequence=N → vyhľadanie podľa handle (REST) → _links.content.href
+    """
+    p = urlparse(url)
+    base = f"{p.scheme}://{p.netloc}/server/api/core/bitstreams"
+    m = _DSPACE_BITSTREAM_RE.search(p.path)
+    if m:
+        return f"{base}/{m.group(1)}/content"
+    m = _DSPACE_HANDLE_RE.search(p.path)
+    if not m:
+        return None
+    seq = (parse_qs(p.query).get("sequence") or ["1"])[0]
+    resp = requests.get(f"{base}/search/byItemHandle", params={"handle": m.group(1), "sequence": seq},
+                        headers=REQUEST_HEADERS, timeout=timeout or FETCH_TIMEOUT, verify=False)
+    resp.raise_for_status()
+    return ((resp.json().get("_links") or {}).get("content") or {}).get("href")
+
+
 def extract_text_from_pdf(content: bytes, url: str = "") -> str | None:
     try:
         doc = fitz.open(stream=content, filetype="pdf")
@@ -415,6 +446,13 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
 
     try:
         final_url, status, html, content_type, raw_content = resolve_and_fetch(item.url)
+        # Univerzitný repozitár DSpace 7: namiesto PDF prišla prázdna Angular stránka → súbor cez REST API.
+        # final_url ostáva pôvodný odkaz (čitateľný pre človeka), mení sa len obsah.
+        if "html" in content_type.lower() and is_dspace_shell(html):
+            content_url = dspace_content_url(final_url)
+            if content_url:
+                log.info("DSpace → REST API: %s", content_url)
+                _, status, html, content_type, raw_content = resolve_and_fetch(content_url)
         final_domain = urlparse(final_url).netloc.lower()
         final_root = domain_root(final_domain)
         final_canon = canonicalize_url(final_url)

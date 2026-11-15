@@ -423,3 +423,15 @@ class TestGoogleNews:
         data = sfn.serpapi_google_news_search("q", "k", 3, "fr", "dz", "7d")
         assert [i["title"] for i in data["news_results"]] == ["T0", "T1", "T2"]
         assert data["news_results"][0]["source"] == "APS"
+
+
+class TestNormalizeWhen:
+    def test_values(self):
+        from search_flow_news import normalize_when
+        assert normalize_when("35") == "35d"
+        assert normalize_when(" 35D ") == "35d"
+        assert normalize_when("2w") == "14d"
+        assert normalize_when("2h") == "2h"
+        assert normalize_when("1m") == "1m"
+        assert normalize_when("abc") == "7d"
+        assert normalize_when(None) == "7d"

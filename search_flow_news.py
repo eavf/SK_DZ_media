@@ -107,6 +107,24 @@ def check_query_length(query: str, qtype: str) -> None:
             qtype.upper(), n, _QUERY_WARN_LEN, _QUERY_MAX_LEN,
         )
 
+def normalize_when(when: str | None) -> str:
+    """Časové okno z formulára / CLI na tvar '<N><d|h|m>'.
+
+    Holé číslo = dni ('35' → '35d'), týždne sa prepočítajú ('2w' → '14d').
+    Neplatná hodnota → '7d' s varovaním (predtým sa ticho použilo 7 dní).
+    """
+    w = (when or "").strip().lower()
+    if re.fullmatch(r"\d+", w):
+        return f"{w}d"
+    m = re.fullmatch(r"(\d+)w", w)
+    if m:
+        return f"{int(m.group(1)) * 7}d"
+    if re.fullmatch(r"\d+[dhm]", w):
+        return w
+    logger.warning("Neplatné časové okno when=%r — použijem 7d", when)
+    return "7d"
+
+
 def compute_window(when: str) -> tuple[str, str]:
     """Vypočíta časové okno podľa when (napr. '7d', '70d', '2h').
     Returns ISO strings (start, end)."""
@@ -583,6 +601,7 @@ def main() -> None:
     )
 
     args = parse_args()
+    args.when = normalize_when(args.when)
 
     run_id = args.run_id or datetime.now().strftime("run_%Y%m%d_%H%M%S")
     run_dir = ensure_run_dir(run_id)

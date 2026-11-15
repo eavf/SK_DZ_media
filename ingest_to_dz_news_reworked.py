@@ -11,11 +11,12 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 import logging
 
 from config.config import get_db_engine, init_context, init_cli
-from extract_articles_reworked import DROP_QUERY_KEYS, canonicalize_url, find_bad_path_marker  # jedna definícia pre ingest aj extrakciu
+from extract_articles_reworked import DROP_QUERY_KEYS, canonicalize_url, find_bad_path_marker, fit_canonical  # jedna definícia pre ingest aj extrakciu
 from translate import translate_ar_fr
 from text_filters import find_bad_word
 
@@ -369,7 +370,7 @@ def news_item_to_candidate(item: dict, query_id: str, rank: int, engine: str, pr
         rank=rank,
         engine=engine,
         url=url,
-        url_canonical=canon,
+        url_canonical=fit_canonical(canon),
         url_hash=sha256_hex(canon),
         domain=dom,
         is_preferred=(dom in preferred_domains),
@@ -695,11 +696,18 @@ def process_file(bundle_path: Path, *, use_clean: bool = True) -> tuple[int, int
             source_map = preload_sources(conn)
 
         # 4. upsert all articles without per-row SELECT
+        # Každý článok v savepointe: chybný (napr. príliš dlhá hodnota) sa preskočí, ostatné sa uložia —
+        # inak jeden článok zhodí celý ingest a denný beh skončí bez nových článkov (11/2026).
         inserted = 0
         updated = 0
         for c in deduped:
             source_id = source_map[c.domain]
-            rc = upsert_article(conn, c, source_id)
+            try:
+                with conn.begin_nested():
+                    rc = upsert_article(conn, c, source_id)
+            except SQLAlchemyError as e:
+                logger.error("Článok preskočený (chyba DB): url=%s err=%s", c.url[:200], str(e.orig if hasattr(e, "orig") else e)[:300])
+                continue
             if rc == 1:
                 inserted += 1
             elif rc == 2:

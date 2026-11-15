@@ -137,6 +137,16 @@ def find_bad_path_marker(url: str | None) -> str | None:
     return next((m for m in sorted(s.bad_path_markers or ()) if m in low), None)
 
 
+# articles.url_canonical / final_url_canonical sú varchar(1024); odkazy google.com/goto?url=… majú aj 1300+ znakov.
+# Hash sa počíta z celej URL (dedup sa nemení), do stĺpca ide skrátená — inak INSERT zhodí celý ingest (11/2026).
+URL_CANONICAL_MAX = 1024
+
+
+def fit_canonical(canon: str | None) -> str | None:
+    """Kanonická URL skrátená na dĺžku stĺpca (len na uloženie; hash počítaj z neskrátenej)."""
+    return canon[:URL_CANONICAL_MAX] if canon else canon
+
+
 def canonicalize_url(url: str) -> str:
     """Kľúč pre dedup (url_hash / final_url_hash), nie adresa na fetch.
 
@@ -427,7 +437,7 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
 
     result = ExtractionResult(
         url=item.url,
-        url_canonical=canon,
+        url_canonical=fit_canonical(canon),
         url_hash=sha256_hex(canon),
         final_url=None,
         final_url_canonical=None,
@@ -466,7 +476,7 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
         final_canon = canonicalize_url(final_url)
 
         result.final_url = final_url
-        result.final_url_canonical = final_canon
+        result.final_url_canonical = fit_canonical(final_canon)
         result.final_url_hash = sha256_hex(final_canon) if final_canon else None
         result.http_status = status
         result.domain = final_domain

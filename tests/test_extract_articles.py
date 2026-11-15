@@ -456,3 +456,16 @@ class TestFindBadPathMarker:
         from extract_articles_reworked import find_bad_path_marker
         assert find_bad_path_marker(None) is None
         assert find_bad_path_marker("https://www.aps.dz/politique/article-1") is None
+
+
+class TestFitCanonical:
+    def test_long_url_truncated_hash_from_full(self):
+        from extract_articles_reworked import URL_CANONICAL_MAX, canonicalize_url, fit_canonical, sha256_hex
+        canon = canonicalize_url("https://www.google.com/goto?url=CAES" + "x" * 1400)
+        assert len(fit_canonical(canon)) == URL_CANONICAL_MAX
+        assert sha256_hex(canon) != sha256_hex(fit_canonical(canon))  # hash sa počíta z neskrátenej
+
+    def test_short_and_none_unchanged(self):
+        from extract_articles_reworked import fit_canonical
+        assert fit_canonical("https://aps.dz/a") == "https://aps.dz/a"
+        assert fit_canonical(None) is None

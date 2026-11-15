@@ -47,3 +47,30 @@ class TestParseExtractSummary:
     def test_no_summary(self):
         from app import _parse_extract_summary
         assert _parse_extract_summary("Žiadne články na extrakciu.") is None
+
+
+class TestSerpapiErrors:
+    """scheduler.serpapi_errors — chyby SerpAPI z bundla sa dostanú do e-mailu."""
+
+    def test_errors_found(self, tmp_path):
+        import json
+        from scheduler import serpapi_errors
+        p = tmp_path / "news_bundle.json"
+        p.write_text(json.dumps({"responses_raw": {
+            "q1": {"error": "site: not supported", "news_results": []},
+            "q2": {"news_results": [{"link": "x"}]},
+            "q3": None,
+        }}), encoding="utf-8")
+        assert serpapi_errors(p) == ["Q1: site: not supported"]
+
+    def test_no_errors(self, tmp_path):
+        import json
+        from scheduler import serpapi_errors
+        p = tmp_path / "news_bundle.json"
+        p.write_text(json.dumps({"responses_raw": {"q1": {"news_results": []}}}), encoding="utf-8")
+        assert serpapi_errors(p) == []
+
+    def test_missing_bundle_reported(self, tmp_path):
+        from scheduler import serpapi_errors
+        errs = serpapi_errors(tmp_path / "missing.json")
+        assert len(errs) == 1 and "bundle sa nedá načítať" in errs[0]

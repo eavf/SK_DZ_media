@@ -55,19 +55,6 @@ logger.info(
     f"{len(BLOCKLIST_DOMAINS)} blocklist domains"
 )
 
-def parse_when(when: str) -> str:
-    """Prevedie 'Nd'/'Nh'/'Nw'/'Nm' na SerpAPI qdr hodnotu (napr. '70d' → 'd70').
-    Fallback na 'w' (týždeň) pri neplatnom vstupe."""
-    import re
-    m = re.fullmatch(r"(\d+)([dhwm])", when.strip().lower())
-    if m:
-        n, unit = m.group(1), m.group(2)
-        if unit == "w":
-            return f"w" if n == "1" else f"d{int(n) * 7}"
-        return f"{unit}{n}" if int(n) != 1 else unit
-    return "w"
-
-
 # ----------------------------
 # QUERY BUILDING
 # ----------------------------
@@ -145,46 +132,98 @@ def compute_window(when: str) -> tuple[str, str]:
 # ----------------------------
 
 
+GOOGLE_NEWS_ENGINE = "google_news"
+_INURL_RE = re.compile(r"\s*-inurl:\S+", re.IGNORECASE)
+
+
+def to_google_news_when(when: str) -> str:
+    """'7d' / '2h' / '2w' / '1m' → operátor pre Google News ('when:7d', 'when:2h', 'when:14d', 'when:30d')."""
+    m = re.fullmatch(r"(\d+)([dhwm])", (when or "").strip().lower())
+    if not m:
+        return "when:7d"
+    n, unit = int(m.group(1)), m.group(2)
+    if unit == "w":
+        return f"when:{n * 7}d"
+    if unit == "m":
+        return f"when:{n * 30}d"
+    return f"when:{n}{unit}"
+
+
+def build_google_news_query(query: str, when: str) -> str:
+    """Odstráni -inurl: (Google News ho nepodporuje; tie URL vyradí looks_unwanted_news_item) a pridá when:."""
+    q = _INURL_RE.sub("", query or "").strip()
+    q = re.sub(r"\s*\bwhen:\S+", "", q).strip()
+    return f"{q} {to_google_news_when(when)}"
+
+
+def normalize_google_news_items(items: list[dict]) -> list[dict]:
+    """Výsledky engine google_news → formát, s ktorým počíta zvyšok pipeline (pôvodne tbm=nws).
+
+    source {name, icon} → názov; date ← iso_date (absolútny dátum, '2026-11-12T20:49:18Z');
+    zoskupené 'stories' sa rozbalia; poradie (position) sa prečísluje.
+    """
+    flat: list[dict] = []
+    for it in items:
+        flat.extend(it["stories"] if it.get("stories") else [it])
+    out = []
+    for it in flat:
+        if not it.get("link"):
+            continue
+        item = dict(it)
+        src = item.get("source")
+        if isinstance(src, dict):
+            item["source"] = src.get("name")
+        if item.get("iso_date"):
+            item["date"] = item["iso_date"]
+        out.append(item)
+    for i, item in enumerate(out, 1):
+        item["position"] = i
+    return out
+
+
+def _filter_window(items: list[dict], when: str) -> list[dict]:
+    """Vyradí výsledky staršie ako okno — Google pri dopytoch s viacerými site: ignoruje when:."""
+    start = datetime.fromisoformat(compute_window(when)[0])
+    kept = []
+    for it in items:
+        iso = it.get("iso_date")
+        if iso:
+            try:
+                dt = datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone().replace(tzinfo=None)
+                if dt < start:
+                    continue
+            except ValueError:
+                pass
+        kept.append(it)
+    return kept
+
+
 def serpapi_google_news_search(query: str, api_key: str, num: int, hl: str, gl: str, when: str) -> dict:
-    all_results = []
-    start = 0
-    qdr = parse_when(when)
-    data = {}
+    """Hľadanie cez SerpAPI engine google_news (Google News API).
 
-    while len(all_results) < num:
-        page_size = min(10, max(1, num - len(all_results)))
+    Engine google (tbm=nws) od 12. 10. 2026 odmieta operátor site: ("Google doesn't serve the News tab
+    for site: queries to signed-out users") — Q1/Q2 vracali 0 výsledkov. google_news site: podporuje,
+    vracia všetko jedným volaním (bez stránkovania) s presným iso_date.
+    Chyba SerpAPI ostáva v odpovedi pod kľúčom "error" a loguje sa ako ERROR.
+    """
+    q = build_google_news_query(query, when)
+    params = {"engine": GOOGLE_NEWS_ENGINE, "q": q, "api_key": api_key, "hl": hl, "gl": gl}
+    data = GoogleSearch(params).get_dict()
 
-        params = {
-            "engine": s.serp_engine,
-            "tbm": "nws",
-            "q": query,
-            "api_key": api_key,
-            "hl": hl,
-            "gl": gl,
-            "tbs": f"qdr:{qdr}",
-            "num": page_size,
-            "start": start,
-            "so": 1,
-        }
+    if "error" in data:
+        err = str(data["error"])
+        if "hasn't returned any results" in err.lower():
+            data.pop("error")
+        else:
+            logger.error("SerpAPI ERROR for query=%r: %s", q, err)
+        data["news_results"] = []
+        return data
 
-        data = GoogleSearch(params).get_dict()
-
-        if "error" in data:
-            err = str(data["error"])
-            if "hasn't returned any results" in err.lower():
-                break
-            logger.warning(f"SerpAPI error for query={query!r}: {err}")
-            break
-
-        items = data.get("news_results", [])
-        if not items:
-            break
-
-        all_results.extend(items)
-        start += page_size
-        time.sleep(0.5)
-
-    data["news_results"] = all_results[:num]
+    items = normalize_google_news_items(data.get("news_results") or [])
+    in_window = _filter_window(items, when)
+    if len(in_window) < len(items):
+        logger.info("google_news: %s výsledkov mimo okna %s vyradených", len(items) - len(in_window), when)
+    data["news_results"] = in_window[:num]
     return data
 
 
@@ -705,7 +744,7 @@ def main() -> None:
     bundle = {
         "run": {
             "timestamp": ts,
-            "engine": s.serp_engine,
+            "engine": GOOGLE_NEWS_ENGINE,
             "time_filter_query": time_filter_query,
             "window_start": window_start,
             "window_end": window_end,

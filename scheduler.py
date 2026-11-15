@@ -201,6 +201,22 @@ def fetch_todays_articles(run_ids: list[int], run_start: datetime) -> tuple[list
         return [], []
 
 
+def serpapi_errors(bundle_path=None) -> list[str]:
+    """Chyby SerpAPI z najnovšieho bundla (responses_raw.q1/q2/q3.error).
+
+    search_flow_news pri chybe SerpAPI nezlyhá (dopyt len vráti 0 výsledkov) — bez tejto kontroly
+    sa výpadok neprejaví (10/2026: Google prestal podporovať site: v tbm=nws, Q1/Q2 mesiac prázdne).
+    """
+    import json
+    path = bundle_path or (paths.latest_dir / "news_bundle.json")
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8")).get("responses_raw") or {}
+    except Exception as e:
+        return [f"bundle sa nedá načítať ({path}): {e}"]
+    return [f"{q.upper()}: {(raw.get(q) or {}).get('error')}" for q in ("q1", "q2", "q3")
+            if (raw.get(q) or {}).get("error")]
+
+
 def send_notification(
     inserted: int,
     updated: int,
@@ -208,6 +224,7 @@ def send_notification(
     articles: list[dict] | None = None,
     reseen: list[dict] | None = None,
     unverified: list[dict] | None = None,
+    search_errors: list[str] | None = None,
 ) -> None:
     if not s.smtp_host or not s.notify_to:
         logger.info("SMTP nie je nakonfigurované — notifikácia preskočená.")
@@ -219,6 +236,9 @@ def send_notification(
         else f"DZ News – {len(articles or [])} relevantných ({inserted} nových / {updated} aktualizovaných)"
     )
 
+    if search_errors and not failed_step:
+        subject = f"⚠ chyba SerpAPI – {subject}"
+
     if failed_step:
         body = f"Pipeline zlyhala v kroku: {failed_step}\nSkontroluj logy v /app/logs/."
     else:
@@ -229,6 +249,10 @@ def send_notification(
             f"Znovu videné (aktualizované): {updated}",
             f"Čas: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         ]
+        if search_errors:
+            lines.append("")
+            lines.append("!!! Vyhľadávanie SerpAPI vrátilo chybu — výsledky môžu chýbať:")
+            lines.extend(f"   {e}" for e in search_errors)
         if articles:
             lines.append("")
             for i, a in enumerate(articles, 1):
@@ -346,7 +370,10 @@ def run_pipeline() -> None:
         inserted, updated, run_ids = _parse_ingest_output(ingest_output)
         articles, unverified = fetch_todays_articles(run_ids, run_start) if (run_ids and inserted > 0) else ([], [])
         reseen = fetch_reseen_articles(run_ids, run_start) if run_ids else []
-        send_notification(inserted, updated, failed_step, articles, reseen, unverified)
+        search_errors = serpapi_errors()
+        for e in search_errors:
+            logger.error("SerpAPI: %s", e)
+        send_notification(inserted, updated, failed_step, articles, reseen, unverified, search_errors)
         logger.info("=== Pipeline hotová — nových: %s, aktualizovaných: %s ===", inserted, updated)
     else:
         send_notification(0, 0, failed_step, [], [])

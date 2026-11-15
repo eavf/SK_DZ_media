@@ -351,3 +351,75 @@ class TestDomainStats:
 
     def test_empty_input(self):
         assert domain_stats([]) == {}
+
+
+# ── SerpAPI engine google_news ────────────────────────────────────────────────
+
+class TestGoogleNews:
+    def test_when_operator(self):
+        from search_flow_news import to_google_news_when
+        assert to_google_news_when("7d") == "when:7d"
+        assert to_google_news_when("2h") == "when:2h"
+        assert to_google_news_when("2w") == "when:14d"
+        assert to_google_news_when("1m") == "when:30d"
+        assert to_google_news_when("nonsense") == "when:7d"
+
+    def test_query_strips_inurl_and_old_when(self):
+        from search_flow_news import build_google_news_query
+        q = "(site:aps.dz OR site:elwatan.com) (Slovaquie) -inurl:recherche -inurl:tag when:30d"
+        assert build_google_news_query(q, "7d") == "(site:aps.dz OR site:elwatan.com) (Slovaquie) when:7d"
+
+    def test_normalize_items(self):
+        from search_flow_news import normalize_google_news_items
+        items = [
+            {"position": 5, "title": "A", "link": "https://aps.dz/a", "source": {"name": "APS", "icon": "x"},
+             "date": "11/12/2026, 08:49 PM, +0000 UTC", "iso_date": "2026-11-12T20:49:18Z"},
+            {"position": 6, "title": "cluster", "stories": [
+                {"title": "B", "link": "https://elwatan.com/b", "source": {"name": "El Watan"},
+                 "iso_date": "2026-11-13T10:00:00Z"}]},
+            {"title": "bez linku"},
+        ]
+        out = normalize_google_news_items(items)
+        assert [i["title"] for i in out] == ["A", "B"]
+        assert out[0]["source"] == "APS" and out[1]["source"] == "El Watan"
+        assert out[0]["date"] == "2026-11-12T20:49:18Z"
+        assert [i["position"] for i in out] == [1, 2]
+
+    def test_filter_window_drops_old(self):
+        from datetime import datetime, timedelta, timezone
+        from search_flow_news import _filter_window
+        now = datetime.now(timezone.utc)
+        fresh = {"link": "https://aps.dz/a", "iso_date": (now - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")}
+        old = {"link": "https://aps.dz/b", "iso_date": "2023-03-12T23:08:16Z"}
+        nodate = {"link": "https://aps.dz/c"}
+        assert _filter_window([fresh, old, nodate], "7d") == [fresh, nodate]
+
+    def test_search_uses_google_news_and_handles_error(self, monkeypatch):
+        import search_flow_news as sfn
+        sent = {}
+
+        class FakeSearch:
+            def __init__(self, params): sent.update(params)
+            def get_dict(self): return {"error": "Some SerpAPI failure"}
+
+        monkeypatch.setattr(sfn, "GoogleSearch", FakeSearch)
+        data = sfn.serpapi_google_news_search("site:.dz (Slovaquie)", "k", 20, "fr", "dz", "7d")
+        assert sent["engine"] == "google_news" and "tbm" not in sent
+        assert sent["q"] == "site:.dz (Slovaquie) when:7d"
+        assert data["news_results"] == [] and data["error"] == "Some SerpAPI failure"
+
+    def test_search_returns_normalized_capped(self, monkeypatch):
+        from datetime import datetime, timezone
+        import search_flow_news as sfn
+        iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        results = [{"title": f"T{i}", "link": f"https://aps.dz/{i}", "source": {"name": "APS"}, "iso_date": iso}
+                   for i in range(5)]
+
+        class FakeSearch:
+            def __init__(self, params): pass
+            def get_dict(self): return {"news_results": results}
+
+        monkeypatch.setattr(sfn, "GoogleSearch", FakeSearch)
+        data = sfn.serpapi_google_news_search("q", "k", 3, "fr", "dz", "7d")
+        assert [i["title"] for i in data["news_results"]] == ["T0", "T1", "T2"]
+        assert data["news_results"][0]["source"] == "APS"

@@ -982,6 +982,15 @@ docker pull eavfeavf/dz-news:latest
 
 ## Changelog
 
+### 2026-11-15
+- **Výpadok vyhľadávania od 12. 10. 2026**: SerpAPI (engine `google`, `tbm=nws`) prestal podporovať `site:` → Q1/Q2 vracali 0 výsledkov, bežal len záložný Q3. Prechod na engine **`google_news`** (okno ako `when:Nd`, `-inurl:` sa odstraňuje, výsledky normalizované na pôvodný formát, filtrovanie podľa `iso_date`). Zameškaný mesiac doplnený jednorazovým hľadaním `--when 35d` (88 nových článkov, napr. slovensko-alžírska dohoda o priemyselnom odpade, blahoželanie slovenského prezidenta).
+- **Chyby SerpAPI** sa logujú ako ERROR a denný e-mail má v predmete „⚠ chyba SerpAPI“ (`scheduler.serpapi_errors()`).
+- **Pád ingestu**: odkaz `google.com/goto` s 1 400 znakmi prekročil `url_canonical varchar(1024)` → celý ingest zlyhal. Kanonické URL sa ukladajú skrátené (`fit_canonical()`, hash z celej), každý článok sa zapisuje v savepointe (chybný sa preskočí), `gsessionid` sa odstraňuje z kanonickej URL.
+- **Časové okno** `35` (bez jednotky) sa bralo ako 7 dní → `normalize_when()` (holé číslo = dni, týždne → dni).
+- **Komerčný obsah** sa hľadá len v titulku a snippete — v celom texte označoval politické články (napr. blahoželania) ako `relevance=0`; chybne označené opravené SQL.
+- Overené: z alžírskej IP (`extract_bulk --retry-blocked`) sa aps.dz a elmoudjahid.dz stiahnu, zo Synology v SK nie → návrh dennej úlohy na DS1512 (Plánovač úloh DSM, `docker run --rm … extract_bulk.py --retry-blocked`).
+- Linka DZ → SK má ~5 KB/s (nezávisle od tunela/verejnej IP) — vysvetľuje pomalé kopírovanie konfigurácie pri deployi.
+
 ### 2026-11-08 – 2026-11-09
 - **Nečitateľné PDF** (`PDF_EXTRACTION_EMPTY` = sken, `PDF_LEGACY_ENCODING` = staré arabské fonty QuarkXPress AXt): `extract_bulk` ich soft-deletne s `relevance=0` a poznámkou `auto: PDF bez textu (…)`; ručne hodnotené sa nemenia. OCR (tesseract ara) otestované a zamietnuté — +100 MB image, minúty na PDF, vo vzorkách (univerzitné plagáty, noviny Sawt al-Ahrar / El Aane) žiadna zmienka o Slovensku. 45 starých článkov uzavretých SQL.
 - **DSpace 7** (univerzitné repozitáre Tiaret, Batna, Chlef…): odkaz na súbor vracal prázdnu Angular stránku → `EXTRACTION_EMPTY`; súbor sa teraz sťahuje cez REST API (`/server/api/core/bitstreams/<uuid>/content`, pri `/bitstream/handle/…` cez `search/byItemHandle`). 15 článkov vrátených do fronty.

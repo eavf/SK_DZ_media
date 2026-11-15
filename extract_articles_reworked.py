@@ -526,8 +526,10 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
             s.topic_keywords,
         )
 
-        combined_text = "\n".join(filter(None, [item.title or "", item.snippet or "", text_out]))
-        result.commercial_word = find_bad_word(combined_text, s.title_bad_words)
+        # Komerčné slová (title_bad_words: prix, offre, عرض…) len v titulku a snippete — v celom texte
+        # dávali falošné zhody v politických článkoch ("à tout prix", "prix Nobel"; 11/2026).
+        title_snippet = "\n".join(filter(None, [item.title or "", item.snippet or ""]))
+        result.commercial_word = find_bad_word(title_snippet, s.title_bad_words)
         result.is_commercial = result.commercial_word is not None
 
         slovakia_terms = s.search_terms.get("slovakia", [])

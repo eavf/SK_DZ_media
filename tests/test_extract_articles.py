@@ -469,3 +469,25 @@ class TestFitCanonical:
         from extract_articles_reworked import fit_canonical
         assert fit_canonical("https://aps.dz/a") == "https://aps.dz/a"
         assert fit_canonical(None) is None
+
+
+class TestCommercialCheck:
+    """Komerčné slová sa hľadajú len v titulku a snippete, nie v celom texte článku."""
+
+    def _run(self, monkeypatch, title, body):
+        import extract_articles_reworked as ear
+        from extract_articles_reworked import CandidateArticle
+        monkeypatch.setattr(ear.s, "title_bad_words", {"prix", "offre"}, raising=False)
+        monkeypatch.setattr(ear, "resolve_and_fetch",
+                            lambda url, timeout=None: (url, 200, "<html></html>", "text/html", b""))
+        monkeypatch.setattr(ear, "extract_text_and_metadata", lambda html: (body, None, "fr"))
+        return ear.extract_candidate(CandidateArticle(url="https://www.aps.dz/fr/a", title=title, snippet=""))
+
+    def test_word_in_body_only_not_commercial(self, monkeypatch):
+        r = self._run(monkeypatch, "Le président reçoit les vœux de son homologue slovaque",
+                      "La Slovaquie ... coopération à tout prix ...")
+        assert r.extraction_ok and not r.is_commercial and r.commercial_word is None
+
+    def test_word_in_title_commercial(self, monkeypatch):
+        r = self._run(monkeypatch, "Offre spéciale roaming Slovaquie", "Slovaquie texte")
+        assert r.is_commercial and r.commercial_word == "offre"

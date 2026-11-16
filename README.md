@@ -982,6 +982,12 @@ docker pull eavfeavf/dz-news:latest
 
 ## Changelog
 
+### 2026-11-16
+- Bez zmien kódu — analýza relé cez DS1512 (Alžírsko) pre weby blokované zo SK, s logikou ponechanou na DS1621.
+- Reverzný SSH tunel na DS1621 cez internet (`eavf1621.synology.me:22222`) funguje ako spojenie, ale sshd v DSM má vypnuté `AllowTcpForwarding` (úprava len cez príkazový riadok — zamietnuté). VPN medzi DZ a SK občas vypadáva.
+- Návrh na rozhodnutie: **Tailscale** (balík v Centre balíkov, oba NAS) + `tinyproxy` kontajner na DS1512 + `FETCH_RELAY_PROXY` na DS1621; alternatíva vlastný SSH server v kontajneri s otvoreným portom na routeri v SR.
+- aps.dz bol 16.11. zo SK dostupný (blokovanie je občasné).
+
 ### 2026-11-15
 - **Výpadok vyhľadávania od 12. 10. 2026**: SerpAPI (engine `google`, `tbm=nws`) prestal podporovať `site:` → Q1/Q2 vracali 0 výsledkov, bežal len záložný Q3. Prechod na engine **`google_news`** (okno ako `when:Nd`, `-inurl:` sa odstraňuje, výsledky normalizované na pôvodný formát, filtrovanie podľa `iso_date`). Zameškaný mesiac doplnený jednorazovým hľadaním `--when 35d` (88 nových článkov, napr. slovensko-alžírska dohoda o priemyselnom odpade, blahoželanie slovenského prezidenta).
 - **Chyby SerpAPI** sa logujú ako ERROR a denný e-mail má v predmete „⚠ chyba SerpAPI“ (`scheduler.serpapi_errors()`).

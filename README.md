@@ -983,10 +983,14 @@ docker pull eavfeavf/dz-news:latest
 ## Changelog
 
 ### 2026-11-16
-- Bez zmien kódu — analýza relé cez DS1512 (Alžírsko) pre weby blokované zo SK, s logikou ponechanou na DS1621.
+- Analýza relé cez DS1512 (Alžírsko) pre weby blokované zo SK, s logikou ponechanou na DS1621.
 - Reverzný SSH tunel na DS1621 cez internet (`eavf1621.synology.me:22222`) funguje ako spojenie, ale sshd v DSM má vypnuté `AllowTcpForwarding` (úprava len cez príkazový riadok — zamietnuté). VPN medzi DZ a SK občas vypadáva.
 - Návrh na rozhodnutie: **Tailscale** (balík v Centre balíkov, oba NAS) + `tinyproxy` kontajner na DS1512 + `FETCH_RELAY_PROXY` na DS1621; alternatíva vlastný SSH server v kontajneri s otvoreným portom na routeri v SR.
 - aps.dz bol 16.11. zo SK dostupný (blokovanie je občasné).
+- **Limit opakovaní extrakcie**: automatické opakovanie (timeout, sieť, 5xx) aj `--retry-blocked` len pre články nie staršie ako 30 dní (`RETRY_MAX_AGE_DAYS`); staršie sa počítajú ako zlyhané a opakujú sa len ručne. Bez migrácie DB. Článok #2506 zmazaný a doména `pmb.cuniv-naama.dz` stlmená ručne v UI.
+- **Deploy cez internet**: `deploy.sh` skúša SSH aliasy `synology` (VPN) a `synology-net` (`eavf1621.synology.me`, rovnaký host key cez `HostKeyAlias`) — pri výpadku VPN ide cez internet.
+- **Deploy odolný voči stratovej linke** (trasa cez Cogent stráca až ~70 % paketov): súbory sa kopírujú cez `rsync --checksum --partial` (len zmenené súbory), každý sieťový krok sa pri chybe spojenia opakuje (8 pokusov, čakanie 10 → 120 s, `DEPLOY_RETRIES`, `DEPLOY_RETRY_DELAY`); SSH keepalive v `~/.ssh/config`.
+- Relé — ďalšie možnosti: WireGuard na routeroch Synology (SRM) nie je k dispozícii (VPN Plus má len IPsec/OpenVPN/L2TP/SSTP/PPTP); žiadny tunel neobíde stratovú trasu. Odporúčaný nový návrh: **skript na DS1512** (Plánovač úloh) — stiahne front URL z DS1621 cez SSH, stránky stiahne `curl`, zbalené pošle späť cez `rsync`; spracovanie ostáva na DS1621. Čaká na rozhodnutie.
 
 ### 2026-11-15
 - **Výpadok vyhľadávania od 12. 10. 2026**: SerpAPI (engine `google`, `tbm=nws`) prestal podporovať `site:` → Q1/Q2 vracali 0 výsledkov, bežal len záložný Q3. Prechod na engine **`google_news`** (okno ako `when:Nd`, `-inurl:` sa odstraňuje, výsledky normalizované na pôvodný formát, filtrovanie podľa `iso_date`). Zameškaný mesiac doplnený jednorazovým hľadaním `--when 35d` (88 nových článkov, napr. slovensko-alžírska dohoda o priemyselnom odpade, blahoželanie slovenského prezidenta).

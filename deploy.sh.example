@@ -22,7 +22,28 @@ set -euo pipefail
 
 # ── Konfigurácia — uprav podľa svojho prostredia ──────────────────────────────
 DOCKER_IMAGE="dockerhub-username/image-name:latest"
-SYNOLOGY_HOST="myserver"          # alias z ~/.ssh/config
+# Aliasy z ~/.ssh/config v poradí skúšania: najprv VPN/LAN, potom cez internet (VPN občas vypadáva)
+SYNOLOGY_HOSTS=(myserver myserver-net)
+SYNOLOGY_HOST="${SYNOLOGY_HOSTS[0]}"
+
+# Vyberie prvý dostupný alias (spojenie ostane otvorené cez ControlMaster pre ďalšie ssh/scp)
+pick_host() {
+  local h
+  for h in "${SYNOLOGY_HOSTS[@]}"; do
+    if ssh -o BatchMode=yes -o ConnectTimeout=8 "$h" true 2>/dev/null; then
+      SYNOLOGY_HOST="$h"
+      echo "--> Synology dostupný cez: ${h}"
+      return 0
+    fi
+    echo "    ${h}: nedostupný"
+  done
+  echo "!! Synology nie je dostupný ani cez jeden alias (${SYNOLOGY_HOSTS[*]}) — deploy zastavený." >&2
+  exit 2
+}
+case "${1:-}" in
+  -h|--help|--rebuild) ;;   # bez servera
+  *) pick_host ;;
+esac
 REMOTE_DIR="/path/to/remote/app"  # napr. /volume1/docker/dz_news
 LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
 

@@ -450,7 +450,8 @@ def dashboard():
 
         # Aktívne články bez textu z neskrytých zdrojov — rovnaké pravidlá ako extract_bulk.fetch_pending:
         #   pending = ešte nestiahnuté + prechodné chyby (denný beh ich spracuje / zopakuje)
-        #   failed  = trvalé chyby (403, 404, PDF, EXTRACTION_EMPTY, …) — automaticky sa neopakujú, len ručne
+        #   failed  = trvalé chyby (403, 404, PDF, EXTRACTION_EMPTY, …) a prechodné staršie ako
+        #             RETRY_MAX_AGE_DAYS — automaticky sa neopakujú, len ručne
         from extract_bulk import TRANSIENT_ERROR_SQL
         counts = conn.execute(text(f"""
             SELECT

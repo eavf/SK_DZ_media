@@ -77,3 +77,21 @@ def test_normal_url_ok(eb):
     conn = _conn(1)
     assert eb.save_result(conn, 7, _ok_result("https://www.alaraby.co.uk/politics/article-1")) == "ok"
     assert not any("relevance = 0" in q for q in _sqls(conn))
+
+
+# ── obmedzenie automatického opakovania podľa veku článku ─────────────────────
+
+def test_transient_sql_has_age_limit():
+    import extract_bulk
+    assert f"INTERVAL {extract_bulk.RETRY_MAX_AGE_DAYS} DAY" in extract_bulk.TRANSIENT_ERROR_SQL
+    assert "a.first_seen_at" in extract_bulk.TRANSIENT_ERROR_SQL
+
+
+def test_fetch_blocked_uses_age_limit():
+    import extract_bulk
+    conn = MagicMock()
+    conn.execute.return_value.mappings.return_value.fetchall.return_value = []
+    extract_bulk.fetch_blocked(conn, 50)
+    sql, params = str(conn.execute.call_args.args[0]), conn.execute.call_args.args[1]
+    assert "a.first_seen_at >= NOW() - INTERVAL :max_age DAY" in sql
+    assert params == {"limit": 50, "max_age": extract_bulk.RETRY_MAX_AGE_DAYS}

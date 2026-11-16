@@ -68,12 +68,18 @@ UNREADABLE_PDF_ERRORS = {
     "PDF_LEGACY_ENCODING": "auto: PDF bez textu (staré kódovanie)",
 }
 
-TRANSIENT_ERROR_SQL = ("(COALESCE(a.fetch_error IN ('TIMEOUT', 'NETWORK_UNREACHABLE'), 0)"
-                       " OR COALESCE(a.http_status, 0) >= 500)")
+# Automatické opakovanie len pre články nájdené za posledných N dní — trvalo nedostupné URL
+# (staré PDF, spamové odkazy) sa inak skúšali donekonečna. Ručne (refetch) sa dajú zopakovať vždy.
+RETRY_MAX_AGE_DAYS = 30
+
+TRANSIENT_ERROR_SQL = ("((COALESCE(a.fetch_error IN ('TIMEOUT', 'NETWORK_UNREACHABLE'), 0)"
+                       " OR COALESCE(a.http_status, 0) >= 500)"
+                       f" AND a.first_seen_at >= NOW() - INTERVAL {RETRY_MAX_AGE_DAYS} DAY)")
 
 
 def fetch_pending(conn, limit: int) -> list[dict]:
-    """Články na extrakciu: najprv nikdy neskúšané (najnovšie prvé), potom prechodné chyby po RETRY_AFTER_DAYS.
+    """Články na extrakciu: najprv nikdy neskúšané (najnovšie prvé), potom prechodné chyby po RETRY_AFTER_DAYS
+    (len články nie staršie ako RETRY_MAX_AGE_DAYS — súčasť TRANSIENT_ERROR_SQL).
 
     Trvalé chyby (403, PDF_LEGACY_ENCODING, EXTRACTION_EMPTY, ...) sa automaticky neopakujú —
     inak by najstaršie neúspešné články zabrali celý limit a nové by sa nikdy nedostali na rad.
@@ -100,7 +106,10 @@ def fetch_pending(conn, limit: int) -> list[dict]:
 
 
 def fetch_blocked(conn, limit: int) -> list[dict]:
-    """Články, ktorých fetch zlyhal na 403 alebo nedostupnosti — bez ohľadu na RETRY_AFTER_DAYS (najnovšie prvé)."""
+    """Články, ktorých fetch zlyhal na 403 alebo nedostupnosti — bez ohľadu na RETRY_AFTER_DAYS (najnovšie prvé).
+
+    Len články nájdené za posledných RETRY_MAX_AGE_DAYS dní (staršie sa neopakujú, iba ručne).
+    """
     rows = conn.execute(text("""
         SELECT a.id, COALESCE(a.final_url, a.url) AS fetch_url, a.title, a.snippet,
                a.title_fr, a.snippet_fr, a.language,
@@ -112,9 +121,10 @@ def fetch_blocked(conn, limit: int) -> list[dict]:
           AND s.is_avoided = 0
           AND (a.http_status = 403 OR a.fetch_error LIKE 'HTTPError: 403%'
                OR a.fetch_error IN ('TIMEOUT', 'NETWORK_UNREACHABLE'))
+          AND a.first_seen_at >= NOW() - INTERVAL :max_age DAY
         ORDER BY a.id DESC
         LIMIT :limit
-    """), {"limit": limit}).mappings().fetchall()
+    """), {"limit": limit, "max_age": RETRY_MAX_AGE_DAYS}).mappings().fetchall()
     return [dict(r) for r in rows]
 
 

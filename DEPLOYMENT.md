@@ -17,7 +17,9 @@ Host synology
     IdentityFile ~/.ssh/id_rsa
 ```
 
-> Synology DSM nemá `rsync` — deploy skript používa `scp -O` (legacy protokol).
+> Súbory sa kopírujú cez `rsync` (DSM 7 ho má, overené 11/2026): prenesú sa len zmenené súbory (`--checksum`), `--partial` pokračuje v prerušenom prenose. Každý sieťový krok (ssh, rsync) sa pri výpadku spojenia opakuje s narastajúcim čakaním 10 → 120 s (`DEPLOY_RETRIES`, predvolene 8; `DEPLOY_RETRY_DELAY`, predvolene 10 s) — linka DZ→SK občas stráca väčšinu paketov. Chyby vzdialeného príkazu (zlé heslo pre sudo, chyba `docker compose`) sa neopakujú. Ak zlyhajú všetky pokusy, stačí deploy spustiť znova.
+>
+> Skript skúša aliasy `SYNOLOGY_HOSTS` v poradí (VPN, potom internet). Do oboch aliasov v `~/.ssh/config` pridaj `ServerAliveInterval 15` a `ServerAliveCountMax 8`, aby sa mŕtve spojenie zistilo.
 
 ## Prvé nastavenie deploy skriptu
 
@@ -73,7 +75,7 @@ Prihlási na Docker Hub účet `eavfeavf`. Pri ďalších deployoch nie je potre
 Skript automaticky:
 1. Zbuilduje nový Docker image lokálne
 2. Pushne image na Docker Hub (`eavfeavf/dz-news:latest`)
-3. Skopíruje `docker-compose.yml`, `.env`, `templates/`, `config/`, `static/` na Synology cez SCP
+3. Skopíruje `docker-compose.yml`, `.env`, `templates/`, `config/`, `static/` na Synology cez rsync (len zmenené súbory, s opakovaním)
 4. Nastaví práva na `logs/`, `data/`, `templates/`
 5. Pullne nový image na Synology a reštartuje kontajner
 

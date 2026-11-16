@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # deploy.sh — zbuilduje image, pushne na Docker Hub, nasadí na server
 # Použitie:
-#   ./deploy.sh              — full deploy (build + push + scp + pull na server)
+#   ./deploy.sh              — full deploy (build + push + rsync + pull na server)
 #   ./deploy.sh --no-rebuild — skopíruje templates/config/.env/static a reštartuje
 #   ./deploy.sh --tpl-only   — len šablóny (bez reštartu, hneď aktívne)
 #   ./deploy.sh --restart    — len reštartuje kontajner na serveri
@@ -28,14 +28,19 @@ SYNOLOGY_HOST="${SYNOLOGY_HOSTS[0]}"
 
 # Vyberie prvý dostupný alias (spojenie ostane otvorené cez ControlMaster pre ďalšie ssh/scp)
 pick_host() {
-  local h
-  for h in "${SYNOLOGY_HOSTS[@]}"; do
-    if ssh -o BatchMode=yes -o ConnectTimeout=8 "$h" true 2>/dev/null; then
-      SYNOLOGY_HOST="$h"
-      echo "--> Synology dostupný cez: ${h}"
-      return 0
-    fi
-    echo "    ${h}: nedostupný"
+  local h round
+  # pri stratovej linke nemusí prvé nadviazanie spojenia prejsť — 3 kolá cez všetky aliasy
+  for round in 1 2 3; do
+    for h in "${SYNOLOGY_HOSTS[@]}"; do
+      if ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 \
+          "$h" true 2>/dev/null; then
+        SYNOLOGY_HOST="$h"
+        echo "--> Synology dostupný cez: ${h}"
+        return 0
+      fi
+      echo "    ${h}: nedostupný (kolo ${round}/3)"
+    done
+    (( round < 3 )) && sleep 10
   done
   echo "!! Synology nie je dostupný ani cez jeden alias (${SYNOLOGY_HOSTS[*]}) — deploy zastavený." >&2
   exit 2
@@ -54,9 +59,49 @@ if [[ -n "$(git -C "${LOCAL_DIR}" status --porcelain --untracked-files=no 2>/dev
 fi
 BUILD_DATE="$(date '+%Y-%m-%d %H:%M')"
 BUILD_ARGS=(--build-arg "GIT_COMMIT=${GIT_COMMIT}" --build-arg "BUILD_DATE=${BUILD_DATE}")
-SCP="scp -O"                      # -O = legacy SCP protokol (potrebné pre Synology)
-SSH="ssh -t ${SYNOLOGY_HOST}"
 DOCKER="sudo /usr/local/bin/docker"  # cesta k docker na serveri
+
+# ── Odolnosť voči stratovej linke ─────────────────────────────────────────────
+# Trasa DZ→SK cez Cogent občas stráca väčšinu paketov: spojenie padne uprostred kopírovania.
+# Kopíruje sa cez rsync (prenesie len zmenené súbory, --partial pokračuje v rozpracovanom),
+# každý sieťový krok sa pri výpadku opakuje s narastajúcim čakaním (DEPLOY_RETRIES, DEPLOY_RETRY_DELAY).
+RETRIES="${DEPLOY_RETRIES:-8}"
+RETRY_DELAY="${DEPLOY_RETRY_DELAY:-10}"
+SSH_OPTS=(-o ServerAliveInterval=15 -o ServerAliveCountMax=8)
+
+# retry "<návratové kódy, pri ktorých opakovať>" príkaz...
+# Iné kódy (napr. zlé heslo pre sudo, chyba docker compose) sa neopakujú.
+retry() {
+  local codes=" $1 " n=1 delay="${RETRY_DELAY}" rc
+  shift
+  while :; do
+    "$@" && return 0
+    rc=$?
+    if [[ $codes != *" ${rc} "* ]]; then return "$rc"; fi
+    if (( n >= RETRIES )); then
+      echo "!! Spojenie so serverom zlyhalo aj po ${n} pokusoch (kód ${rc}) — deploy zastavený." >&2
+      echo "   Znova spusti ten istý príkaz, rsync pokračuje tam, kde skončil." >&2
+      exit 2
+    fi
+    echo "    spojenie prerušené (kód ${rc}), pokus $((n + 1))/${RETRIES} o ${delay} s..." >&2
+    # zavrie visiace zdieľané spojenie (ControlMaster), ďalší pokus otvorí nové
+    ssh -O exit "${SYNOLOGY_HOST}" 2>/dev/null || true
+    sleep "${delay}"
+    n=$((n + 1))
+    delay=$(( delay * 2 > 120 ? 120 : delay * 2 ))
+  done
+}
+SSH_NET_ERR="255"                       # ssh: chyba spojenia (kód vzdialeného príkazu sa neopakuje)
+RSYNC_NET_ERR="5 10 12 30 35 255"       # rsync: socket, dátový tok, timeout, ssh
+
+# push_files cesta... — relatívne k LOCAL_DIR, na server do REMOTE_DIR (bez mazania na serveri)
+push_files() {
+  ( cd "${LOCAL_DIR}" && retry "${RSYNC_NET_ERR}" rsync -rltz --checksum --partial --timeout=120 \
+      --exclude='__pycache__' --exclude='*.pyc' \
+      -e "ssh ${SSH_OPTS[*]}" "$@" "${SYNOLOGY_HOST}:${REMOTE_DIR}/" )
+}
+remote() { retry "${SSH_NET_ERR}" ssh "${SSH_OPTS[@]}" -o BatchMode=yes "${SYNOLOGY_HOST}" "$@"; }
+remote_tty() { retry "${SSH_NET_ERR}" ssh "${SSH_OPTS[@]}" -t "${SYNOLOGY_HOST}" "$@"; }
 
 # ── Kontrola rozdielov lokál ↔ server ─────────────────────────────────────────
 # Deploy prepisuje na serveri .env, docker-compose.yml, config/, templates/ a static/ lokálnymi verziami.
@@ -77,7 +122,7 @@ check_remote() {
   echo "--> Kontrolujem rozdiely lokál ↔ ${SYNOLOGY_HOST}:${REMOTE_DIR} ..."
 
   # Bez spojenia by všetko vyzeralo ako "len lokálne" a kontrola by falošne hlásila OK
-  if ! ssh -o BatchMode=yes -o ConnectTimeout=10 "${SYNOLOGY_HOST}" "test -f ${REMOTE_DIR}/.env"; then
+  if ! remote "test -f ${REMOTE_DIR}/.env"; then
     echo "!! Server ${SYNOLOGY_HOST} je nedostupný alebo chýba ${REMOTE_DIR}/.env — kontrola zlyhala, deploy zastavený." >&2
     rm -rf "${tmp}"
     exit 2
@@ -85,7 +130,12 @@ check_remote() {
 
   # .env
   _env_hashes < "${LOCAL_DIR}/.env" > "${tmp}/env_l"
-  ssh -o BatchMode=yes "${SYNOLOGY_HOST}" "cat ${REMOTE_DIR}/.env 2>/dev/null" | _env_hashes > "${tmp}/env_r"
+  # výstup sa pri opakovaní musí zapisovať odznova → presmerovanie vo vnútri funkcie
+  _remote_env() {
+    ssh "${SSH_OPTS[@]}" -o BatchMode=yes "${SYNOLOGY_HOST}" "cat ${REMOTE_DIR}/.env 2>/dev/null" > "${tmp}/env_raw"
+  }
+  retry "${SSH_NET_ERR}" _remote_env
+  _env_hashes < "${tmp}/env_raw" > "${tmp}/env_r"
   join -a1 -a2 -e MISSING -o 0,1.2,2.2 "${tmp}/env_l" "${tmp}/env_r" > "${tmp}/env_j"
   while read -r k l r; do
     if [[ $l == MISSING ]]; then echo "  !! .env ${k}: len na serveri — deploy ho ZMAŽE"; risky=1
@@ -98,9 +148,14 @@ check_remote() {
   (cd "${LOCAL_DIR}" && find docker-compose.yml config templates static -type f \
       ! -path '*__pycache__*' ! -name '*.pyc' 2>/dev/null | sort) > "${tmp}/files"
   (cd "${LOCAL_DIR}" && while read -r f; do md5sum "$f"; done < "${tmp}/files") | sort -k2 > "${tmp}/md5_l"
-  ssh -o BatchMode=yes "${SYNOLOGY_HOST}" \
-    "cd ${REMOTE_DIR} && while read -r f; do [ -f \"\$f\" ] && md5sum \"\$f\"; done" \
-    < "${tmp}/files" | sort -k2 > "${tmp}/md5_r"
+  # stdin aj výstup sa pri opakovaní musia otvoriť odznova → presmerovanie vo vnútri funkcie
+  _remote_md5() {
+    ssh "${SSH_OPTS[@]}" -o BatchMode=yes "${SYNOLOGY_HOST}" \
+      "cd ${REMOTE_DIR} && while read -r f; do [ -f \"\$f\" ] && md5sum \"\$f\"; done; true" \
+      < "${tmp}/files" > "${tmp}/md5_raw"
+  }
+  retry "${SSH_NET_ERR}" _remote_md5
+  sort -k2 "${tmp}/md5_raw" > "${tmp}/md5_r"
   join -1 2 -2 2 -a1 -e MISSING -o 0,1.1,2.1 "${tmp}/md5_l" "${tmp}/md5_r" > "${tmp}/md5_j"
   while read -r f l r; do
     if [[ $r == MISSING ]]; then echo "     ${f}: nový (len lokálne)"
@@ -140,7 +195,7 @@ case "${1:-}" in
   -h|--help)
     echo "Použitie: ./deploy.sh [MOŽNOSŤ]"
     echo ""
-    echo "  (bez možnosti)   Full deploy: build image → push Docker Hub → scp konfig → pull + restart na serveri"
+    echo "  (bez možnosti)   Full deploy: build image → push Docker Hub → rsync konfig → pull + restart na serveri"
     echo "  --no-rebuild     Skopíruje config/.env/static na server a reštartuje (bez buildu)"
     echo "  --tpl-only       Len šablóny (templates/) na server, bez reštartu — zmeny sú hneď aktívne"
     echo "  --restart        Len reštartuje kontajnery na serveri"
@@ -162,7 +217,7 @@ fi
 if [[ $MODE == "tpl" ]]; then
   confirm_remote
   echo "--> Kopírujem len šablóny..."
-  ${SCP} -r "${LOCAL_DIR}/templates" "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
+  push_files templates
   echo "==> Hotovo. Obnov stránku v prehliadači."
   exit 0
 fi
@@ -170,19 +225,17 @@ fi
 if [[ $MODE == "no-rebuild" ]]; then
   confirm_remote
   echo "--> Kopírujem config, .env a static (bez rebuildu)..."
-  tar -czf - --exclude='__pycache__' --exclude='*.pyc' -C "${LOCAL_DIR}" config | \
-    ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR} && chmod 666 ${REMOTE_DIR}/config/*.json"
-  ${SCP} "${LOCAL_DIR}/.env"         "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
-  ${SCP} -r "${LOCAL_DIR}/static"    "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
+  push_files config .env static
+  remote "chmod 666 ${REMOTE_DIR}/config/*.json"
   echo "--> Rešartujem kontajner..."
-  ${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose restart"
+  remote_tty "cd ${REMOTE_DIR} && ${DOCKER} compose restart"
   echo "==> Hotovo."
   exit 0
 fi
 
 if [[ $MODE == "restart" ]]; then
   echo "--> Rešartujem kontajner na serveri..."
-  ${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose up --force-recreate -d"
+  remote_tty "cd ${REMOTE_DIR} && ${DOCKER} compose up --force-recreate -d"
   echo "==> Hotovo."
   exit 0
 fi
@@ -210,19 +263,12 @@ docker push "${DOCKER_IMAGE}"
 # ── 3. Skopíruj konfig, .env a šablóny na server ──────────────────────────────
 echo "--> Kopírujem konfig na server..."
 
-${SCP} \
-  "${LOCAL_DIR}/docker-compose.yml" \
-  "${LOCAL_DIR}/.env" \
-  "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
-
-${SCP} -r "${LOCAL_DIR}/templates" "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
-tar -czf - --exclude='__pycache__' --exclude='*.pyc' -C "${LOCAL_DIR}" config | \
-  ssh "${SYNOLOGY_HOST}" "tar -xzf - -C ${REMOTE_DIR} && chmod 666 ${REMOTE_DIR}/config/*.json"
-${SCP} -r "${LOCAL_DIR}/static"    "${SYNOLOGY_HOST}:${REMOTE_DIR}/"
+push_files docker-compose.yml .env templates config static
+remote "chmod 666 ${REMOTE_DIR}/config/*.json"
 
 # ── 4. Nastav práva na zapisovateľné adresáre ─────────────────────────────────
 echo "--> Nastavujem práva..."
-${SSH} "sudo /bin/mkdir -p ${REMOTE_DIR}/logs ${REMOTE_DIR}/data ${REMOTE_DIR}/bundle && \
+remote_tty "sudo /bin/mkdir -p ${REMOTE_DIR}/logs ${REMOTE_DIR}/data ${REMOTE_DIR}/bundle && \
   sudo /bin/chmod 777 \
   ${REMOTE_DIR}/logs \
   ${REMOTE_DIR}/data \
@@ -233,5 +279,5 @@ ${SSH} "sudo /bin/mkdir -p ${REMOTE_DIR}/logs ${REMOTE_DIR}/data ${REMOTE_DIR}/b
 
 # ── 5. Pull nový image a reštartuj ────────────────────────────────────────────
 echo "--> Pullnem nový image a reštartujem na serveri..."
-${SSH} "cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up --force-recreate -d && ${DOCKER} image prune -f"
+remote_tty "cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up --force-recreate -d && ${DOCKER} image prune -f"
 echo "==> Deploy hotový."

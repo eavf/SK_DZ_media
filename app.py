@@ -282,7 +282,9 @@ def _extract_state_sql(state: str) -> str:
     from extract_bulk import TRANSIENT_ERROR_SQL
     if state == "pending":
         return f"a.content_text IS NULL AND (a.fetched_at IS NULL OR {TRANSIENT_ERROR_SQL})"
-    return f"a.content_text IS NULL AND a.fetched_at IS NOT NULL AND NOT {TRANSIENT_ERROR_SQL}"
+    # failed: bez irelevantných (relevance=0 — komerčné, nežiaduca URL, ručne označené), tie netreba riešiť
+    return (f"a.content_text IS NULL AND a.fetched_at IS NOT NULL AND NOT {TRANSIENT_ERROR_SQL}"
+            " AND (a.relevance IS NULL OR a.relevance <> 0)")
 
 
 def parse_run_filter(run: str | None, rstate: str | None) -> tuple[str | None, str | None]:
@@ -453,17 +455,15 @@ def dashboard():
         #   failed  = trvalé chyby (403, 404, PDF, EXTRACTION_EMPTY, …) a prechodné staršie ako
         #             RETRY_MAX_AGE_DAYS — automaticky sa neopakujú, len ručne; bez irelevantných
         #             (relevance=0: komerčné, nežiaduca URL, ručne označené) — tie netreba riešiť
-        from extract_bulk import TRANSIENT_ERROR_SQL
+        # rovnaké podmienky ako filter /browse?state=… (_extract_state_sql), aby číslo sedelo so zoznamom
         counts = conn.execute(text(f"""
             SELECT
-                SUM(a.fetched_at IS NULL OR {TRANSIENT_ERROR_SQL}) AS pending,
-                SUM(a.fetched_at IS NOT NULL AND NOT {TRANSIENT_ERROR_SQL}
-                    AND (a.relevance IS NULL OR a.relevance <> 0)) AS failed
+                SUM({_extract_state_sql("pending")}) AS pending,
+                SUM({_extract_state_sql("failed")}) AS failed
             FROM articles a
             JOIN sources s ON s.id = a.source_id
             WHERE a.deleted_at IS NULL
               AND s.is_avoided = 0
-              AND a.content_text IS NULL
         """)).mappings().fetchone()
         pending, failed = counts["pending"], counts["failed"]
 

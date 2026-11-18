@@ -74,3 +74,23 @@ class TestSerpapiErrors:
         from scheduler import serpapi_errors
         errs = serpapi_errors(tmp_path / "missing.json")
         assert len(errs) == 1 and "bundle sa nedá načítať" in errs[0]
+
+
+class TestExtractStateSql:
+    """„Neúspešná extrakcia“ na úvodnej stránke a filter /browse?state=failed používajú tú istú podmienku."""
+
+    def test_failed_excludes_irrelevant(self):
+        from app import _extract_state_sql
+        sql = _extract_state_sql("failed")
+        assert "(a.relevance IS NULL OR a.relevance <> 0)" in sql
+        assert "a.content_text IS NULL" in sql
+
+    def test_pending_keeps_irrelevant(self):
+        from app import _extract_state_sql
+        assert "relevance" not in _extract_state_sql("pending")
+
+    def test_browse_filter_uses_same_condition(self):
+        from app import build_filters, _extract_state_sql
+        where, _ = build_filters(0, "all", False, "all", False, False, extract_state="failed")
+        assert _extract_state_sql("failed") in where
+        assert "a.deleted_at IS NULL" in where and "s.is_avoided = 0" in where

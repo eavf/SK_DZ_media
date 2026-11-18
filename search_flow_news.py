@@ -216,6 +216,22 @@ def _filter_window(items: list[dict], when: str) -> list[dict]:
     return kept
 
 
+# Dočasný výpadok SerpAPI/Google ("We couldn't get valid results for this search. Please try again later.",
+# 17. 11. 2026 Q1 aj Q3) — rovnaký dopyt o chvíľu prejde, preto sa opakuje.
+SERP_RETRIES = 2
+SERP_RETRY_DELAY = 60  # s
+_TRANSIENT_SERP_MARKERS = ("try again later", "couldn't get valid results", "timed out", "timeout",
+                           "internal server error", "service unavailable")
+
+
+def is_transient_serp_error(err) -> bool:
+    """Chyba SerpAPI, pri ktorej má zmysel dopyt zopakovať (nie zlý kľúč, vyčerpaný kredit, prázdny výsledok)."""
+    if not err:
+        return False
+    e = str(err).lower()
+    return any(m in e for m in _TRANSIENT_SERP_MARKERS)
+
+
 def serpapi_google_news_search(query: str, api_key: str, num: int, hl: str, gl: str, when: str) -> dict:
     """Hľadanie cez SerpAPI engine google_news (Google News API).
 
@@ -227,6 +243,14 @@ def serpapi_google_news_search(query: str, api_key: str, num: int, hl: str, gl: 
     q = build_google_news_query(query, when)
     params = {"engine": GOOGLE_NEWS_ENGINE, "q": q, "api_key": api_key, "hl": hl, "gl": gl}
     data = GoogleSearch(params).get_dict()
+    for attempt in range(1, SERP_RETRIES + 1):
+        if not is_transient_serp_error(data.get("error")):
+            break
+        logger.warning("SerpAPI dočasná chyba (%s), opakujem o %s s (pokus %s/%s): %s",
+                       data["error"], SERP_RETRY_DELAY, attempt, SERP_RETRIES, q)
+        time.sleep(SERP_RETRY_DELAY)
+        # no_cache: SerpAPI inak môže vrátiť tú istú odpoveď z hodinovej cache
+        data = GoogleSearch({**params, "no_cache": "true"}).get_dict()
 
     if "error" in data:
         err = str(data["error"])

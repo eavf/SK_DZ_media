@@ -424,6 +424,47 @@ class TestGoogleNews:
         assert [i["title"] for i in data["news_results"]] == ["T0", "T1", "T2"]
         assert data["news_results"][0]["source"] == "APS"
 
+    def test_transient_error_detection(self):
+        import search_flow_news as sfn
+        assert sfn.is_transient_serp_error("We couldn't get valid results for this search. Please try again later.")
+        assert not sfn.is_transient_serp_error("Invalid API key. Your API key should be here: …")
+        assert not sfn.is_transient_serp_error("Your account has run out of searches.")
+        assert not sfn.is_transient_serp_error(None)
+
+    def _fake_sequence(self, monkeypatch, responses):
+        import search_flow_news as sfn
+        calls = []
+
+        class FakeSearch:
+            def __init__(self, params): calls.append(params)
+            def get_dict(self): return responses[len(calls) - 1]
+
+        monkeypatch.setattr(sfn, "GoogleSearch", FakeSearch)
+        monkeypatch.setattr(sfn, "SERP_RETRY_DELAY", 0)
+        return sfn, calls
+
+    def test_transient_error_retried_then_succeeds(self, monkeypatch):
+        from datetime import datetime, timezone
+        iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        ok = {"news_results": [{"title": "T", "link": "https://aps.dz/1", "source": {"name": "APS"}, "iso_date": iso}]}
+        err = {"error": "We couldn't get valid results for this search. Please try again later."}
+        sfn, calls = self._fake_sequence(monkeypatch, [err, ok])
+        data = sfn.serpapi_google_news_search("q", "k", 20, "fr", "dz", "7d")
+        assert len(calls) == 2 and calls[1]["no_cache"] == "true" and "no_cache" not in calls[0]
+        assert "error" not in data and len(data["news_results"]) == 1
+
+    def test_transient_error_gives_up_after_retries(self, monkeypatch):
+        err = {"error": "We couldn't get valid results for this search. Please try again later."}
+        sfn, calls = self._fake_sequence(monkeypatch, [dict(err) for _ in range(5)])
+        data = sfn.serpapi_google_news_search("q", "k", 20, "fr", "dz", "7d")
+        assert len(calls) == 1 + sfn.SERP_RETRIES
+        assert data["error"] == err["error"] and data["news_results"] == []
+
+    def test_permanent_error_not_retried(self, monkeypatch):
+        sfn, calls = self._fake_sequence(monkeypatch, [{"error": "Invalid API key."}])
+        sfn.serpapi_google_news_search("q", "k", 20, "fr", "dz", "7d")
+        assert len(calls) == 1
+
 
 class TestNormalizeWhen:
     def test_values(self):

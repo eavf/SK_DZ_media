@@ -41,9 +41,9 @@
         <div class="row" title="Ešte nestiahnuté články a prechodné chyby (sieť, timeout, 5xx) — spracuje ich denný beh">
           <div class="k">Čaká na extrakciu</div>
           <div class="v">{% if pending_count %}<a href="/browse?state=pending&days=0&extraction=all&rel=all&del=0&av=0&sk=0">{{ pending_count }}</a>{% else %}0{% endif %}</div></div>
-        <div class="row" title="Trvalé chyby (403, 404, PDF, prázdna extrakcia) — automaticky sa neopakujú, treba ručný fetch alebo vložiť text">
+        <div class="row" title="Trvalé chyby (403, 404, PDF, prázdna extrakcia) — automaticky sa neopakujú, treba ručný fetch alebo vložiť text. Bez zmazaných, irelevantných a článkov zo stlmených domén">
           <div class="k">Neúspešná extrakcia</div>
-          <div class="v">{% if failed_count %}<a href="/browse?state=failed&days=0&extraction=all&rel=all&del=0&av=0&sk=0">{{ failed_count }}</a>{% else %}0{% endif %}</div></div>
+          <div class="v">{% if failed_count %}<a href="/browse?state=failed&days=0&extraction=all&rel=1_or_null&del=0&av=0&sk=0">{{ failed_count }}</a>{% else %}0{% endif %}</div></div>
       </div>
     </div>
 

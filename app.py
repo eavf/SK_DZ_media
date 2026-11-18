@@ -451,12 +451,14 @@ def dashboard():
         # Aktívne články bez textu z neskrytých zdrojov — rovnaké pravidlá ako extract_bulk.fetch_pending:
         #   pending = ešte nestiahnuté + prechodné chyby (denný beh ich spracuje / zopakuje)
         #   failed  = trvalé chyby (403, 404, PDF, EXTRACTION_EMPTY, …) a prechodné staršie ako
-        #             RETRY_MAX_AGE_DAYS — automaticky sa neopakujú, len ručne
+        #             RETRY_MAX_AGE_DAYS — automaticky sa neopakujú, len ručne; bez irelevantných
+        #             (relevance=0: komerčné, nežiaduca URL, ručne označené) — tie netreba riešiť
         from extract_bulk import TRANSIENT_ERROR_SQL
         counts = conn.execute(text(f"""
             SELECT
                 SUM(a.fetched_at IS NULL OR {TRANSIENT_ERROR_SQL}) AS pending,
-                SUM(a.fetched_at IS NOT NULL AND NOT {TRANSIENT_ERROR_SQL}) AS failed
+                SUM(a.fetched_at IS NOT NULL AND NOT {TRANSIENT_ERROR_SQL}
+                    AND (a.relevance IS NULL OR a.relevance <> 0)) AS failed
             FROM articles a
             JOIN sources s ON s.id = a.source_id
             WHERE a.deleted_at IS NULL

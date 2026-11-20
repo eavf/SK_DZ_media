@@ -59,6 +59,7 @@ python source_relink.py [--apply]              # Relink google.com/goto articles
 python translate_missing.py [--apply] [--limit N]  # Translate AR articles that have content_text but no content_text_fr (dry-run by default)
 python normalize_url_scheme.py [--apply]        # Recompute stored url/final_url canonical+hash after canonicalization change http→https (dry-run by default)
 python backfill_run_bundles.py [--apply]        # Fill run folder into runs.bundle_filename for old ingests (matches by article url_hash + time; dry-run by default)
+python eval_ai_relevance.py export.csv [--limit N] [--model M]  # Measure LLM (NVIDIA API) agreement with manual SK–DZ relevance labels from /export/csv (title+snippet, labels with note 'auto:' skipped); no DB, answers cached in <csv>.ai_<model>.csv
 python scheduler.py                            # Daily pipeline at 15:00 + email notification
 python setup_db.py                             # One-time DB init + first admin user
 python create_admin.py [--role user|power|admin]

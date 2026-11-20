@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import os
 import random
 import re
@@ -35,58 +34,12 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 
-DEFAULT_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b"  # nemotron-3-super-120b NVIDIA zrušila (410)
+DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b"  # ako AI_RELEVANCE_MODEL; meranie 11/2026
 DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1"
 REQUEST_TIMEOUT = 90
-MAX_SNIPPET_CHARS = 1500
 
-SYSTEM_PROMPT = (
-    "You help the Slovak embassy in Algeria monitor Algerian media. Decide whether a news article is RELEVANT, "
-    "i.e. it contains real information concerning Slovakia (Slovaquie, سلوفاكيا).\n"
-    "Answer ONLY with JSON: {\"relevant\": true|false, \"confidence\": 0-100, \"reason\": \"<max 15 words>\"}.\n"
-    "relevant=true when the text says something about Slovakia, even briefly or at the end of the article: "
-    "Slovak–Algerian relations (visits, meetings, agreements, trade, cooperation, embassy activities), "
-    "Slovak officials acting or speaking, Slovakia's position in an EU or international decision, "
-    "Slovak companies or citizens, Slovak politics.\n"
-    "relevant=false: sports (matches, results, qualifications, athletes); advertisements, travel offers, job "
-    "postings; pages without real content (only a title or a photo, an empty text, a generic embassy homepage "
-    "or contact page); Algerian elections and the organisation of diaspora electoral constituencies or seats "
-    "abroad, even when Slovakia is listed among the countries of a zone; and when the matching word means "
-    "something else (a person's name, another country).\n"
-    "Rules of precedence: sports ALWAYS means relevant=false, also when Slovakia or a Slovak athlete or club "
-    "is listed among participants, groups, fixtures or results. "
-    "If the text consists only of website navigation (menus, section lists, links, contact details) or headlines "
-    "of other news, treat it as a page without real content; a mention of Slovakia only in such parts does not count.\n"
-    "Decide from the article text when it is given; title and snippet alone can be misleading. "
-    "The article may be in French, Arabic or English."
-)
-
-# výseky textu okolo zmienky o Slovensku (zmienka býva aj v poslednom odseku)
-SLOVAK_RE = re.compile(r"slovaqu|slovak|bratislav|سلوفاك|fico|فيتسو|blan[aá]r|بلانار", re.I)
-TEXT_HEAD_CHARS = 1500
-TEXT_WINDOW_CHARS = 500
-TEXT_MAX_WINDOWS = 6
-
-
-def text_excerpt(text: str) -> str:
-    """Začiatok textu + okolie každej zmienky o Slovensku (bez prekrývania), aby sa zmestil aj dlhý článok."""
-    text = (text or "").strip()
-    if len(text) <= TEXT_HEAD_CHARS + 2 * TEXT_WINDOW_CHARS:
-        return text
-    parts, last_end = [text[:TEXT_HEAD_CHARS]], TEXT_HEAD_CHARS
-    for m in SLOVAK_RE.finditer(text, TEXT_HEAD_CHARS):
-        if len(parts) > TEXT_MAX_WINDOWS:
-            break
-        start = max(m.start() - TEXT_WINDOW_CHARS, last_end)
-        end = min(m.end() + TEXT_WINDOW_CHARS, len(text))
-        if start >= end:
-            continue
-        parts.append(("[…] " if start > last_end else "") + text[start:end])
-        last_end = end
-    return " ".join(parts) + (" […]" if last_end < len(text) else "")
-
-
-_JSON_RE = re.compile(r"\{.*?\}", re.S)
+# Zadanie a príprava správy sú spoločné s produkciou (ai_relevance.py) — meria sa presne to, čo beží v pipeline
+from ai_relevance import SYSTEM_PROMPT, build_user_msg, parse_answer, text_excerpt  # noqa: E402,F401
 
 
 # ── vstup ─────────────────────────────────────────────────────────────────────
@@ -135,30 +88,6 @@ def balanced_sample(rows: list[dict], limit: int | None, seed: int = 42) -> list
 
 
 # ── AI ────────────────────────────────────────────────────────────────────────
-
-def build_user_msg(row: dict) -> str:
-    msg = (f"Source domain: {row.get('domain') or ''}\n"
-           f"Title: {row.get('title') or ''}\n\n"
-           f"Snippet:\n{(row.get('snippet') or '')[:MAX_SNIPPET_CHARS]}")
-    if "text" in row:  # export s ?text=1
-        body = (row.get("text") or "").strip()
-        msg += (f"\n\nArticle text ({len(body)} chars):\n{text_excerpt(body)}" if body
-                else "\n\nArticle text: (empty — no text could be extracted)")
-    return msg
-
-
-def parse_answer(answer: str) -> tuple[bool, int | None, str]:
-    """JSON odpoveď modelu → (relevant, confidence, reason). Pri neplatnej odpovedi ValueError."""
-    m = _JSON_RE.search(answer or "")
-    if not m:
-        raise ValueError(f"AI nevrátilo JSON: {answer[:200]!r}")
-    data = json.loads(m.group(0))
-    if not isinstance(data.get("relevant"), bool):
-        raise ValueError(f"neplatná hodnota 'relevant': {answer[:200]!r}")
-    conf = data.get("confidence")
-    conf = int(conf) if isinstance(conf, (int, float)) else None
-    return data["relevant"], conf, str(data.get("reason") or "").strip()
-
 
 def ask_ai(row: dict, model: str, api_key: str, base_url: str, thinking: bool) -> tuple[bool, int | None, str]:
     payload = {

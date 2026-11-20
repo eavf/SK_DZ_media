@@ -20,6 +20,7 @@ from extract_articles_reworked import CandidateArticle, extract_candidate
 from config.config import get_db_engine, init_context
 from translate import translate_ar_fr
 from classify_ai import classify_and_mark
+from ai_relevance import assess_and_save
 from source_relink import mark_content_duplicate, mark_url_duplicate, relink_source
 
 s, paths = init_context()
@@ -145,6 +146,11 @@ def main() -> int:
                 return 0
         except Exception as e:
             logger.warning("AI klasifikácia preskočená pre id=%s: %s", article_id, e)
+        # AI návrh relevancie (len návrh; ručne označené a už posúdené články sa preskočia)
+        try:
+            assess_and_save(article_id)
+        except Exception as e:
+            logger.warning("AI relevancia preskočená pre id=%s: %s", article_id, e)
         if row.get("relevance") != 0:
             _translate_if_arabic(article_id, result, row)
         logger.info("OK: id=%s, chars=%s", article_id, result.extracted_chars)

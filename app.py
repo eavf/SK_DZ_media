@@ -216,7 +216,8 @@ def _parse_ingest_summary(out: str) -> dict | None:
     return None
 
 
-_EXTRACT_SUMMARY_KEYS = ("ok", "soft_deleted", "commercial", "failed", "duplicate", "ai_sport", "pdf_unreadable", "bad_url")
+_EXTRACT_SUMMARY_KEYS = ("ok", "soft_deleted", "commercial", "failed", "duplicate", "ai_sport", "pdf_unreadable", "bad_url",
+                         "ai_relevant", "ai_irrelevant")
 
 
 def _parse_extract_summary(out: str) -> dict | None:
@@ -277,6 +278,18 @@ RUN_STATE_LABELS = {"new": "nové", "extracted": "extrahované", "errors": "chyb
 # Stav extrakcie v celej DB (preklik z úvodnej stránky) — rovnaké pravidlá ako extract_bulk.fetch_pending
 EXTRACT_STATE_LABELS = {"pending": "čaká na extrakciu", "failed": "neúspešná extrakcia"}
 
+# AI návrh relevancie (ai_relevance.py, migrácia 004) — kým stĺpce chýbajú, zobrazí sa NULL a filter sa ignoruje
+AI_RELEVANCE_COLS = "a.ai_relevance, a.ai_relevance_conf, a.ai_relevance_reason, a.ai_relevance_at"
+AI_RELEVANCE_NULL_COLS = ("NULL AS ai_relevance, NULL AS ai_relevance_conf, NULL AS ai_relevance_reason, "
+                          "NULL AS ai_relevance_at")
+AI_RELEVANCE_FILTERS = {"1": "a.ai_relevance = 1", "0": "a.ai_relevance = 0",
+                        "none": "a.ai_relevance_at IS NULL"}
+
+
+def ai_relevance_ready(conn) -> bool:
+    from ai_relevance import columns_ready
+    return columns_ready(conn)
+
 
 def _extract_state_sql(state: str) -> str:
     from extract_bulk import TRANSIENT_ERROR_SQL
@@ -297,7 +310,7 @@ def parse_run_filter(run: str | None, rstate: str | None) -> tuple[str | None, s
 
 def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str, include_deleted: bool, include_avoided: bool,
                   only_ai_sport: bool = False, run: str | None = None, run_state: str | None = None,
-                  extract_state: str | None = None):
+                  extract_state: str | None = None, ai_relevance: str | None = None):
     """
     Zostaví WHERE klauzulu pre browse/export.
 
@@ -309,6 +322,7 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
     run:             priečinok runu (run_XXX) → len články prepojené s jeho ingestami (run_articles)
     run_state:       new | extracted | errors | pending | removed — ako stĺpce na stránke Process
     extract_state:   pending | failed — ako „Čaká na extrakciu“ / „Neúspešná extrakcia“ na úvodnej stránke
+    ai_relevance:    '1' | '0' | 'none' — AI návrh relevancie (ai_relevance.py); None = bez filtra
 
     Tlačítká na browse.html:
       Reset        — days=0, extraction=all, rel=1_or_null, del=0, av=0  (default pri /browse)
@@ -341,6 +355,9 @@ def build_filters(days: int, extraction: str, only_slovak: bool, relevance: str,
 
     if extract_state in EXTRACT_STATE_LABELS:
         where.append(f"({_extract_state_sql(extract_state)})")
+
+    if ai_relevance in AI_RELEVANCE_FILTERS:
+        where.append(AI_RELEVANCE_FILTERS[ai_relevance])
 
     if extraction == "unextracted":
         where.append("a.content_text IS NULL")
@@ -379,7 +396,7 @@ def browse_q_from_request():
     Vytiahne len browse filtre (days/extraction/sk/rel/del/av/run/rstate) z requestu.
     Funguje pre GET aj POST, lebo request.values = args + form.
     """
-    allowed = {"days", "extraction", "sk", "rel", "del", "av", "run", "rstate", "state"}
+    allowed = {"days", "extraction", "sk", "rel", "del", "av", "run", "rstate", "state", "ai"}
     q = request.values.to_dict(flat=True)
     return {k: v for k, v in q.items() if k in allowed}
 
@@ -497,9 +514,13 @@ def browse():
     include_avoided = request.args.get("av", "0") == "1"
     run, rstate = parse_run_filter(request.args.get("run"), request.args.get("rstate"))
     state = request.args.get("state") if request.args.get("state") in EXTRACT_STATE_LABELS else None
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        ai_ready = ai_relevance_ready(conn)
+    ai_filter = request.args.get("ai") if ai_ready and request.args.get("ai") in AI_RELEVANCE_FILTERS else None
 
     where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided, only_ai_sport,
-                                      run=run, run_state=rstate, extract_state=state)
+                                      run=run, run_state=rstate, extract_state=state, ai_relevance=ai_filter)
 
     limit = 300 if days > 0 or extraction == "all" else 100
     sql = f"""
@@ -520,6 +541,7 @@ def browse():
             a.relevance_note,
             a.deleted_at,
             a.ai_label,
+            {AI_RELEVANCE_COLS if ai_ready else AI_RELEVANCE_NULL_COLS},
             s.id AS source_id,
             s.is_avoided,
             s.notes AS source_notes
@@ -530,7 +552,6 @@ def browse():
         LIMIT {limit}
     """
 
-    engine = get_db_engine()
     with engine.begin() as conn:
         rows = conn.execute(text(sql), params).fetchall()
 
@@ -571,6 +592,8 @@ def browse():
         rstate_label=RUN_STATE_LABELS.get(rstate),
         state=state,
         state_label=EXTRACT_STATE_LABELS.get(state),
+        ai_ready=ai_ready,
+        ai_filter=ai_filter,
     )
 
 
@@ -1185,7 +1208,8 @@ def article_edit_save(article_id: int):
 def article_detail(article_id: int):
     engine = get_db_engine()
     with engine.begin() as conn:
-        r = conn.execute(text("""
+        ai_cols = AI_RELEVANCE_COLS if ai_relevance_ready(conn) else AI_RELEVANCE_NULL_COLS
+        r = conn.execute(text(f"""
             SELECT
                 a.id,
                 a.source_id,
@@ -1232,7 +1256,8 @@ def article_detail(article_id: int):
 
                 a.relevance,
                 a.relevance_note,
-                a.deleted_at
+                a.deleted_at,
+                {ai_cols}
             FROM articles a
             JOIN sources s ON s.id = a.source_id
             WHERE a.id = :id

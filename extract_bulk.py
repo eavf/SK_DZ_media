@@ -42,6 +42,7 @@ from extract_articles_reworked import CandidateArticle, extract_candidate, find_
 from config.config import get_db_engine, init_cli, init_context
 from translate import translate_ar_fr
 from classify_ai import ClassificationStopped, classify_and_mark, classify_pending
+from ai_relevance import ai_relevance_batch, assess_and_save, assess_pending
 from source_relink import mark_content_duplicate, mark_url_duplicate, relink_source
 
 s, paths = init_context()
@@ -406,8 +407,9 @@ def main() -> int:
     logger.info("Pending: %s článkov (limit=%s)", len(pending), args.limit)
 
     counts = {"ok": 0, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0,
-              "pdf_unreadable": 0, "bad_url": 0}
+              "pdf_unreadable": 0, "bad_url": 0, "ai_relevant": 0, "ai_irrelevant": 0}
     ai_stopped = False
+    ai_rel_stopped = False
     translation_stopped = False
     last_domain_fetch: dict[str, float] = {}
     DOMAIN_DELAY = 1.5  # min. sekúnd medzi requestmi na rovnakú doménu
@@ -466,6 +468,16 @@ def main() -> int:
                 ai_stopped = True
                 logger.warning("AI klasifikácia zastavená (%s) — dokončí sa pri ďalšom behu.", e)
 
+        # AI návrh relevancie (len návrh, relevance/deleted_at nemení) — ponechané, ručne neoznačené články
+        if status == "ok" and row.get("relevance") is None and not ai_rel_stopped:
+            try:
+                ai_rel = assess_and_save(article_id)
+                if ai_rel is not None:
+                    counts["ai_relevant" if ai_rel else "ai_irrelevant"] += 1
+            except ClassificationStopped as e:
+                ai_rel_stopped = True
+                logger.warning("AI relevancia zastavená (%s) — dokončí sa pri ďalšom behu.", e)
+
         # prekladajú sa len ponechané články — nie zmazané (bez SK kontextu, duplikát), komerčné,
         # neúspešné ani skôr označené ako irelevantné (relevance=0)
         if status == "ok" and row.get("relevance") != 0 and not translation_stopped:
@@ -479,11 +491,18 @@ def main() -> int:
     # Dobehnutie AI klasifikácie pre články, kde predtým zlyhalo API
     if not args.dry_run and not ai_stopped:
         counts["ai_sport"] += classify_pending(limit=args.limit)["sport"]
+    # Dobehnutie AI návrhov relevancie (staršie články, zlyhané volania)
+    if not args.dry_run and not ai_rel_stopped:
+        # veľký model ~10–25 s/článok — v dennom behu len malá dávka, staršie: python ai_relevance.py --apply
+        rel = assess_pending(limit=min(args.limit, ai_relevance_batch()))
+        counts["ai_relevant"] += rel["relevant"]
+        counts["ai_irrelevant"] += rel["irrelevant"]
 
     logger.info(
-        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, duplicate=%s, ai_sport=%s, pdf_unreadable=%s, bad_url=%s",
+        "Hotovo: ok=%s, soft_deleted=%s, commercial=%s, failed=%s, duplicate=%s, ai_sport=%s, pdf_unreadable=%s, "
+        "bad_url=%s, ai_relevant=%s, ai_irrelevant=%s",
         counts["ok"], counts["soft_deleted"], counts["commercial"], counts["failed"], counts["duplicate"],
-        counts["ai_sport"], counts["pdf_unreadable"], counts["bad_url"]
+        counts["ai_sport"], counts["pdf_unreadable"], counts["bad_url"], counts["ai_relevant"], counts["ai_irrelevant"]
     )
 
     translated = translate_missing_titles(args.limit, args.dry_run)

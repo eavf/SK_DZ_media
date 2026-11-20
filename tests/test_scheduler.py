@@ -37,12 +37,19 @@ class TestParseExtractSummary:
         from app import _parse_extract_summary
         out = "… [INFO] extract_bulk: Hotovo: ok=15, soft_deleted=3, commercial=0, failed=1, duplicate=2, ai_sport=4 in /app/x.py:1"
         assert _parse_extract_summary(out) == {"ok": 15, "soft_deleted": 3, "commercial": 0, "failed": 1,
-                                               "duplicate": 2, "ai_sport": 4, "pdf_unreadable": 0, "bad_url": 0}
+                                               "duplicate": 2, "ai_sport": 4, "pdf_unreadable": 0, "bad_url": 0,
+                                               "ai_relevant": 0, "ai_irrelevant": 0}
 
     def test_old_format_without_new_keys(self):
         from app import _parse_extract_summary
         assert _parse_extract_summary("Hotovo: ok=1, soft_deleted=0, commercial=0, failed=0") == {
-            "ok": 1, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0, "pdf_unreadable": 0, "bad_url": 0}
+            "ok": 1, "soft_deleted": 0, "commercial": 0, "failed": 0, "duplicate": 0, "ai_sport": 0, "pdf_unreadable": 0, "bad_url": 0,
+            "ai_relevant": 0, "ai_irrelevant": 0}
+
+    def test_ai_relevance_counts(self):
+        from app import _parse_extract_summary
+        s = _parse_extract_summary("Hotovo: ok=3, failed=0, ai_relevant=2, ai_irrelevant=1")
+        assert s["ai_relevant"] == 2 and s["ai_irrelevant"] == 1
 
     def test_no_summary(self):
         from app import _parse_extract_summary

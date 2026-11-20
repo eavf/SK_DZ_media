@@ -120,6 +120,18 @@
             </select>
           </div>
 
+          {% if ai_ready %}
+          <div class="filter-item">
+            <label for="f-ai" title="Návrh AI (ai_relevance.py) — len návrh, rozhoduješ ty">AI návrh</label>
+            <select id="f-ai" name="ai">
+              <option value="" {% if not ai_filter %}selected{% endif %}>všetky</option>
+              <option value="1" {% if ai_filter == '1' %}selected{% endif %}>AI: relevantné</option>
+              <option value="0" {% if ai_filter == '0' %}selected{% endif %}>AI: nerelevantné</option>
+              <option value="none" {% if ai_filter == 'none' %}selected{% endif %}>neposúdené</option>
+            </select>
+          </div>
+          {% endif %}
+
           <div class="filter-item">
             <label for="f-av">Skryté domény</label>
             <select id="f-av" name="av">
@@ -191,6 +203,7 @@
   <input type="hidden" name="rel" value="{{ relevance }}">
   <input type="hidden" name="del" value="{{ del_mode }}">
   <input type="hidden" name="av" value="{{ 1 if include_avoided else 0 }}">
+  {% if ai_filter %}<input type="hidden" name="ai" value="{{ ai_filter }}">{% endif %}
   {% if run %}<input type="hidden" name="run" value="{{ run }}"><input type="hidden" name="rstate" value="{{ rstate or '' }}">{% endif %}
   {% if state %}<input type="hidden" name="state" value="{{ state }}">{% endif %}
 
@@ -278,6 +291,14 @@
               {% endif %}
               {% if r.ai_label == 'sport' %}
                 <span class="pill purple" title="{{ r.relevance_note or '' }}">šport (AI)</span>
+              {% endif %}
+              {% if r.ai_relevance is not none %}
+                {% set ai_tip = "Návrh AI (istota " ~ (r.ai_relevance_conf if r.ai_relevance_conf is not none else "?") ~ "): " ~ (r.ai_relevance_reason or "") %}
+                {% if r.ai_relevance == 1 %}
+                  <span class="pill {{ 'info' if r.relevance is none else 'gray' }}" title="{{ ai_tip }}">AI: relevantné</span>
+                {% else %}
+                  <span class="pill {{ 'orange' if r.relevance is none else 'gray' }}" title="{{ ai_tip }}">AI: nerelevantné</span>
+                {% endif %}
               {% endif %}
 
               {% set fe = (r.fetch_error or "") %}

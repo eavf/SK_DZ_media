@@ -84,6 +84,18 @@
       </div>
     </div>
 
+    {% if r["ai_relevance_at"] %}
+    <div class="row" title="Len návrh AI (ai_relevance.py) — relevanciu nastavuješ ty">
+      <div class="k">AI návrh</div>
+      <div class="v">
+        {% if r["ai_relevance"] == 1 %}<span class="pill ok">relevantné</span>{% else %}<span class="pill warn">nerelevantné</span>{% endif %}
+        {% if r["ai_relevance_conf"] is not none %}<span class="pill">istota {{ r["ai_relevance_conf"] }} %</span>{% endif %}
+        {{ r["ai_relevance_reason"] or "" }}
+        <span style="opacity:.6;font-size:12px">({{ r["ai_relevance_at"] }})</span>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="row"><div class="k">Source notes</div><div class="v">{{ r["source_notes"] or "-" }}</div></div>
 
     <div class="row"><div class="k">Ingest</div>

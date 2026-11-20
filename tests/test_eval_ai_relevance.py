@@ -56,3 +56,10 @@ def test_user_msg_with_text_column():
     msg = e.build_user_msg({"domain": "d", "title": "t", "snippet": "s", "text": "Bratislava"})
     assert "Article text (10 chars)" in msg
     assert "Article text" not in e.build_user_msg({"domain": "d", "title": "t", "snippet": "s"})
+
+
+def test_apply_overrides():
+    rows = [{"id": "1", "relevance": 1}, {"id": "2", "relevance": 1}]
+    assert [r["relevance"] for r in e.apply_overrides(rows, ["2=0"])] == [1, 0]
+    with pytest.raises(SystemExit):
+        e.apply_overrides(rows, ["2=x"])

@@ -5,7 +5,7 @@ Porovná odpoveď LLM (NVIDIA API, OpenAI-kompatibilné) s ručným označením 
 (/export/csv, stĺpce id;domain;published;url;title;snippet;fetch_error;relevance;note).
 DB sa nepoužíva a nič sa nezapisuje — výsledok je len report + CSV s odpoveďami.
 
-Do merania idú len ručne označené články: relevance 0/1 a poznámka nezačína „auto:“
+Do merania idú len ručne označené články: relevance 0/1 a poznámka nezačína „auto:“ ani „duplikát“
 (automatické vyradenia — komerčné, šport AI, PDF, duplikáty — nie sú tvoje rozhodnutie).
 S exportom ?text=1 dostane AI aj text (začiatok + okolie zmienok o Slovensku), inak len
 titulok, snippet a doménu. Ručné označenie vychádza z celého textu, preto export s textom.
@@ -47,11 +47,16 @@ SYSTEM_PROMPT = (
     "relevant=true when the text says something about Slovakia, even briefly or at the end of the article: "
     "Slovak–Algerian relations (visits, meetings, agreements, trade, cooperation, embassy activities), "
     "Slovak officials acting or speaking, Slovakia's position in an EU or international decision, "
-    "Slovak companies or citizens, Slovakia listed among countries in an Algerian decision that concerns them "
-    "(e.g. diaspora electoral constituencies, visas, consular matters), Slovak politics.\n"
+    "Slovak companies or citizens, Slovak politics.\n"
     "relevant=false: sports (matches, results, qualifications, athletes); advertisements, travel offers, job "
     "postings; pages without real content (only a title or a photo, an empty text, a generic embassy homepage "
-    "or contact page); and when the matching word means something else (a person's name, another country).\n"
+    "or contact page); Algerian elections and the organisation of diaspora electoral constituencies or seats "
+    "abroad, even when Slovakia is listed among the countries of a zone; and when the matching word means "
+    "something else (a person's name, another country).\n"
+    "Rules of precedence: sports ALWAYS means relevant=false, also when Slovakia or a Slovak athlete or club "
+    "is listed among participants, groups, fixtures or results. "
+    "If the text consists only of website navigation (menus, section lists, links, contact details) or headlines "
+    "of other news, treat it as a page without real content; a mention of Slovakia only in such parts does not count.\n"
     "Decide from the article text when it is given; title and snippet alone can be misleading. "
     "The article may be in French, Arabic or English."
 )
@@ -94,12 +99,24 @@ def load_labeled(path: Path) -> list[dict]:
     for r in rows:
         rel = (r.get("relevance") or "").strip()
         note = (r.get("note") or "").strip()
-        if rel not in ("0", "1") or note.lower().startswith("auto:"):
+        # „duplikát #…“ — označenie hovorí o duplicite, nie o téme
+        if rel not in ("0", "1") or note.lower().startswith("auto:") or note.lower().startswith("duplikát"):
             continue
         if not (r.get("title") or r.get("snippet")):
             continue
         out.append({**r, "relevance": int(rel)})
     return out
+
+
+def apply_overrides(rows: list[dict], overrides: list[str]) -> list[dict]:
+    """--override "873,874=0": prepíše ručné označenie uvedených článkov (oprava bez nového exportu)."""
+    fix = {}
+    for o in overrides:
+        ids, _, val = o.partition("=")
+        if val not in ("0", "1"):
+            raise SystemExit(f"--override {o!r}: očakávam ID,ID=0 alebo =1")
+        fix.update({i.strip(): int(val) for i in ids.split(",") if i.strip()})
+    return [{**r, "relevance": fix.get(r["id"], r["relevance"])} for r in rows]
 
 
 def balanced_sample(rows: list[dict], limit: int | None, seed: int = 42) -> list[dict]:
@@ -155,10 +172,17 @@ def ask_ai(row: dict, model: str, api_key: str, base_url: str, thinking: bool) -
     if not thinking:
         # reasoning modely (Nemotron, Qwen3…) by inak minuli tokeny na premýšľanie
         payload["chat_template_kwargs"] = {"enable_thinking": False}
-    for attempt in range(5):
-        resp = requests.post(f"{base_url}/chat/completions",
-                             headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
-                             json=payload, timeout=REQUEST_TIMEOUT)
+    for attempt in range(8):
+        try:
+            resp = requests.post(f"{base_url}/chat/completions",
+                                 headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
+                                 json=payload, timeout=REQUEST_TIMEOUT)
+        except (requests.ConnectionError, requests.Timeout) as e:
+            # výpadok siete/DNS — počkať, nie preskočiť článok
+            wait = min(30 * (attempt + 1), 180)
+            print(f"   sieť nedostupná ({type(e).__name__}), čakám {wait} s…", file=sys.stderr)
+            time.sleep(wait)
+            continue
         if resp.status_code == 429 or resp.status_code >= 500:
             wait = 30 * (attempt + 1)
             print(f"   HTTP {resp.status_code}, čakám {wait} s…", file=sys.stderr)
@@ -166,7 +190,7 @@ def ask_ai(row: dict, model: str, api_key: str, base_url: str, thinking: bool) -
             continue
         resp.raise_for_status()
         return parse_answer(resp.json()["choices"][0]["message"]["content"] or "")
-    raise RuntimeError("API opakovane vracia 429/5xx")
+    raise RuntimeError("API opakovane nedostupné (sieť, 429, 5xx)")
 
 
 # ── výsledky ──────────────────────────────────────────────────────────────────
@@ -219,8 +243,11 @@ def main() -> int:
     ap.add_argument("--limit", type=int, help="vyvážená vzorka N článkov (polovica relevantných)")
     ap.add_argument("--delay", type=float, default=2.0, help="pauza medzi volaniami (s), free limit ~40/min")
     ap.add_argument("--thinking", action="store_true", help="nechať modelu premýšľanie (pomalšie)")
-    ap.add_argument("--out", type=Path, help="CSV s odpoveďami (default <csv>.ai_<model>.csv)")
+    ap.add_argument("--out", type=Path, help="CSV s odpoveďami (default <csv>.ai_<model>[_<tag>].csv)")
+    ap.add_argument("--tag", default="", help="označenie verzie zadania v názve výstupu (napr. v2)")
     ap.add_argument("--report-only", action="store_true")
+    ap.add_argument("--override", action="append", default=[], metavar="ID,ID=0|1",
+                    help="oprava ručného označenia bez nového exportu, napr. 873,874=0 (dá sa opakovať)")
     args = ap.parse_args()
 
     load_dotenv()
@@ -230,8 +257,11 @@ def main() -> int:
         print("Chýba NVIDIA_API_KEY v .env", file=sys.stderr)
         return 2
 
-    rows = balanced_sample(load_labeled(args.csv), args.limit)
-    out = args.out or args.csv.with_name(f"{args.csv.stem}.ai_{re.sub(r'[^A-Za-z0-9.-]+', '_', args.model)}.csv")
+    rows = apply_overrides(load_labeled(args.csv), args.override)
+    rows = balanced_sample(rows, args.limit)
+    tag = f"_{args.tag}" if args.tag else ""
+    out = args.out or args.csv.with_name(
+        f"{args.csv.stem}.ai_{re.sub(r'[^A-Za-z0-9.-]+', '_', args.model)}{tag}.csv")
     done = load_done(out, args.model)
     print(f"Ručne označených v CSV: {len(rows)} (vo vzorke), už vyhodnotených: "
           f"{sum(1 for r in rows if r['id'] in done)} → {out}", file=sys.stderr)

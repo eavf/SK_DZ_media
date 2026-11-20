@@ -42,3 +42,17 @@ def test_report_counts():
            {"id": "3", "domain": "d", "title": "t", "manual": 0, "ai": 0, "confidence": 90, "reason": ""}]
     out = e.report(res)
     assert "Zhoda celkom: 67 %" in out and "#2" in out and "#1 " not in out
+
+
+def test_text_excerpt_keeps_late_mention():
+    text = "A" * 5000 + " la Slovaquie a voté contre " + "B" * 5000
+    ex = e.text_excerpt(text)
+    assert ex.startswith("A" * 100) and "Slovaquie a voté contre" in ex and len(ex) < 3000
+
+
+def test_user_msg_with_text_column():
+    msg = e.build_user_msg({"domain": "d", "title": "t", "snippet": "s", "text": ""})
+    assert "empty" in msg
+    msg = e.build_user_msg({"domain": "d", "title": "t", "snippet": "s", "text": "Bratislava"})
+    assert "Article text (10 chars)" in msg
+    assert "Article text" not in e.build_user_msg({"domain": "d", "title": "t", "snippet": "s"})

@@ -12,3 +12,6 @@ config/translator_backend
 # DB dumps
 migrations/*backup*.sql
 templates/*.old
+
+# exporty dát (CSV z /export/csv) a výsledky eval_ai_relevance.py
+docs/*.csv

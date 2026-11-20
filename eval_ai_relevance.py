@@ -7,8 +7,8 @@ DB sa nepoužíva a nič sa nezapisuje — výsledok je len report + CSV s odpov
 
 Do merania idú len ručne označené články: relevance 0/1 a poznámka nezačína „auto:“
 (automatické vyradenia — komerčné, šport AI, PDF, duplikáty — nie sú tvoje rozhodnutie).
-CSV export neobsahuje celý text, AI teda rozhoduje z titulku, snippetu a domény
-(rovnako ako pri prvom pohľade v zozname).
+S exportom ?text=1 dostane AI aj text (začiatok + okolie zmienok o Slovensku), inak len
+titulok, snippet a doménu. Ručné označenie vychádza z celého textu, preto export s textom.
 
 Odpovede sa ukladajú priebežne (--out), opakované spustenie pokračuje od posledného článku.
 
@@ -41,19 +41,45 @@ REQUEST_TIMEOUT = 90
 MAX_SNIPPET_CHARS = 1500
 
 SYSTEM_PROMPT = (
-    "You help a Slovak diplomat monitor Algerian media. Decide whether a news article is RELEVANT "
-    "for monitoring Slovakia and Slovakia–Algeria relations.\n"
+    "You help the Slovak embassy in Algeria monitor Algerian media. Decide whether a news article is RELEVANT, "
+    "i.e. it contains real information concerning Slovakia (Slovaquie, سلوفاكيا).\n"
     "Answer ONLY with JSON: {\"relevant\": true|false, \"confidence\": 0-100, \"reason\": \"<max 15 words>\"}.\n"
-    "relevant=true when Slovakia is a real subject of the article: Slovak–Algerian relations "
-    "(visits, meetings, agreements, trade, investments, cooperation, embassy activities, consular matters), "
-    "Slovak officials (president, prime minister Fico, foreign minister Blanár, ambassador) acting or speaking, "
-    "Slovak companies, products or citizens in Algeria, or Slovak domestic or foreign policy covered on its own.\n"
-    "relevant=false when Slovakia (Slovaquie, سلوفاكيا) is only mentioned in passing: in a list of countries, "
-    "a sports result, an advertisement, a generic EU or UN article, or when the matching word refers to "
-    "something else (a person's name, a different country). Also false for commercial content and job offers.\n"
-    "Decide from the main subject, not from single words. The article may be in French, Arabic or English. "
-    "Only the title, a short snippet and the source domain are available."
+    "relevant=true when the text says something about Slovakia, even briefly or at the end of the article: "
+    "Slovak–Algerian relations (visits, meetings, agreements, trade, cooperation, embassy activities), "
+    "Slovak officials acting or speaking, Slovakia's position in an EU or international decision, "
+    "Slovak companies or citizens, Slovakia listed among countries in an Algerian decision that concerns them "
+    "(e.g. diaspora electoral constituencies, visas, consular matters), Slovak politics.\n"
+    "relevant=false: sports (matches, results, qualifications, athletes); advertisements, travel offers, job "
+    "postings; pages without real content (only a title or a photo, an empty text, a generic embassy homepage "
+    "or contact page); and when the matching word means something else (a person's name, another country).\n"
+    "Decide from the article text when it is given; title and snippet alone can be misleading. "
+    "The article may be in French, Arabic or English."
 )
+
+# výseky textu okolo zmienky o Slovensku (zmienka býva aj v poslednom odseku)
+SLOVAK_RE = re.compile(r"slovaqu|slovak|bratislav|سلوفاك|fico|فيتسو|blan[aá]r|بلانار", re.I)
+TEXT_HEAD_CHARS = 1500
+TEXT_WINDOW_CHARS = 500
+TEXT_MAX_WINDOWS = 6
+
+
+def text_excerpt(text: str) -> str:
+    """Začiatok textu + okolie každej zmienky o Slovensku (bez prekrývania), aby sa zmestil aj dlhý článok."""
+    text = (text or "").strip()
+    if len(text) <= TEXT_HEAD_CHARS + 2 * TEXT_WINDOW_CHARS:
+        return text
+    parts, last_end = [text[:TEXT_HEAD_CHARS]], TEXT_HEAD_CHARS
+    for m in SLOVAK_RE.finditer(text, TEXT_HEAD_CHARS):
+        if len(parts) > TEXT_MAX_WINDOWS:
+            break
+        start = max(m.start() - TEXT_WINDOW_CHARS, last_end)
+        end = min(m.end() + TEXT_WINDOW_CHARS, len(text))
+        if start >= end:
+            continue
+        parts.append(("[…] " if start > last_end else "") + text[start:end])
+        last_end = end
+    return " ".join(parts) + (" […]" if last_end < len(text) else "")
+
 
 _JSON_RE = re.compile(r"\{.*?\}", re.S)
 
@@ -94,9 +120,14 @@ def balanced_sample(rows: list[dict], limit: int | None, seed: int = 42) -> list
 # ── AI ────────────────────────────────────────────────────────────────────────
 
 def build_user_msg(row: dict) -> str:
-    return (f"Source domain: {row.get('domain') or ''}\n"
-            f"Title: {row.get('title') or ''}\n\n"
-            f"Snippet:\n{(row.get('snippet') or '')[:MAX_SNIPPET_CHARS]}")
+    msg = (f"Source domain: {row.get('domain') or ''}\n"
+           f"Title: {row.get('title') or ''}\n\n"
+           f"Snippet:\n{(row.get('snippet') or '')[:MAX_SNIPPET_CHARS]}")
+    if "text" in row:  # export s ?text=1
+        body = (row.get("text") or "").strip()
+        msg += (f"\n\nArticle text ({len(body)} chars):\n{text_excerpt(body)}" if body
+                else "\n\nArticle text: (empty — no text could be extracted)")
+    return msg
 
 
 def parse_answer(answer: str) -> tuple[bool, int | None, str]:

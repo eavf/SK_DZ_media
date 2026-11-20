@@ -942,6 +942,9 @@ def delete(article_id: int):
     return redirect(url_for("browse", **browse_q_from_request()))
 
 
+EXPORT_TEXT_MAX_CHARS = 30000  # Excel: max 32 767 znakov v bunke
+
+
 @app.get("/export/csv")
 @power_required
 def export_csv():
@@ -953,6 +956,9 @@ def export_csv():
     include_deleted, only_ai_sport = parse_del_mode(del_mode)
     include_avoided = request.args.get("av", "0") == "1"
     errors_only = request.args.get("errors_only", "0") == "1"
+    # text=1: aj stav zmazania a extrahovaný text (napr. pre eval_ai_relevance.py), skrátený pre Excel
+    with_text = request.args.get("text", "0") == "1"
+    text_col = f"LEFT(a.content_text, {EXPORT_TEXT_MAX_CHARS})" if with_text else "NULL"
     where_sql, params = build_filters(days, extraction, only_slovak, relevance, include_deleted, include_avoided, only_ai_sport)
 
     errors_clause = " AND (a.fetch_error IS NOT NULL AND TRIM(a.fetch_error) <> '')" if errors_only else ""
@@ -967,7 +973,9 @@ def export_csv():
             a.snippet,
             a.fetch_error,
             a.relevance,
-            a.relevance_note
+            a.relevance_note,
+            a.deleted_at,
+            {text_col} AS content_text
         FROM articles a
         JOIN sources s ON s.id = a.source_id
         WHERE {where_sql}{errors_clause}
@@ -980,7 +988,8 @@ def export_csv():
 
     out = io.StringIO()
     writer = csv.writer(out, delimiter=";")
-    writer.writerow(["id", "domain", "published", "url", "title", "snippet", "fetch_error", "relevance", "note"])
+    header = ["id", "domain", "published", "url", "title", "snippet", "fetch_error", "relevance", "note"]
+    writer.writerow(header + (["deleted", "text"] if with_text else []))
 
     if not rows:
         writer.writerow(["", "", "", "", "Žiadne nové správy", "", "", "", ""])
@@ -992,7 +1001,7 @@ def export_csv():
                 r.fetch_error or "",
                 "" if r.relevance is None else int(r.relevance),
                 r.relevance_note or ""
-            ])
+            ] + ([1 if r.deleted_at else 0, r.content_text or ""] if with_text else []))
 
     logger.info("CSV export: %d rows, %dd filter", len(rows), days)
     mem = io.BytesIO(out.getvalue().encode("utf-8-sig"))  # BOM helps Excel

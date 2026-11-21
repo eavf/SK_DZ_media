@@ -158,32 +158,26 @@ Claude Code / iní klienti môžu namiesto kľúča v ceste poslať `Authorizati
 `fetch_article_page` sťahuje len URL článkov z DB (nie ľubovoľné adresy) — weby blokujúce Slovensko
 (aps.dz, elmoudjahid.dz) vrátia chybu aj tu.
 
-## Relé cez Alžírsko (router VPN Plus + RPi)
+## Relé cez Alžírsko (RPi cez existujúci IPsec)
 
-aps.dz, elmoudjahid.dz a niektoré ďalšie weby zo Slovenska nejdú (timeout, 403), z Alžírska áno. DS1621 sa preto
-pripojí cez OpenVPN k routeru v Alžírsku a sťahuje cez HTTP proxy (tinyproxy) na Raspberry Pi v tamojšej LAN.
-Cez VPN ide len komunikácia s proxy, nie celá prevádzka DS1621. DS1512 sa nepoužíva.
+aps.dz, elmoudjahid.dz a niektoré ďalšie weby zo Slovenska nejdú (timeout, 403), z Alžírska áno. DS1621 preto
+sťahuje cez HTTP proxy (tinyproxy) na Raspberry Pi v alžírskej LAN. Spojenie ide cez **existujúci site-to-site
+IPsec** medzi routermi — router v SR už smeruje 192.168.1.0/24 do tunela, DS1621 nepotrebuje vlastnú VPN.
+Router v Alžírsku je za CGNAT, VPN server tam preto byť nemôže (a netreba). DS1512 sa nepoužíva.
 
 ```
-dz-app / extract_bulk (DS1621, SK) ──OpenVPN──► router DZ (VPN Plus) ──LAN──► RPi 192.168.1.20:3128 (tinyproxy) ──► aps.dz …
+dz-app / extract_bulk (DS1621 192.168.0.202) ──IPsec routerov──► RPi 192.168.1.20:3128 (tinyproxy) ──► aps.dz …
 ```
 
-Overené 21.11.2026 z RPi: aps.dz 200 (1 s), elmoudjahid.dz 200 (11 s), lexpressiondz.com 403 (aj z DZ;
-cez proxy to skúsi curl_cffi s odtlačkom Chrome — CONNECT tunel odtlačok zachová).
+Overené 21.11.2026:
+- DS1621 → RPi: TCP spojenie prejde; prenos 60 KB z RPi na DS1621 za 4,8–5,8 s (~10–12 KB/s).
+- z RPi: aps.dz 200 (1 s), elmoudjahid.dz 200 (11 s), lexpressiondz.com 403 (aj z DZ; cez proxy to skúsi
+  curl_cffi s odtlačkom Chrome — CONNECT tunel odtlačok zachová).
 
-**Predpoklad:** router v Alžírsku má verejnú IP (alebo DDNS). Over v SRM *Centrum siete → Stav*: WAN IP sa má
-zhodovať s IP, ktorú ukáže napr. whatismyip.com. Ak nie (CGNAT), VPN server musí byť na slovenskej strane
-(router SK alebo VPN Server na DS1621) a RPi sa pripája ako klient — postup sa upraví.
+> Presné nastavenie sa ešte doladí — nižšie je kostra postupu.
 
-> Presné hodnoty (podsieť VPN, pravidlá firewallu) sa ešte doladia — nižšie je kostra postupu.
-
-### 1. Router v Alžírsku — VPN Plus Server (SRM, GUI)
-1. *VPN Plus Server → OpenVPN*: zapni, protokol **UDP**, port `1194`, podsieť napr. `10.8.0.0/24`,
-   zapni **Povoliť klientom prístup do LAN servera**. Port počúva priamo na routeri — presmerovanie netreba.
-2. *SRM → Používateľ*: vytvor `relay` (silné heslo). *VPN Plus Server → Oprávnenia*: `relay` smie len OpenVPN.
-3. *VPN Plus Server → OpenVPN → Exportovať konfiguráciu* (súbor `.ovpn`, prípadne `ca.crt`).
-   Ak je v ňom namiesto adresy zástupný text, nahraď ho verejnou IP / DDNS menom routera.
-4. *Centrum siete → Lokálna sieť → DHCP klienti*: rezervuj pre RPi pevnú adresu `192.168.1.20`.
+### 1. Router v Alžírsku (SRM, GUI)
+*Centrum siete → Lokálna sieť → DHCP klienti*: rezervuj pre RPi pevnú adresu `192.168.1.20`.
 
 ### 2. RPi (192.168.1.20, `ssh rpi`) — tinyproxy
 1. `sudo apt install tinyproxy`
@@ -191,7 +185,7 @@ zhodovať s IP, ktorú ukáže napr. whatismyip.com. Ak nie (CGNAT), VPN server 
    ```
    Port 3128
    Timeout 120
-   Allow 10.8.0.0/24        # len podsieť OpenVPN z VPN Plus (doladiť podľa skutočnej)
+   Allow 192.168.0.202      # len DS1621 (cez IPsec bez NAT — overiť v logu tinyproxy)
    ConnectPort 443
    ConnectPort 80
    DisableViaHeader Yes
@@ -199,20 +193,12 @@ zhodovať s IP, ktorú ukáže napr. whatismyip.com. Ak nie (CGNAT), VPN server 
 3. `sudo systemctl restart tinyproxy && sudo systemctl enable tinyproxy`
 4. Port 3128 **nepresmerovávaj** na routeri — proxy nesmie byť dostupná z internetu.
 
-### 3. DS1621 — VPN klient (DSM 7, GUI)
-1. *Ovládací panel → Sieť → Sieťové rozhranie → Vytvoriť → Vytvoriť profil VPN* → **OpenVPN (importom súboru .ovpn)**.
-2. Server: verejná IP / DDNS routera v Alžírsku, používateľ `relay` + heslo, importuj `.ovpn` (a `ca.crt`).
-3. **Vypni** *Použiť predvolenú bránu vo vzdialenej sieti* (inak pôjde celý internet DS1621 cez Alžírsko
-   a prestane fungovať prístup zvonka), **vypni** zdieľanie internetového pripojenia, **zapni** *Znovu pripojiť pri strate VPN*.
-4. Pripojiť. Stav: *Sieťové rozhranie* → profil VPN = Pripojené. DS1621 musí dosiahnuť `192.168.1.20`
-   (sieť 192.168.1.0/24 sa nesmie biť s LAN na Slovensku — tá je 192.168.0.0/24).
-
-### 4. Zapnutie v aplikácii
+### 3. Zapnutie v aplikácii
 1. Overenie (cez SSH na DS1621, len čítanie):
    `curl -x http://192.168.1.20:3128 -s -o /dev/null -w "%{http_code}\n" -m 120 https://www.aps.dz/fr`
 2. V lokálnom `.env`: `FETCH_RELAY_PROXY=http://192.168.1.20:3128` (`FETCH_RELAY_DOMAINS=aps.dz,elmoudjahid.dz`) → `./deploy.sh`.
 3. V logu `dznews.extract_bulk.log` sú riadky `relé (doména v FETCH_RELAY_DOMAINS)` a `… → skúšam relé`.
-   Ak relé nie je dostupné (VPN dole, RPi vypnuté), článok zlyhá ako predtým (`relé zlyhalo` v logu)
+   Ak relé nie je dostupné (IPsec dole, RPi vypnuté), článok zlyhá ako predtým (`relé zlyhalo` v logu)
    a skúsi sa pri ďalšom behu. Denný beh je o 04:30 — RPi má vtedy bežať.
 
 ## Manuálny deploy (ak automatický zlyhá)

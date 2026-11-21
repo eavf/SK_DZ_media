@@ -209,7 +209,7 @@ def is_js_shell(html: str) -> bool:
 FETCH_TIMEOUT: tuple[int, int] = (15, 60)
 
 
-# Relé: HTTP proxy (tinyproxy) na RPi v Alžírsku cez VPN (FETCH_RELAY_PROXY, napr. http://192.168.1.20:3128).
+# Relé: HTTP proxy (tinyproxy) na RPi v Alžírsku cez IPsec routerov (FETCH_RELAY_PROXY, napr. http://192.168.1.20:3128).
 # Niektoré alžírske weby zo Slovenska nejdú (timeout, 403), z alžírskej IP áno. Domény z FETCH_RELAY_DOMAINS
 # idú rovno cez relé, ostatné len keď priame stiahnutie zlyhá timeoutom, chybou spojenia alebo 403/451.
 RELAY_TIMEOUT: tuple[int, int] = (20, 90)   # stratová linka DZ→SK (~5 KB/s)

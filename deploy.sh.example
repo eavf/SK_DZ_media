@@ -4,7 +4,7 @@
 #   ./deploy.sh              — full deploy (build + push + rsync + pull na server)
 #   ./deploy.sh --no-rebuild — skopíruje templates/config/.env/static a reštartuje
 #   ./deploy.sh --tpl-only   — len šablóny (bez reštartu, hneď aktívne)
-#   ./deploy.sh --restart    — len reštartuje kontajner na serveri
+#   ./deploy.sh --restart    — stiahne image a znovu vytvorí kontajnery na serveri
 #   ./deploy.sh --rebuild    — len build + push (bez deployu na server)
 #   ./deploy.sh --check      — len porovná .env/config/templates/static so serverom
 #
@@ -103,6 +103,26 @@ push_files() {
 remote() { retry "${SSH_NET_ERR}" ssh "${SSH_OPTS[@]}" -o BatchMode=yes "${SYNOLOGY_HOST}" "$@"; }
 remote_tty() { retry "${SSH_NET_ERR}" ssh "${SSH_OPTS[@]}" -t "${SYNOLOGY_HOST}" "$@"; }
 
+# ── Kontrola nasadenej verzie ─────────────────────────────────────────────────
+# Shell kód pre server: GIT_COMMIT v image každého kontajnera z docker-compose.yml musí byť ${GIT_COMMIT}.
+# Ide do toho istého ssh volania ako pull/up — sudo sa nepýta na heslo druhýkrát.
+# version_check_cmd strict → nesúlad skončí kódom 3 (neopakuje sa); inak len upozornenie.
+version_check_cmd() {
+  local on_bad="exit 3"
+  [[ ${1:-} == strict ]] || on_bad="true"
+  printf '%s' "bad=0; ids=\$(${DOCKER} compose ps -aq); [ -n \"\$ids\" ] || bad=1; \
+for id in \$ids; do \
+n=\$(${DOCKER} inspect -f '{{.Name}}' \$id | tr -d /); \
+v=\$(${DOCKER} inspect -f '{{range .Config.Env}}{{println .}}{{end}}' \$id | sed -n 's/^GIT_COMMIT=//p'); \
+s=\$(${DOCKER} inspect -f '{{.State.Status}}' \$id); \
+echo \"    \$n: \${v:-?} (\$s)\"; \
+[ \"\$v\" = '${GIT_COMMIT}' ] && [ \"\$s\" = running ] || bad=1; \
+done; \
+if [ \$bad = 1 ]; then echo '!! Na serveri nebeží očakávaná verzia ${GIT_COMMIT} (alebo kontajner nebeží) — nový image sa nestiahol/nespustil.' >&2; \
+echo '   Over: cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up --force-recreate -d' >&2; ${on_bad}; \
+else echo '--> Verzia ${GIT_COMMIT} beží.'; fi"
+}
+
 # ── Kontrola rozdielov lokál ↔ server ─────────────────────────────────────────
 # Deploy prepisuje na serveri .env, docker-compose.yml, config/, templates/ a static/ lokálnymi verziami.
 # check_remote ukáže, čo by sa prepísalo (hodnoty .env len ako hash, nikdy sa nevypisujú).
@@ -198,7 +218,7 @@ case "${1:-}" in
     echo "  (bez možnosti)   Full deploy: build image → push Docker Hub → rsync konfig → pull + restart na serveri"
     echo "  --no-rebuild     Skopíruje config/.env/static na server a reštartuje (bez buildu)"
     echo "  --tpl-only       Len šablóny (templates/) na server, bez reštartu — zmeny sú hneď aktívne"
-    echo "  --restart        Len reštartuje kontajnery na serveri"
+    echo "  --restart        Stiahne image z Docker Hubu a znovu vytvorí kontajnery na serveri (bez kopírovania)"
     echo "  --rebuild        Len build + push na Docker Hub (bez nasadenia na server)"
     echo "  --check          Len porovná .env, docker-compose.yml, config, templates, static so serverom"
     echo "  -h, --help       Zobrazí túto nápovedu"
@@ -235,7 +255,7 @@ fi
 
 if [[ $MODE == "restart" ]]; then
   echo "--> Rešartujem kontajner na serveri..."
-  remote_tty "cd ${REMOTE_DIR} && ${DOCKER} compose up --force-recreate -d"
+  remote_tty "cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up --force-recreate -d && $(version_check_cmd)"
   echo "==> Hotovo."
   exit 0
 fi
@@ -279,5 +299,5 @@ remote_tty "sudo /bin/mkdir -p ${REMOTE_DIR}/logs ${REMOTE_DIR}/data ${REMOTE_DI
 
 # ── 5. Pull nový image a reštartuj ────────────────────────────────────────────
 echo "--> Pullnem nový image a reštartujem na serveri..."
-remote_tty "cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up --force-recreate -d && ${DOCKER} image prune -f"
+remote_tty "cd ${REMOTE_DIR} && ${DOCKER} compose pull && ${DOCKER} compose up --force-recreate -d && ${DOCKER} image prune -f && $(version_check_cmd strict)"
 echo "==> Deploy hotový."

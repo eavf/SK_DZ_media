@@ -103,7 +103,7 @@ Skopíruje iba `templates/` na Synology. Zmeny sú aktívne ihneď po refresh st
 ./deploy.sh --restart
 ```
 
-Reštartuje kontajner na Synology bez kopírovania čohokoľvek.
+Stiahne aktuálny image z Docker Hubu (`compose pull`) a znovu vytvorí kontajnery, nič nekopíruje. Na konci vypíše verziu (`GIT_COMMIT`) v každom kontajneri; ak sa nezhoduje s lokálnym commitom, len upozorní (napr. lokálne sú novšie commity, ktoré ešte nie sú zbuildované).
 
 ## Len build a push image (bez nasadenia)
 
@@ -112,6 +112,15 @@ Reštartuje kontajner na Synology bez kopírovania čohokoľvek.
 ```
 
 Zbuilduje a pushne nový image na Docker Hub. Nasadenie treba spustiť samostatne cez `./deploy.sh --restart`.
+
+## Kontrola nasadenej verzie
+
+Full deploy na konci (v tom istom ssh volaní ako `compose pull` / `up`, sudo sa nepýta druhýkrát) porovná `GIT_COMMIT` v image každého kontajnera z `docker-compose.yml` (`dz-app`, `dz-scheduler`) s lokálnym commitom a overí, že kontajner beží. Pri nesúlade deploy skončí chybou (kód 3) a vypíše príkaz na ručné stiahnutie image — bez tejto kontroly sa nestiahnutý image prejavil až chýbajúcim súborom (`can't open file '/app/ai_relevance.py'`, 11/2026).
+
+Ručne:
+```bash
+sudo /usr/local/bin/docker exec dz-app env | grep GIT_COMMIT
+```
 
 ## Manuálny deploy (ak automatický zlyhá)
 
@@ -240,9 +249,8 @@ sudo /usr/local/bin/docker exec dz-app python classify_existing.py --limit 20   
 sudo /usr/local/bin/docker exec dz-app python classify_existing.py --apply --limit 500  # zápis
 ```
 
-### Overenie verzie bežiaceho app.py
-V Container Manager → Terminal:
+### Overenie verzie bežiaceho kontajnera
 ```bash
-grep -n "def browse" /app/app.py
+sudo /usr/local/bin/docker exec dz-app env | grep GIT_COMMIT
 ```
-Nová verzia má `browse` na riadku ~270.
+Verzia je aj v pätičke webu a v `/admin/maintenance`.

@@ -20,6 +20,7 @@ def _row(id_, *, title="Accord Algérie-Slovaquie", text=None, relevance=None, f
         "snippet": "snippet", "snippet_fr": None, "lang": lang,
         "first_seen_at": found or datetime(2026, 10, 15, 12, 0), "published_at_real": None,
         "relevance": relevance, "relevance_note": None, "content_text": text, "content_text_fr": None,
+        "fetch_error": None if text else "HTTPError: 403",
         "domain": "aps.dz",
     }
 
@@ -148,3 +149,50 @@ class TestGetArticle:
 
     def test_not_found(self, client):
         assert _get(client, "/api/articles/999").status_code == 404
+
+
+class TestFetchPage:
+    """GET /api/articles/<id>/page — stiahne stránku teraz, nič neukladá."""
+
+    def _patch(self, monkeypatch, result=None, exc=None):
+        import extract_articles_reworked as ear
+        def fake(url, timeout=None):
+            if exc:
+                raise exc
+            return result
+        monkeypatch.setattr(ear, "resolve_and_fetch", fake)
+
+    def test_article_text(self, client, monkeypatch):
+        client.rows.append(_row(5))
+        html = "<html><body><article><p>" + "La Slovaquie et l'Algérie renforcent leur coopération. " * 20 + "</p></article></body></html>"
+        self._patch(monkeypatch, ("https://aps.dz/5", 200, html, "text/html", html.encode()))
+        r = _get(client, "/api/articles/5/page?max_chars=100")
+        assert r.status_code == 200
+        d = r.get_json()
+        assert d["method"] == "article" and d["text_truncated"] and len(d["text"]) == 100
+        assert not any(c[0].lstrip().upper().startswith("UPDATE") for c in client.calls)
+
+    def test_page_text_fallback(self, client, monkeypatch):
+        import api as api_mod
+        import extract_articles_reworked as ear
+        client.rows.append(_row(5))
+        self._patch(monkeypatch, ("https://aps.dz/5", 200, "<html><body><nav>Menu</nav></body></html>", "text/html", b""))
+        monkeypatch.setattr(ear, "extract_text_and_metadata", lambda html: (None, None, None))
+        d = _get(client, "/api/articles/5/page").get_json()
+        assert d["method"] == "page_text" and "Menu" in d["text"]
+
+    def test_http_error(self, client, monkeypatch):
+        import requests
+        client.rows.append(_row(5))
+        self._patch(monkeypatch, exc=requests.HTTPError(response=MagicMock(status_code=403)))
+        r = _get(client, "/api/articles/5/page")
+        assert r.status_code == 502 and "403" in r.get_json()["error"]
+
+    def test_missing_and_auth(self, client):
+        assert _get(client, "/api/articles/9/page").status_code == 404
+        assert _get(client, "/api/articles/9/page", key="zly").status_code == 401
+
+    def test_list_has_fetch_error(self, client):
+        client.rows.extend([_row(1), _row(2, text="La Slovaquie")])
+        arts = _get(client, "/api/articles").get_json()["articles"]
+        assert arts[0]["fetch_error"] == "HTTPError: 403" and arts[1]["fetch_error"] is None

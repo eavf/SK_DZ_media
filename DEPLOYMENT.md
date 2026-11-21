@@ -122,6 +122,34 @@ Ručne:
 sudo /usr/local/bin/docker exec dz-app env | grep GIT_COMMIT
 ```
 
+## MCP konektor pre Claude (claude.ai, aplikácia Claude)
+
+Kontajner `dz-mcp` (`python mcp_server.py --http`) sprístupní články ako MCP server — v chate sa potom dá
+napísať napr. „Sprav prehľad článkov za posledný týždeň“. Nástroje: `list_articles`, `get_article`,
+`fetch_article_page` (stiahne pôvodnú stránku teraz, keď extrakcia zlyhala; nič neukladá), `get_filters`.
+Server počúva len na `127.0.0.1:5090`, von ide cez reverzný proxy DSM (HTTPS). Prístup chráni kľúč v adrese —
+claude.ai pri vlastnom konektore nevie poslať hlavičku s API kľúčom; bez platného kľúča server vráti 404.
+
+1. **Kľúč** — v `.env` musí byť `API_KEYS` (alebo samostatné `MCP_TOKENS`). Nový kľúč:
+   `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`
+2. **Deploy** — `./deploy.sh` (plný, kontajner `dz-mcp` pribudne a skontroluje sa aj jeho verzia).
+3. **Reverzný proxy (GUI DSM)** — *Ovládací panel → Prihlasovací portál → Rozšírené → Reverzný proxy → Vytvoriť*:
+   - Zdroj: protokol **HTTPS**, názov hostiteľa **`mcp.eavf1621.synology.me`**, port **443**
+   - Cieľ: protokol **HTTP**, názov hostiteľa **`localhost`**, port **5090**
+   - *Vlastná hlavička* netreba. V *Rozšírené nastavenia* zvýš časový limit čítania proxy na **120 s**
+     (`fetch_article_page` čaká na pomalé alžírske weby).
+4. **Certifikát** — *Ovládací panel → Zabezpečenie → Certifikát → Nastavenia*: pri položke
+   `mcp.eavf1621.synology.me` vyber certifikát `eavf1621.synology.me` (je na `*.eavf1621.synology.me`).
+   Port 443 je na routeri už presmerovaný na DS1621, DNS `*.eavf1621.synology.me` funguje.
+5. **Kontrola** — `https://mcp.eavf1621.synology.me/health` v prehliadači vráti `ok`.
+6. **Claude** — *Nastavenia → Konektory → Pridať vlastný konektor*: názov `DZ News`, adresa
+   `https://mcp.eavf1621.synology.me/mcp/<kľúč>`, OAuth nevypĺňať. Konektor je potom dostupný na webe aj
+   v aplikácii Claude (Windows) s tým istým účtom; v chate ho zapneš v ponuke nástrojov.
+
+Claude Code / iní klienti môžu namiesto kľúča v ceste poslať `Authorization: Bearer <kľúč>` na `https://…/mcp`.
+`fetch_article_page` sťahuje len URL článkov z DB (nie ľubovoľné adresy) — weby blokujúce Slovensko
+(aps.dz, elmoudjahid.dz) vrátia chybu aj tu.
+
 ## Manuálny deploy (ak automatický zlyhá)
 
 ```bash

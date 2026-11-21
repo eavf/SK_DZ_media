@@ -102,8 +102,8 @@ Web dashboard              (browse, label, translate, export)
   - search (SerpAPI, MFA) and process (ingest, extract_bulk as background jobs, `/process/job/<id>`); the Process run table joins `bundle/runs/<run>/news_bundle.json` with `runs.bundle_filename` (`run_XXX/news_bundle.json`, written by ingest via `bundle_label()`) and shows per run: ingest count/time, new, extracted, errors, pending, removed articles; each number links to `/browse?run=<run_dir>&rstate=<new|extracted|errors|pending|removed>` (filter in `build_filters`, same definitions as the stats)
   - sources (create, note, avoid/unavoid), users
   - `/admin/queries`, `/admin/search-terms`, `/admin/maintenance` (translator backend, fix-dates, DB backup/restore)
-- **api.py** — Read-only JSON API blueprint (`/api`) for AI agents. Auth: `API_KEYS` from `.env` (comma-separated) via `Authorization: Bearer <key>` or `X-API-Key`; without keys the API returns 503. Endpoints: `GET /api/articles` (period `from`/`to`, default last 7 days, `date_field=found|published`, filters `relevance`, `topic` (computed from `topics.json` keywords), `lang`, `source`, `has_text`, `include_text`, `limit`/`offset`), `GET /api/articles/<id>` (full text), `GET /api/meta`, `GET /api/openapi.json` (public). Deleted articles are never returned.
-- **mcp_server.py** — MCP server (stdio, `mcp` SDK 2.x, `requirements-mcp.txt`) exposing tools `list_articles`, `get_article`, `get_filters` over the REST API; runs on the AI client's machine with `DZ_API_URL` + `DZ_API_KEY`.
+- **api.py** — Read-only JSON API blueprint (`/api`) for AI agents. Auth: `API_KEYS` from `.env` (comma-separated) via `Authorization: Bearer <key>` or `X-API-Key`; without keys the API returns 503. Endpoints: `GET /api/articles` (period `from`/`to`, default last 7 days, `date_field=found|published`, filters `relevance`, `topic` (computed from `topics.json` keywords), `lang`, `source`, `has_text`, `include_text`, `limit`/`offset`), `GET /api/articles/<id>` (full text), `GET /api/articles/<id>/page` (fetches the original page live via `resolve_and_fetch` → trafilatura text, else whole visible page text `html2txt`, or PDF Slovak pages; read-only, nothing stored; list items carry `fetch_error` when text is missing), `GET /api/meta`, `GET /api/openapi.json` (public). Deleted articles are never returned.
+- **mcp_server.py** — MCP server (`mcp` SDK 2.x, `requirements-mcp.txt`, installed in the image) exposing tools `list_articles`, `get_article`, `fetch_article_page`, `get_filters` over the REST API. Two modes: stdio on the AI client's machine (`DZ_API_URL` + `DZ_API_KEY`), or remote `--http` in container `dz-mcp` (streamable HTTP, stateless, `127.0.0.1:5090`, behind DSM reverse proxy `https://mcp.eavf1621.synology.me`) for claude.ai custom connectors. `TokenAuth` ASGI wrapper accepts `/mcp/<key>` (claude.ai cannot send headers) or `/mcp` with `Authorization: Bearer`; keys `MCP_TOKENS`, default `API_KEYS`; anything else → 404; `/health` → ok; uvicorn access log is off (it would log the key). Setup steps in `DEPLOYMENT.md`.
 - **Roles** — hierarchy `user < power < admin` (`User.has_role()`), decorators `user_required`, `power_required`, `admin_required`.
 
 ### Configuration
@@ -119,6 +119,7 @@ All config comes from `.env` (loaded via python-dotenv). Key variables:
 - `NVIDIA_API_KEY`, `NVIDIA_MODEL`, `AI_CLASSIFY_ENABLED`, `AI_CLASSIFY_DELAY` — AI sport classification (disabled without key)
 - `AI_RELEVANCE_ENABLED`, `AI_RELEVANCE_MODEL`, `AI_RELEVANCE_SKIP_DOMAINS`, `AI_RELEVANCE_BATCH` — AI relevance suggestion (defaults work without setting them)
 - `API_KEYS` — keys for the read-only `/api` (empty = API disabled)
+- `MCP_TOKENS`, `MCP_PORT` — remote MCP server keys (default `API_KEYS`) and port (5090)
 - `EXTRACT_MAX`, `EXTRACT_ONLY_MISSING`, `LOG_FILE/LEVEL/PREFIX`
 - There is .env.local file, where are put variables for development PC and server 
 - See `.env.example` for the full list.
@@ -193,8 +194,9 @@ CREATE TABLE `articles` (
 
 ### Docker
 
-`docker-compose.yml` defines two containers from image `eavfeavf/dz-news`, both with `network_mode: host` to reach a Synology-hosted MySQL instance:
+`docker-compose.yml` defines three containers from image `eavfeavf/dz-news`, both with `network_mode: host` to reach a Synology-hosted MySQL instance:
 - `dz-app` — runs as a non-root user on port 5088 via gunicorn (2 workers, 4 threads)
 - `dz-scheduler` — runs `python scheduler.py`
+- `dz-mcp` — runs `python mcp_server.py --http` (remote MCP server, no DB access, calls the API of `dz-app`)
 
 `entrypoint.sh` waits until MariaDB accepts connections before starting the main command.

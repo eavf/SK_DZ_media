@@ -8,6 +8,7 @@ Bez nastaveného API_KEYS je API vypnuté (503).
 Endpointy:
     GET /api/articles        zoznam článkov za obdobie (default posledných 7 dní) s filtrami
     GET /api/articles/<id>   detail článku vrátane textu
+    GET /api/articles/<id>/page  stiahne pôvodnú stránku teraz (keď extrakcia zlyhala) — nič neukladá
     GET /api/meta            hodnoty filtrov (témy, jazyky, zdroje)
     GET /api/openapi.json    OpenAPI 3 popis (bez autentifikácie) — pre ChatGPT Actions, n8n, ...
 """
@@ -123,6 +124,8 @@ def _article_json(r, *, topics: list[str], include_text: bool, max_chars: int) -
         "relevance_note": r["relevance_note"],
         "topics": topics,
         "has_text": r["content_text"] is not None,
+        # prečo text chýba (HTTP 403, TIMEOUT…) — text sa dá skúsiť získať cez /articles/<id>/page
+        "fetch_error": (r["fetch_error"] or "")[:200] or None if r["content_text"] is None else None,
     }
     if include_text:
         for key, col in (("text", "content_text"), ("text_fr", "content_text_fr")):
@@ -135,7 +138,7 @@ def _article_json(r, *, topics: list[str], include_text: bool, max_chars: int) -
 _SELECT = """
     SELECT a.id, a.url, a.final_url, a.title, a.title_fr, a.snippet, a.snippet_fr,
            COALESCE(a.lang_detected, a.language) AS lang, a.first_seen_at, a.published_at_real,
-           a.relevance, a.relevance_note, a.content_text, a.content_text_fr, s.domain
+           a.relevance, a.relevance_note, a.content_text, a.content_text_fr, a.fetch_error, s.domain
     FROM articles a
     JOIN sources s ON s.id = a.source_id
 """
@@ -237,6 +240,55 @@ def get_article(article_id: int):
     return jsonify(_article_json(r, topics=t, include_text=True, max_chars=max_chars))
 
 
+PAGE_FETCH_TIMEOUT = (15, 45)   # connect, read — MCP klient nečaká donekonečna
+
+
+@api.get("/articles/<int:article_id>/page")
+@api_key_required
+def fetch_page(article_id: int):
+    """Stiahne pôvodnú stránku článku teraz a vráti jej text (pre články s neúspešnou extrakciou).
+
+    Poradie: trafilatura (hlavný text) → celý viditeľný text stránky (html2txt) → PDF (len strany so SK).
+    Do DB sa nič nezapisuje — uložiť text vie tlačidlo „Stiahnuť“ v detaile článku.
+    """
+    import requests
+    import trafilatura
+    from extract_articles_reworked import extract_text_and_metadata, extract_text_from_pdf, resolve_and_fetch
+
+    with get_db_engine().connect() as conn:
+        r = conn.execute(text("SELECT url, final_url FROM articles WHERE id = :id AND deleted_at IS NULL"),
+                         {"id": article_id}).mappings().fetchone()
+    if not r:
+        return _error(404, f"Článok {article_id} neexistuje alebo je vyradený")
+    url = r["final_url"] or r["url"]
+    max_chars = _int_arg("max_chars", DEFAULT_TEXT_CHARS, 100, 200000)
+    try:
+        final_url, status, html, content_type, raw = resolve_and_fetch(url, timeout=PAGE_FETCH_TIMEOUT)
+    except requests.HTTPError as e:
+        code = getattr(e.response, "status_code", None)
+        return _error(502, f"Stránka vrátila HTTP {code} ({url}) — web pravdepodobne blokuje prístup zo Slovenska "
+                           "alebo roboty; skús ju otvoriť priamo")
+    except Exception as e:
+        return _error(502, f"Stránku sa nepodarilo stiahnuť ({url}): {type(e).__name__}: {str(e)[:200]}")
+
+    if "application/pdf" in (content_type or "").lower() or final_url.lower().endswith(".pdf"):
+        body, method = extract_text_from_pdf(raw, url=final_url), "pdf"
+    else:
+        body, _, _ = extract_text_and_metadata(html)
+        method = "article"
+        if not body:
+            body, method = (trafilatura.html2txt(html) or "").strip() or None, "page_text"
+    return jsonify({
+        "id": article_id,
+        "url": final_url,
+        "http_status": status,
+        "method": method,          # article = hlavný text, page_text = celá stránka vrátane menu, pdf
+        "text": body[:max_chars] if body else None,
+        "text_truncated": bool(body and len(body) > max_chars),
+        "chars": len(body or ""),
+    })
+
+
 @api.get("/meta")
 @api_key_required
 def meta():
@@ -303,6 +355,14 @@ def openapi():
                 "summary": "Detail článku vrátane celého textu (originál aj francúzsky preklad)",
                 "parameters": [{"name": "id", "in": "path", "required": True, "schema": {"type": "integer"}}],
                 "responses": {"200": {"description": "Článok"}, "404": {"description": "Neexistuje"}},
+            }},
+            "/api/articles/{id}/page": {"get": {
+                "operationId": "fetchArticlePage",
+                "summary": "Stiahne pôvodnú stránku článku teraz a vráti jej text (keď has_text = false); nič neukladá",
+                "parameters": [{"name": "id", "in": "path", "required": True, "schema": {"type": "integer"}},
+                               {"name": "max_chars", "in": "query", "required": False,
+                                "schema": {"type": "integer"}, "description": "Max. dĺžka textu (default 20000)"}],
+                "responses": {"200": {"description": "Text stránky"}, "502": {"description": "Stránka nedostupná"}},
             }},
             "/api/meta": {"get": {
                 "operationId": "getMeta",

@@ -10,8 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     default-mysql-client \
  && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt requirements-mcp.txt ./
+# requirements-mcp.txt: vzdialený MCP server (kontajner dz-mcp)
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-mcp.txt
 
 # Používateľ pred COPY: --chown nastaví vlastníka hneď pri kopírovaní
 # (chown -R po COPY by v novej vrstve zduplikoval všetky súbory)

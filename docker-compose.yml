@@ -74,3 +74,21 @@ services:
 
     command: ["python", "scheduler.py"]
 
+  # Vzdialený MCP server pre claude.ai / aplikáciu Claude (mcp_server.py --http) — volá API dz-app
+  # na 127.0.0.1:5088, počúva len na 127.0.0.1:5090; von cez reverzný proxy DSM s HTTPS (DEPLOYMENT.md)
+  dz-mcp:
+    image: eavfeavf/dz-news:latest
+    container_name: dz-mcp
+    restart: unless-stopped
+    network_mode: "host"
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: "${TZ:-Africa/Algiers}"
+      DZ_API_URL: "http://127.0.0.1:${FLASK_PORT:-5088}"
+      MCP_PORT: "${MCP_PORT:-5090}"
+
+    entrypoint: []
+    command: ["python", "mcp_server.py", "--http"]

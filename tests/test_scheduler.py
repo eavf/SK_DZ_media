@@ -101,3 +101,48 @@ class TestExtractStateSql:
         where, _ = build_filters(0, "all", False, "all", False, False, extract_state="failed")
         assert _extract_state_sql("failed") in where
         assert "a.deleted_at IS NULL" in where and "s.is_avoided = 0" in where
+
+
+class TestEmailBreakdown:
+    """Rozpis v dennom maili — prečo nové/znovu videné články v maili nie sú."""
+
+    def test_buckets(self):
+        from scheduler import _email_bucket as b
+        assert b("sport", 0, "auto: sport (AI) – x", True, True, False) == "sport"
+        assert b(None, 0, "auto: duplikát #12", True, True, True) == "duplicate"
+        assert b(None, 0, "auto: komerčné (promo)", None, True, True) == "commercial"
+        assert b(None, 0, "auto: PDF bez textu (sken)", True, False, False) == "unreadable"
+        assert b(None, 0, "auto: URL (/tag/)", None, True, False) == "unreadable"
+        assert b(None, 0, "ručne", None, True, True) == "irrelevant"
+        assert b(None, None, None, True, True, False) == "deleted"
+        assert b(None, None, None, False, False, True) == "no_text_sk"
+        assert b(None, None, None, False, False, False) == "no_text"
+        assert b("other", 1, None, False, True, True) == "shown"
+
+    def test_format_order_and_zeroes(self):
+        from scheduler import format_breakdown
+        counts = {"shown": 2, "no_text": 2, "sport": 3, "deleted": 7, "commercial": 0}
+        assert format_breakdown(counts) == (
+            "šport (AI) 3, bez zmienky o Slovensku (zmazané) 7, text sa nestiahol, Slovensko nespomína 2")
+        assert format_breakdown({"shown": 4}) == ""
+
+    def test_email_body(self, monkeypatch):
+        from unittest.mock import MagicMock
+        import scheduler
+        for k, v in {"smtp_host": "smtp.x", "notify_to": "a@b", "smtp_user": "u", "smtp_pass": "p",
+                     "smtp_port": 587}.items():
+            monkeypatch.setattr(scheduler.s, k, v, raising=False)
+        smtp = MagicMock()
+        monkeypatch.setattr(scheduler.smtplib, "SMTP", smtp)
+        arts = [{"title": "t", "snippet": "", "url": "u", "lang": "fr"}] * 2
+        scheduler.send_notification(14, 17, None, arts, [{"title": "r", "url": "u", "lang": "fr"}] * 4, [], [],
+                                    ({"shown": 2, "deleted": 7, "sport": 3, "no_text": 2},
+                                     {"shown": 4, "deleted": 10, "irrelevant": 3}))
+        msg = smtp.return_value.__enter__.return_value.send_message.call_args[0][0]
+        body = msg.get_content()
+        assert "Nové články: 14, z toho v maili: 2" in body
+        assert "vyradené filtrami: šport (AI) 3, bez zmienky o Slovensku (zmazané) 7, " \
+               "text sa nestiahol, Slovensko nespomína 2" in body
+        assert "Znovu videné: 17, z toho v maili: 4" in body
+        assert "ostatné: označené ako nerelevantné 3, bez zmienky o Slovensku (zmazané) 10" in body
+        assert msg["Subject"] == "DZ News – 2 na posúdenie (14 nových / 17 znovu videných)"

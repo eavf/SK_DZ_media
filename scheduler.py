@@ -9,6 +9,7 @@ Pipeline:
 Po skončení odošle emailové upozornenie. V maili sú len články, ktoré prešli filtrami
 (nie zmazané, nie relevance=0, nie AI šport) — viď _EMAIL_FILTER_SQL. Články bez textu
 (extrakcia zlyhala) sú v samostatnej sekcii, a to len ak titulok/snippet spomína Slovensko.
+Pod počtami je rozpis, prečo ostatné články v maili nie sú (fetch_breakdown, _email_bucket).
 """
 from __future__ import annotations
 
@@ -120,6 +121,73 @@ def _mentions_slovakia(*texts: str | None) -> bool:
     return any(term in combined for term in terms)
 
 
+# Prečo článok nie je v maili — poradie = priorita (článok patrí do prvej zhodnej kategórie)
+_BUCKET_LABELS = {
+    "sport":       "šport (AI)",
+    "duplicate":   "duplikát",
+    "commercial":  "komerčné",
+    "unreadable":  "nečitateľné PDF / nežiaduca URL",
+    "irrelevant":  "označené ako nerelevantné",
+    "deleted":     "bez zmienky o Slovensku (zmazané)",
+    "no_text_sk":  "text sa nestiahol, spomína Slovensko",
+    "no_text":     "text sa nestiahol, Slovensko nespomína",
+    "shown":       "v maili",
+}
+
+
+def _email_bucket(ai_label, relevance, note, deleted, has_text, mentions_sk) -> str:
+    """Kategória článku pre rozpis v maili (rovnaké pravidlá ako _EMAIL_FILTER_SQL + SK filter)."""
+    note = (note or "").lower()
+    if ai_label == "sport":
+        return "sport"
+    if note.startswith("auto: duplikát"):
+        return "duplicate"
+    if note.startswith("auto: komerčné"):
+        return "commercial"
+    if note.startswith("auto: pdf") or note.startswith("auto: url"):
+        return "unreadable"
+    if relevance == 0:
+        return "irrelevant"
+    if deleted:
+        return "deleted"
+    if not has_text:
+        return "no_text_sk" if mentions_sk else "no_text"
+    return "shown"
+
+
+def format_breakdown(counts: dict[str, int], skip: tuple[str, ...] = ("shown",)) -> str:
+    """„bez zmienky o Slovensku (zmazané) 7, šport (AI) 3“ — v poradí _BUCKET_LABELS, nuly vynechané."""
+    return ", ".join(f"{label} {counts[k]}" for k, label in _BUCKET_LABELS.items()
+                     if counts.get(k) and k not in skip)
+
+
+def fetch_breakdown(run_ids: list[int], run_start: datetime) -> tuple[dict[str, int], dict[str, int]]:
+    """Rozpis článkov tohto behu (nové, znovu videné) podľa toho, prečo (ne)sú v maili."""
+    new, reseen = {}, {}
+    try:
+        from config.config import get_db_engine
+        from sqlalchemy import text
+        placeholders = ", ".join(f":r{i}" for i in range(len(run_ids)))
+        params = {f"r{i}": v for i, v in enumerate(run_ids)}
+        params["run_start"] = run_start.strftime("%Y-%m-%d %H:%M:%S")
+        with get_db_engine().begin() as conn:
+            rows = conn.execute(text(f"""
+                SELECT DISTINCT a.id, a.first_seen_at >= :run_start AS is_new, a.ai_label, a.relevance,
+                       a.relevance_note, a.deleted_at IS NOT NULL, a.content_text IS NOT NULL,
+                       a.title, a.title_fr, a.snippet, a.snippet_fr
+                FROM articles a
+                JOIN run_articles ra ON ra.article_id = a.id
+                WHERE ra.run_id IN ({placeholders})
+            """), params).fetchall()
+        for r in rows:
+            bucket = _email_bucket(r[2], r[3], r[4], r[5], r[6], _mentions_slovakia(r[7], r[8], r[9], r[10]))
+            target = new if r[1] else reseen
+            target[bucket] = target.get(bucket, 0) + 1
+    except Exception as e:
+        logger.warning("Nepodarilo sa spočítať rozpis článkov: %s", e)
+    return new, reseen
+
+
 def fetch_reseen_articles(run_ids: list[int], run_start: datetime) -> list[dict]:
     """Vráti články z tohto behu, ktoré existovali pred spustením pipeline."""
     try:
@@ -225,6 +293,7 @@ def send_notification(
     reseen: list[dict] | None = None,
     unverified: list[dict] | None = None,
     search_errors: list[str] | None = None,
+    breakdown: tuple[dict[str, int], dict[str, int]] | None = None,
 ) -> None:
     if not s.smtp_host or not s.notify_to:
         logger.info("SMTP nie je nakonfigurované — notifikácia preskočená.")
@@ -233,7 +302,7 @@ def send_notification(
     subject = (
         f"DZ News – pipeline zlyhala ({failed_step})"
         if failed_step
-        else f"DZ News – {len(articles or [])} relevantných ({inserted} nových / {updated} aktualizovaných)"
+        else f"DZ News – {len(articles or [])} na posúdenie ({inserted} nových / {updated} znovu videných)"
     )
 
     if search_errors and not failed_step:
@@ -245,10 +314,18 @@ def send_notification(
         lines = [
             f"Denná pipeline prebehla úspešne.",
             f"",
-            f"Nové články: {inserted}, z toho relevantných: {len(articles or [])}",
-            f"Znovu videné (aktualizované): {updated}",
-            f"Čas: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+            f"Nové články: {inserted}, z toho v maili: {len(articles or [])}"
+            + (f" (+ {len(unverified)} bez stiahnutého textu)" if unverified else ""),
         ]
+        new_bd, reseen_bd = breakdown or ({}, {})
+        hidden = format_breakdown(new_bd, skip=("shown", "no_text_sk"))
+        if hidden:
+            lines.append(f"   vyradené filtrami: {hidden}")
+        lines.append(f"Znovu videné: {updated}, z toho v maili: {len(reseen or [])}")
+        hidden = format_breakdown(reseen_bd)
+        if hidden:
+            lines.append(f"   ostatné: {hidden}")
+        lines.append(f"Čas: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         if search_errors:
             lines.append("")
             lines.append("!!! Vyhľadávanie SerpAPI vrátilo chybu — výsledky môžu chýbať:")
@@ -373,7 +450,8 @@ def run_pipeline() -> None:
         search_errors = serpapi_errors()
         for e in search_errors:
             logger.error("SerpAPI: %s", e)
-        send_notification(inserted, updated, failed_step, articles, reseen, unverified, search_errors)
+        breakdown = fetch_breakdown(run_ids, run_start) if run_ids else ({}, {})
+        send_notification(inserted, updated, failed_step, articles, reseen, unverified, search_errors, breakdown)
         logger.info("=== Pipeline hotová — nových: %s, aktualizovaných: %s ===", inserted, updated)
     else:
         send_notification(0, 0, failed_step, [], [])

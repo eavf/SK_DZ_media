@@ -83,7 +83,7 @@ MySQL database             (articles + sources tables)
 Web dashboard              (browse, label, translate, export)
 ```
 
-`scheduler.py` (container `dz-scheduler`) runs search → ingest → extract_bulk daily at 15:00 and emails a summary (`SMTP_*`, `NOTIFY_TO`).
+`scheduler.py` (container `dz-scheduler`) runs search → ingest → extract_bulk daily at 15:00 and emails a summary (`SMTP_*`, `NOTIFY_TO`). The email lists only articles passing `_EMAIL_FILTER_SQL`; below the counts, `fetch_breakdown()` / `_email_bucket()` say why the rest is missing (AI sport, duplicate, commercial, unreadable PDF/URL, irrelevant, deleted without Slovak context, text not fetched). Logs are in `logs/` on the server (`/volume1/docker/dz_news/logs/dznews.<script>.log`); the scheduler itself logs to stdout (`docker logs dz-scheduler`).
 
 ### Key Modules
 

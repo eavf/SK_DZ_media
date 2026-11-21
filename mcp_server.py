@@ -43,6 +43,7 @@ server = MCPServer(
         "Keď používateľ chce prehľad / súhrn / čo sa udialo (aj krátko, napr. „prehľad 14 dní, plyn“), "
         "najprv zavolaj zadanie_prehladu(dni, zameranie) a postupuj presne podľa vráteného zadania — "
         "databáza je len jeden zdroj, hľadaj aj sám na webe. "
+        "Kópie (ten istý text pod inou URL) sú v list_articles zlúčené v poli copies — ich text nečítaj. "
         "Arabské články majú francúzsky preklad v poliach *_fr. Odpovedaj po slovensky, ak používateľ nepíše inak."
     ),
 )
@@ -86,6 +87,7 @@ def list_articles(
     has_text: bool = False,
     include_text: bool = False,
     max_chars: int = 4000,
+    include_copies: bool = False,
     limit: int = 50,
     offset: int = 0,
 ) -> dict:
@@ -102,6 +104,8 @@ def list_articles(
         has_text: len články so stiahnutým textom
         include_text: pridať text článku (text, text_fr) skrátený na max_chars
         max_chars: max. dĺžka textu pri include_text
+        include_copies: vrátiť aj kópie samostatne (predvolene zlúčené: článok s rovnakým textom pod inou
+            URL je len v poli `copies` najdlhšej verzie — jeho text nečítaj, stačí uviesť odkaz)
         limit: počet článkov (max 200)
         offset: posun pre stránkovanie
     """
@@ -109,7 +113,8 @@ def list_articles(
         "from": date_from, "to": date_to, "date_field": date_field, "relevance": relevance,
         "topic": topic, "lang": lang, "source": source,
         "has_text": "1" if has_text else None, "include_text": "1" if include_text else None,
-        "max_chars": max_chars if include_text else None, "limit": limit, "offset": offset,
+        "max_chars": max_chars if include_text else None,
+        "copies": "1" if include_copies else None, "limit": limit, "offset": offset,
     })
 
 

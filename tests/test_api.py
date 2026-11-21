@@ -196,3 +196,33 @@ class TestFetchPage:
         client.rows.extend([_row(1), _row(2, text="La Slovaquie")])
         arts = _get(client, "/api/articles").get_json()["articles"]
         assert arts[0]["fetch_error"] == "HTTPError: 403" and arts[1]["fetch_error"] is None
+
+
+_STORY = " ".join(f"slovo{i} Slovaquie Algérie coopération" for i in range(80))   # ~320 slov
+
+
+class TestCopies:
+    def test_versions_merged_longest_kept(self, client):
+        client.rows.extend([
+            _row(1, text=_STORY.replace("coopération", "«coopération»")),
+            _row(2, text=_STORY + " dopísaný odsek o návšteve ministra" * 10),
+            _row(3, text=" ".join(f"iny{i} text o plyne" for i in range(100))),
+        ])
+        d = _get(client, "/api/articles").get_json()
+        assert d["total"] == 2 and d["copies_merged"] == 1
+        a = {x["id"]: x for x in d["articles"]}
+        assert [c["id"] for c in a[2]["copies"]] == [1] and "copies" not in a[3]
+        assert a[2]["copies"][0]["url"] == "https://aps.dz/1"
+
+    def test_copies_param_disables(self, client):
+        client.rows.extend([_row(1, text=_STORY), _row(2, text=_STORY)])
+        d = _get(client, "/api/articles?copies=1").get_json()
+        assert d["total"] == 2 and d["copies_merged"] == 0
+
+    def test_short_texts_and_pdfs_not_merged(self, client):
+        pdf = _row(3, text=_STORY + " ďalšie články čísla novín")
+        pdf["url"] = "https://media.dz/2026-11-19.pdf"
+        client.rows.extend([_row(1, text="menu webu kontakt"), _row(2, text="menu webu kontakt"),
+                            _row(4, text=_STORY), pdf])
+        d = _get(client, "/api/articles").get_json()
+        assert d["total"] == 4 and d["copies_merged"] == 0

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hmac
 import os
+import re
 from datetime import date, datetime, timedelta
 from functools import wraps
 
@@ -135,6 +136,71 @@ def _article_json(r, *, topics: list[str], include_text: bool, max_chars: int) -
     return out
 
 
+# ── zlučovanie kópií ───────────────────────────────────────────────────────────
+# Weby zverejňujú ten istý článok pod viacerými URL (aktualizované verzie, preberanie od APS) — text sa líši
+# úvodzovkami alebo dopísaným odsekom, takže presná kontrola content_hash ich nezachytí. Pre AI to znamená
+# čítať ten istý text viackrát → v zozname sa zlúčia: zostane najdlhšia verzia, ostatné sú v jej poli `copies`.
+
+SHINGLE_WORDS = 5          # dĺžka n-gramu slov
+COPY_MIN_SHINGLES = 150    # kratšie texty sa neporovnávajú (menu webu, prázdne stránky by splývali)
+COPY_CONTAINMENT = 0.8     # podiel n-gramov kratšieho textu, ktoré sú aj v dlhšom
+COPY_MAX_CHARS = 30000
+
+
+def _shingles(text: str | None) -> set[int]:
+    words = re.findall(r"\w+", (text or "")[:COPY_MAX_CHARS].lower())
+    return {hash(tuple(words[i:i + SHINGLE_WORDS])) for i in range(len(words) - SHINGLE_WORDS + 1)}
+
+
+def _is_pdf(r) -> bool:
+    return any((u or "").lower().split("?")[0].endswith(".pdf") for u in (r.get("url"), r.get("final_url")))
+
+
+def group_copies(items: list) -> list:
+    """items = [(row, topics)] → [(row, topics, [kópie row])]; zástupca = najdlhší text, poradie zachované."""
+    sh = [_shingles(r["content_text"]) for r, _ in items]
+    parent = list(range(len(items)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    # PDF = celé číslo novín (veľa článkov) — prebratý článok v ňom nie je kópia celého PDF
+    big = [i for i, x in enumerate(sh) if len(x) >= COPY_MIN_SHINGLES and not _is_pdf(items[i][0])]
+    # kandidáti cez index: kópia s ≥ 80 % spoločných n-gramov takmer iste obsahuje aj niektorý
+    # z 12 najmenších hashov kratšieho textu → netreba porovnávať každý s každým
+    index: dict[int, list[int]] = {}
+    for i in big:
+        for h in sh[i]:
+            index.setdefault(h, []).append(i)
+    for i in big:
+        cand = {j for h in sorted(sh[i])[:12] for j in index[h] if j != i and len(sh[j]) >= len(sh[i])}
+        for j in cand:
+            if len(sh[i] & sh[j]) >= COPY_CONTAINMENT * len(sh[i]):
+                parent[find(i)] = find(j)
+
+    groups: dict[int, list[int]] = {}
+    for i in range(len(items)):
+        groups.setdefault(find(i), []).append(i)
+    out, seen = [], set()
+    for i in range(len(items)):
+        g = groups[find(i)]
+        if g[0] in seen:
+            continue
+        seen.add(g[0])
+        best = max(g, key=lambda k: (len(items[k][0]["content_text"] or ""), items[k][0]["id"]))
+        row, topics = items[best]
+        out.append((row, topics, [items[k][0] for k in g if k != best]))
+    return out
+
+
+def _copy_json(r) -> dict:
+    return {"id": r["id"], "url": r["final_url"] or r["url"], "source": r["domain"],
+            "published_at": _iso(r["published_at_real"]), "relevance": _relevance_label(r["relevance"])}
+
+
 _SELECT = """
     SELECT a.id, a.url, a.final_url, a.title, a.title_fr, a.snippet, a.snippet_fr,
            COALESCE(a.lang_detected, a.language) AS lang, a.first_seen_at, a.published_at_real,
@@ -175,6 +241,7 @@ def list_articles():
     langs, sources = _csv_arg("lang"), _csv_arg("source")
     only_with_text = request.args.get("has_text", "").lower() in ("1", "true", "yes")
     include_text = request.args.get("include_text", "").lower() in ("1", "true", "yes")
+    show_copies = request.args.get("copies", "").lower() in ("1", "true", "yes")
     max_chars = _int_arg("max_chars", DEFAULT_TEXT_CHARS, 100, 200000)
     limit = _int_arg("limit", 50, 1, MAX_LIMIT)
     offset = _int_arg("offset", 0, 0, 10**6)
@@ -212,18 +279,26 @@ def list_articles():
             continue
         items.append((r, t))
 
-    page = items[offset:offset + limit]
+    grouped = [(r, t, []) for r, t in items] if show_copies else group_copies(items)
+    page = grouped[offset:offset + limit]
+    articles = []
+    for r, t, copies in page:
+        a = _article_json(r, topics=t, include_text=include_text, max_chars=max_chars)
+        if copies:
+            a["copies"] = [_copy_json(c) for c in copies]
+        articles.append(a)
     return jsonify({
         "from": date_from.isoformat(),
         "to": date_to.isoformat(),
         "date_field": date_field,
         "filters": {"relevance": relevance, "topic": topics, "lang": langs, "source": sources,
                     "has_text": only_with_text},
-        "total": len(items),
+        "total": len(grouped),
+        "copies_merged": len(items) - len(grouped),
         "offset": offset,
         "limit": limit,
         "count": len(page),
-        "articles": [_article_json(r, topics=t, include_text=include_text, max_chars=max_chars) for r, t in page],
+        "articles": articles,
     })
 
 
@@ -342,6 +417,8 @@ def openapi():
                     str_param("source", "Čiarkou: domény, napr. aps.dz"),
                     str_param("has_text", "1 = len články so stiahnutým textom"),
                     str_param("include_text", "1 = pridať text článku (text, text_fr)"),
+                    str_param("copies", "1 = nezlučovať kópie (predvolene je ten istý text pod inými URL "
+                                        "zlúčený do poľa copies najdlhšej verzie)"),
                     {"name": "max_chars", "in": "query", "required": False, "schema": {"type": "integer"},
                      "description": "Max. dĺžka textu pri include_text (default 20000)"},
                     {"name": "limit", "in": "query", "required": False, "schema": {"type": "integer", "maximum": MAX_LIMIT},

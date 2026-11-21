@@ -491,3 +491,86 @@ class TestCommercialCheck:
     def test_word_in_title_commercial(self, monkeypatch):
         r = self._run(monkeypatch, "Offre spéciale roaming Slovaquie", "Slovaquie texte")
         assert r.is_commercial and r.commercial_word == "offre"
+
+
+class TestRelay:
+    """resolve_and_fetch cez relé (proxy na DS1512 v Alžírsku)."""
+    PROXY = "http://10.8.0.1:3128"
+
+    def _setup(self, monkeypatch, direct, relay, domains=""):
+        """direct/relay: status kód alebo výnimka pre priamy pokus a pokus cez proxy."""
+        from unittest.mock import MagicMock
+        import extract_articles_reworked as ear
+        monkeypatch.setenv("FETCH_RELAY_PROXY", self.PROXY)
+        monkeypatch.setenv("FETCH_RELAY_DOMAINS", domains)
+        monkeypatch.setattr(ear, "cffi_requests", None)
+        calls = []
+
+        def make_session():
+            sess = MagicMock()
+            sess.proxies = {}
+
+            def get(url, **kw):
+                via = sess.proxies.get("https")
+                calls.append((via, kw["timeout"]))
+                outcome = relay if via else direct
+                if isinstance(outcome, Exception):
+                    raise outcome
+                return TestImpersonatedFallback()._requests_resp(outcome, url)
+            sess.get.side_effect = get
+            return sess
+        monkeypatch.setattr(ear.requests, "Session", make_session)
+        return calls
+
+    def test_relay_domain_goes_straight_to_proxy(self, monkeypatch):
+        import extract_articles_reworked as ear
+        calls = self._setup(monkeypatch, direct=200, relay=200, domains="aps.dz, elmoudjahid.dz")
+        assert ear.resolve_and_fetch("https://www.aps.dz/fr/a")[1] == 200
+        assert calls == [(self.PROXY, ear.RELAY_TIMEOUT)]
+
+    def test_timeout_falls_back_to_relay(self, monkeypatch):
+        import requests, extract_articles_reworked as ear
+        calls = self._setup(monkeypatch, direct=requests.ReadTimeout("t"), relay=200)
+        assert ear.resolve_and_fetch("https://site.dz/a")[1] == 200
+        assert [c[0] for c in calls] == [None, self.PROXY]
+
+    def test_403_falls_back_to_relay(self, monkeypatch):
+        import extract_articles_reworked as ear
+        calls = self._setup(monkeypatch, direct=403, relay=200)
+        assert ear.resolve_and_fetch("https://site.dz/a")[1] == 200 and len(calls) == 2
+
+    def test_404_not_relayed(self, monkeypatch):
+        import pytest, requests, extract_articles_reworked as ear
+        calls = self._setup(monkeypatch, direct=404, relay=200)
+        with pytest.raises(requests.HTTPError):
+            ear.resolve_and_fetch("https://site.dz/a")
+        assert len(calls) == 1
+
+    def test_relay_down_raises_original_error(self, monkeypatch):
+        import pytest, requests, extract_articles_reworked as ear
+        orig = requests.ReadTimeout("priamo")
+        self._setup(monkeypatch, direct=orig, relay=requests.exceptions.ProxyError("vpn dole"))
+        with pytest.raises(requests.ReadTimeout) as e:
+            ear.resolve_and_fetch("https://site.dz/a")
+        assert e.value is orig
+
+    def test_relay_real_answer_wins(self, monkeypatch):
+        import pytest, requests, extract_articles_reworked as ear
+        self._setup(monkeypatch, direct=requests.ConnectTimeout("t"), relay=404)
+        with pytest.raises(requests.HTTPError) as e:
+            ear.resolve_and_fetch("https://site.dz/a")
+        assert e.value.response.status_code == 404
+
+    def test_no_proxy_configured(self, monkeypatch):
+        import pytest, requests, extract_articles_reworked as ear
+        calls = self._setup(monkeypatch, direct=requests.ReadTimeout("t"), relay=200)
+        monkeypatch.setenv("FETCH_RELAY_PROXY", "")
+        with pytest.raises(requests.ReadTimeout):
+            ear.resolve_and_fetch("https://site.dz/a")
+        assert len(calls) == 1
+
+    def test_wants_relay_matches_subdomains_only(self, monkeypatch):
+        import extract_articles_reworked as ear
+        monkeypatch.setenv("FETCH_RELAY_DOMAINS", "aps.dz")
+        assert ear.wants_relay("https://news.aps.dz/x") and ear.wants_relay("https://APS.dz/")
+        assert not ear.wants_relay("https://maps.dz/") and not ear.wants_relay("https://aps.dz.evil.com/")

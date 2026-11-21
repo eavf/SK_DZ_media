@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
@@ -208,9 +209,37 @@ def is_js_shell(html: str) -> bool:
 FETCH_TIMEOUT: tuple[int, int] = (15, 60)
 
 
-def _fetch_impersonated(url: str, timeout: tuple[int, int]) -> tuple[str, int, str, str, bytes]:
+# Relé: HTTP proxy na DS1512 v Alžírsku cez VPN (FETCH_RELAY_PROXY, napr. http://10.8.0.1:3128).
+# Niektoré alžírske weby zo Slovenska nejdú (timeout, 403), z alžírskej IP áno. Domény z FETCH_RELAY_DOMAINS
+# idú rovno cez relé, ostatné len keď priame stiahnutie zlyhá timeoutom, chybou spojenia alebo 403/451.
+RELAY_TIMEOUT: tuple[int, int] = (20, 90)   # stratová linka DZ→SK (~5 KB/s)
+RELAY_STATUSES = (403, 451)
+
+
+def _relay_proxy() -> str | None:
+    return os.getenv("FETCH_RELAY_PROXY", "").strip() or None
+
+
+def _relay_domains() -> list[str]:
+    return [d.strip().lower().removeprefix("www.") for d in os.getenv("FETCH_RELAY_DOMAINS", "").split(",") if d.strip()]
+
+
+def wants_relay(url: str) -> bool:
+    host = (urlparse(url).hostname or "").lower().removeprefix("www.")
+    return any(host == d or host.endswith("." + d) for d in _relay_domains())
+
+
+def _relay_worthy(e: Exception) -> bool:
+    if isinstance(e, requests.HTTPError):
+        return e.response is not None and e.response.status_code in RELAY_STATUSES
+    return isinstance(e, (requests.Timeout, requests.ConnectionError))
+
+
+def _fetch_impersonated(url: str, timeout: tuple[int, int],
+                        proxy: str | None = None) -> tuple[str, int, str, str, bytes]:
     """Fetch cez curl_cffi s odtlačkom Chrome. Chybový stav vyhodí ako requests.HTTPError (rovnako ako requests)."""
-    resp = cffi_requests.get(url, impersonate="chrome", timeout=timeout, allow_redirects=True, verify=False)
+    kw = {"proxies": {"http": proxy, "https": proxy}} if proxy else {}
+    resp = cffi_requests.get(url, impersonate="chrome", timeout=timeout, allow_redirects=True, verify=False, **kw)
     if resp.status_code >= 400:
         err = requests.Response()
         err.status_code, err.reason, err.url = resp.status_code, resp.reason or "", str(resp.url)
@@ -219,10 +248,11 @@ def _fetch_impersonated(url: str, timeout: tuple[int, int]) -> tuple[str, int, s
     return str(resp.url), resp.status_code, resp.text, content_type, resp.content
 
 
-def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple[str, int, str, str, bytes]:
-    timeout = timeout or FETCH_TIMEOUT
+def _fetch(url: str, timeout: tuple[int, int], proxy: str | None = None) -> tuple[str, int, str, str, bytes]:
     sess = requests.Session()
     sess.headers.update(REQUEST_HEADERS)
+    if proxy:
+        sess.proxies = {"http": proxy, "https": proxy}
     try:
         resp = sess.get(url, allow_redirects=True, timeout=timeout)
     except requests.exceptions.SSLError:
@@ -233,7 +263,7 @@ def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple
     if resp.status_code == 403 and cffi_requests is not None:
         log.info("403 → skúšam curl_cffi (impersonate chrome): %s", resp.url)
         try:
-            return _fetch_impersonated(resp.url, timeout)
+            return _fetch_impersonated(resp.url, timeout, proxy)
         except requests.HTTPError:
             raise
         except Exception as e:
@@ -242,6 +272,29 @@ def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple
     resp.raise_for_status()
     content_type = resp.headers.get("Content-Type", "")
     return resp.url, resp.status_code, resp.text, content_type, resp.content
+
+
+def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple[str, int, str, str, bytes]:
+    timeout = timeout or FETCH_TIMEOUT
+    proxy = _relay_proxy()
+    if proxy and wants_relay(url):
+        log.info("relé (doména v FETCH_RELAY_DOMAINS): %s", url)
+        return _fetch(url, RELAY_TIMEOUT, proxy)
+    try:
+        return _fetch(url, timeout)
+    except requests.RequestException as e:
+        if not proxy or not _relay_worthy(e):
+            raise
+        log.info("%s → skúšam relé: %s", type(e).__name__, url)
+        try:
+            return _fetch(url, RELAY_TIMEOUT, proxy)
+        except requests.HTTPError as relay_err:
+            if relay_err.response is not None and relay_err.response.status_code in RELAY_STATUSES:
+                raise e from relay_err     # blokované aj z DZ → pôvodná chyba (final_url z priameho pokusu)
+            raise                          # skutočná odpoveď webu z DZ (napr. 404)
+        except requests.RequestException as relay_err:
+            log.warning("relé zlyhalo (%s: %s): %s", type(relay_err).__name__, relay_err, url)
+            raise e from relay_err
 
 
 _DSPACE_BITSTREAM_RE = re.compile(r"/bitstreams/([0-9a-f-]{36})/download", re.I)

@@ -1,5 +1,5 @@
 """
-scheduler.py — Spúšťa pipeline každý deň o 15:00 (podľa TZ z prostredia).
+scheduler.py — Spúšťa pipeline každý deň o SCHEDULE_TIME (predvolene 04:30, podľa TZ z prostredia).
 
 Pipeline:
   1. search_flow_news.py
@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import base64
 import logging
+import os
 import smtplib
 import subprocess
 import sys
@@ -40,8 +41,23 @@ PIPELINE = [
     "extract_bulk.py",
 ]
 
-RUN_HOUR = 15
-RUN_MINUTE = 0
+DEFAULT_SCHEDULE_TIME = (4, 30)
+
+
+def parse_schedule_time(value: str | None) -> tuple[int, int]:
+    """'HH:MM' → (hodina, minúta); neplatná hodnota → DEFAULT_SCHEDULE_TIME."""
+    try:
+        h, m = (int(x) for x in (value or "").strip().split(":"))
+        if 0 <= h < 24 and 0 <= m < 60:
+            return h, m
+    except ValueError:
+        pass
+    if value and value.strip():
+        logging.getLogger(__name__).warning("Neplatné SCHEDULE_TIME=%r, použijem %02d:%02d", value, *DEFAULT_SCHEDULE_TIME)
+    return DEFAULT_SCHEDULE_TIME
+
+
+RUN_HOUR, RUN_MINUTE = parse_schedule_time(os.getenv("SCHEDULE_TIME"))
 
 
 _AR_RE = __import__("re").compile(r"[\u0600-\u06FF]")

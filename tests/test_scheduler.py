@@ -3,6 +3,8 @@ Tests for scheduler.py — email filtering helpers.
 """
 from __future__ import annotations
 
+import pytest
+
 from scheduler import _EMAIL_FILTER_SQL, _mentions_slovakia
 
 
@@ -210,3 +212,13 @@ class TestTextHelpers:
         from text_filters import slovak_excerpt
         assert slovak_excerpt("bez zmienky", re.compile("slovaqu", re.I)) is None
         assert slovak_excerpt("La Slovaquie", re.compile("slovaqu", re.I), width=5) == "La Slovaquie"
+
+
+class TestScheduleTime:
+    @pytest.mark.parametrize("value,expected", [
+        ("04:30", (4, 30)), (" 15:00 ", (15, 0)), ("0:05", (0, 5)),
+        (None, (4, 30)), ("", (4, 30)), ("25:00", (4, 30)), ("4.30", (4, 30)), ("abc", (4, 30)),
+    ])
+    def test_parse(self, value, expected):
+        import scheduler
+        assert scheduler.parse_schedule_time(value) == expected

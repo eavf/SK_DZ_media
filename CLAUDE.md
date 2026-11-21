@@ -61,7 +61,7 @@ python normalize_url_scheme.py [--apply]        # Recompute stored url/final_url
 python backfill_run_bundles.py [--apply]        # Fill run folder into runs.bundle_filename for old ingests (matches by article url_hash + time; dry-run by default)
 python eval_ai_relevance.py export.csv [--limit N] [--model M]  # Measure LLM (NVIDIA API) agreement with manual SK–DZ relevance labels from /export/csv (export with `&text=1` adds `deleted` + `text` columns; the model gets the start of the text + windows around Slovak mentions, otherwise title+snippet; labels with note 'auto:' skipped); no DB, answers cached in <csv>.ai_<model>.csv
 python ai_relevance.py [--apply] [--limit N]   # Backfill AI relevance suggestions for older unlabeled articles (dry-run by default; ~10–25 s/article)
-python scheduler.py                            # Daily pipeline at 15:00 + email notification
+python scheduler.py                            # Daily pipeline at SCHEDULE_TIME (default 04:30, TZ) + email notification
 python setup_db.py                             # One-time DB init + first admin user
 python create_admin.py [--role user|power|admin]
 ```
@@ -83,7 +83,7 @@ MySQL database             (articles + sources tables)
 Web dashboard              (browse, label, translate, export)
 ```
 
-`scheduler.py` (container `dz-scheduler`) runs search → ingest → extract_bulk daily at 15:00 and emails a summary (`SMTP_*`, `NOTIFY_TO`). The email lists only articles passing `_EMAIL_FILTER_SQL`; below the counts, `fetch_breakdown()` / `_email_bucket()` say why the rest is missing (AI sport, duplicate, commercial, unreadable PDF/URL, irrelevant, deleted without Slovak context, text not fetched). Each article line carries the AI relevance suggestion (`_ai_line`, needs migration 004). PDF articles (whole newspaper issues) are shown as `PDF <domain>[: title]` — Google's title is dropped when garbled by multi-column reading (`text_filters.is_garbled_title`) — with the text around the first Slovak mention instead of the snippet (`slovak_excerpt`). Language comes from `text_filters.detect_language()` (lowercased before langdetect: ALL-CAPS titles were detected as `de`); PDFs get `lang_detected` from their text at extraction, older ones via `backfill_pdf_language()` in each run. Logs are in `logs/` on the server (`/volume1/docker/dz_news/logs/dznews.<script>.log`); the scheduler itself logs to stdout (`docker logs dz-scheduler`).
+`scheduler.py` (container `dz-scheduler`) runs search → ingest → extract_bulk daily at `SCHEDULE_TIME` (`HH:MM` in `TZ`, default 04:30; was 15:00 until 11/2026) and emails a summary (`SMTP_*`, `NOTIFY_TO`). The email lists only articles passing `_EMAIL_FILTER_SQL`; below the counts, `fetch_breakdown()` / `_email_bucket()` say why the rest is missing (AI sport, duplicate, commercial, unreadable PDF/URL, irrelevant, deleted without Slovak context, text not fetched). Each article line carries the AI relevance suggestion (`_ai_line`, needs migration 004). PDF articles (whole newspaper issues) are shown as `PDF <domain>[: title]` — Google's title is dropped when garbled by multi-column reading (`text_filters.is_garbled_title`) — with the text around the first Slovak mention instead of the snippet (`slovak_excerpt`). Language comes from `text_filters.detect_language()` (lowercased before langdetect: ALL-CAPS titles were detected as `de`); PDFs get `lang_detected` from their text at extraction, older ones via `backfill_pdf_language()` in each run. Logs are in `logs/` on the server (`/volume1/docker/dz_news/logs/dznews.<script>.log`); the scheduler itself logs to stdout (`docker logs dz-scheduler`).
 
 ### Key Modules
 
@@ -115,6 +115,7 @@ All config comes from `.env` (loaded via python-dotenv). Key variables:
 - `FLASK_PORT`, `FLASK_SECRET_KEY`
 - `SERP_HL/GL/NUM/WHEN` — SerpAPI search defaults (`SERP_ENGINE` is ignored by `search_flow_news.py`, which always uses `google_news`)
 - `TRANSLATOR_BACKEND`, `TRANSLATOR_URL`, `DEEPL_API_KEY`, `AZURE_TRANSLATOR_KEY/REGION`, `NVIDIA_TRANSLATE_MODEL` — translation
+- `SCHEDULE_TIME` — daily scheduler run (`HH:MM`, default 04:30)
 - `SMTP_HOST/PORT/USER/PASS`, `NOTIFY_TO` — scheduler email notifications
 - `NVIDIA_API_KEY`, `NVIDIA_MODEL`, `AI_CLASSIFY_ENABLED`, `AI_CLASSIFY_DELAY` — AI sport classification (disabled without key)
 - `AI_RELEVANCE_ENABLED`, `AI_RELEVANCE_MODEL`, `AI_RELEVANCE_SKIP_DOMAINS`, `AI_RELEVANCE_BATCH` — AI relevance suggestion (defaults work without setting them)

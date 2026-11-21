@@ -146,6 +146,12 @@ claude.ai pri vlastnom konektore nevie poslať hlavičku s API kľúčom; bez pl
    `https://mcp.eavf1621.synology.me/mcp/<kľúč>`, OAuth nevypĺňať. Konektor je potom dostupný na webe aj
    v aplikácii Claude (Windows) s tým istým účtom; v chate ho zapneš v ponuke nástrojov.
 
+**Zadanie prehľadu** — server ponúka prompt `prehlad_sk_dz` (v chate *„+“ → DZ News → Prehľad SK–DZ*,
+parametre `dni` a voliteľné `zameranie`). Hovorí, čo do prehľadu patrí (pravidlá ako pri ručnom označovaní),
+že DZ News je len jeden zdroj a Claude má hľadať aj sám na webe (FR/AR/EN, alžírske aj slovenské zdroje),
+a predpisuje výstup vrátane sekcií „Nájdené mimo DB“ a „Poznámky k DB“. Text: `build_overview_prompt()`.
+Články bez textu si Claude najprv stiahne sám z `url`; `fetch_article_page` je záloha, keď to zlyhá.
+
 Claude Code / iní klienti môžu namiesto kľúča v ceste poslať `Authorization: Bearer <kľúč>` na `https://…/mcp`.
 `fetch_article_page` sťahuje len URL článkov z DB (nie ľubovoľné adresy) — weby blokujúce Slovensko
 (aps.dz, elmoudjahid.dz) vrátia chybu aj tu.

@@ -37,8 +37,10 @@ server = MCPServer(
         "Prístup k článkom alžírskych médií o vzťahoch Slovensko–Alžírsko, ktoré zbiera aplikácia DZ News Monitor. "
         "Vyradené články (šport, bez slovenského kontextu, duplikáty) sa nevracajú. "
         "Najprv použi list_articles (predvolene posledných 7 dní), detail a celý text získaš cez get_article. "
-        "Ak článok nemá text (has_text = false, fetch_error uvádza dôvod), skús fetch_article_page — stiahne "
-        "pôvodnú stránku teraz; pri method = page_text je v texte aj menu webu, vyber z neho len článok. "
+        "Ak článok nemá text (has_text = false, fetch_error uvádza dôvod), stiahni stránku z poľa url najprv "
+        "vlastným nástrojom na čítanie webu; až keď to zlyhá (blokovanie, 403), použi fetch_article_page — stiahne "
+        "ju zo servera aplikácie; pri method = page_text je v texte aj menu webu, vyber z neho len článok. "
+        "Táto databáza je len jeden zdroj — pri prehľadoch hľadaj aj sám na webe (prompt prehlad_sk_dz). "
         "Arabské články majú francúzsky preklad v poliach *_fr. Odpovedaj po slovensky, ak používateľ nepíše inak."
     ),
 )
@@ -117,9 +119,10 @@ def get_article(article_id: int) -> dict:
 
 @server.tool()
 def fetch_article_page(article_id: int, max_chars: int = 20000) -> dict:
-    """Stiahne pôvodnú stránku článku teraz (zo servera na Slovensku) a vráti jej text.
+    """Stiahne pôvodnú stránku článku teraz (zo servera aplikácie na Slovensku) a vráti jej text.
 
-    Použi, keď článok nemá uložený text (has_text = false). Nič neukladá. method: "article" = hlavný text,
+    Záložná možnosť: keď článok nemá uložený text (has_text = false) a stránku z jeho url sa nepodarilo
+    otvoriť vlastným nástrojom na čítanie webu. Server obchádza časť ochrán proti robotom. Nič neukladá. method: "article" = hlavný text,
     "page_text" = celá stránka vrátane menu (vyber z nej článok), "pdf" = strany PDF so zmienkou o Slovensku.
     Niektoré alžírske weby (aps.dz, elmoudjahid.dz) prístup zo Slovenska blokujú — vtedy vráti chybu.
 
@@ -134,6 +137,86 @@ def fetch_article_page(article_id: int, max_chars: int = 20000) -> dict:
 def get_filters() -> dict:
     """Dostupné hodnoty filtrov: témy, relevancia, jazyky a najčastejšie zdroje."""
     return _get("/meta")
+
+
+# ── zadanie prehľadu (MCP prompt — v Claude cez „+“ → DZ News) ──────────────────
+
+def _search_terms() -> dict:
+    """Termíny a preferované zdroje z config/ (rovnaké ako hľadá aplikácia); bez súborov prázdne."""
+    from pathlib import Path
+    base = Path(__file__).resolve().parent / "config"
+    out = {}
+    for name, key in (("search_terms.json", None), ("sources.json", "preferred")):
+        try:
+            data = json.loads((base / name).read_text(encoding="utf-8"))
+            out.update(data if key is None else {key: data.get(key, [])})
+        except (OSError, ValueError):
+            pass
+    return out
+
+
+def build_overview_prompt(dni: str = "7", zameranie: str = "") -> str:
+    from datetime import date, timedelta
+    try:
+        days = max(1, min(int(str(dni).strip() or 7), 366))
+    except ValueError:
+        days = 7
+    date_to = date.today()
+    date_from = date_to - timedelta(days=days)
+    cfg = _search_terms()
+    sk = ", ".join(cfg.get("slovakia") or ["Slovaquie", "Slovakia", "سلوفاكيا", "Bratislava"])
+    dz = ", ".join(cfg.get("algeria") or ["Algérie", "الجزائر"])
+    sources = ", ".join(cfg.get("preferred") or ["aps.dz", "elmoudjahid.dz", "elwatan.com", "tsa-algerie.com"])
+    focus = f"\n**Zameranie:** {zameranie.strip()} — tomuto daj prednosť, ostatné stručne.\n" if zameranie.strip() else ""
+    return f"""Priprav prehľad vzťahov **Slovensko–Alžírsko** za obdobie **{date_from:%d.%m.%Y} – {date_to:%d.%m.%Y}** ({days} {"deň" if days == 1 else "dni" if days < 5 else "dní"}).
+{focus}
+## Čo do prehľadu patrí
+- diplomacia: návštevy, rokovania, telefonáty, listy a blahoželania ústavných činiteľov a ministrov,
+  veľvyslanci (akreditácia, stretnutia), politické konzultácie, spoločné komisie
+- zmluvy, memorandá, dohody (aj pripravované)
+- ekonomika: obchod, investície, slovenské firmy v Alžírsku, veľtrhy a podnikateľské misie, energetika (plyn),
+  doprava, zdravotníctvo, obranný priemysel
+- vzdelávanie, veda, kultúra, štipendiá, konzulárne a vízové veci
+- multilaterálne: keď sa **výslovne** spomína Slovensko alebo jeho postoj (EÚ, OSN, Palestína, Západná Sahara, energetika EÚ)
+
+## Čo nepatrí
+- šport (aj keď hrá slovenský a alžírsky tím), reklamy, inzeráty, stránky bez obsahu
+- voľby alžírskej diaspóry (volebné obvody v zahraničí), kde je Slovensko len v zozname krajín
+- Slovensko len ako slovo bez súvisu s Alžírskom (napr. článok o Slovensku a inej krajine)
+- **okrajové zmienky** (Slovensko v zozname krajín na veľtrhu a pod.) — nevyhadzuj, daj ich do samostatnej sekcie
+
+## Zdroje — použi oba
+1. **MCP DZ News** (táto aplikácia; zbiera Google News a stránky MZV Alžírska):
+   `list_articles(date_from="{date_from}", date_to="{date_to}")`, pri potrebe ďalšie strany (`offset`).
+   Text cez `get_article`; ak `has_text` = false, stiahni `url` vlastným nástrojom na čítanie webu
+   a až keď to zlyhá, `fetch_article_page`. Arabské články majú francúzsky preklad (`text_fr`).
+2. **Vlastné hľadanie na webe** — databáza nie je úplná. Hľadaj po francúzsky, arabsky a anglicky
+   kombinácie: [{sk}] × [{dz}]. Alžírske médiá: {sources}, mfa.gov.dz, embbratislava.mfa.gov.dz.
+   Slovenské zdroje: mzv.sk (aj Veľvyslanectvo SR v Alžíri), teraz.sk / TASR, vlada.gov.sk, prezident.sk,
+   SARIO. Berie sa len to, čo vyšlo v danom období.
+
+## Výstup (po slovensky)
+1. **Zhrnutie** — 3–5 viet: najdôležitejšie udalosti obdobia; ak sa nič podstatné nestalo, povedz to.
+2. **Udalosti podľa tém** (Diplomacia · Ekonomika a energetika · Ostatné), pri každej:
+   dátum (dd.mm.rrrr) — 1–2 vety čo sa stalo — zdroj (doména, odkaz) — `[DB #id]` alebo `[web]`.
+   Rovnakú udalosť z viacerých médií spoj do jednej položky so všetkými odkazmi.
+3. **Okrajové zmienky** — krátky zoznam.
+4. **Nájdené mimo DB** — relevantné články z webu, ktoré v DZ News chýbajú (odkaz + doména).
+5. **Poznámky k DB** — články z DZ News, ktoré podľa pravidiel vyššie nie sú relevantné (`#id` + prečo).
+
+Uvádzaj len to, čo máš doložené zdrojom; pri neistote (dátum, kto, čo) to napíš. Nevymýšľaj odkazy."""
+
+
+@server.prompt(name="prehlad_sk_dz", title="Prehľad SK–DZ",
+               description="Prehľad vzťahov Slovensko–Alžírsko za posledné dni: DZ News + vlastné hľadanie na webe")
+def prehlad_sk_dz(dni: str = "7", zameranie: str = "") -> str:
+    """Zadanie prehľadu.
+
+    Args:
+        dni: počet dní dozadu (predvolene 7)
+        zameranie: voliteľné — napr. „ekonomika“, „návšteva ministra“, „plyn“
+    """
+    return build_overview_prompt(dni, zameranie)
 
 
 # ── vzdialený režim (HTTP) ─────────────────────────────────────────────────────

@@ -158,6 +158,50 @@ Claude Code / iní klienti môžu namiesto kľúča v ceste poslať `Authorizati
 `fetch_article_page` sťahuje len URL článkov z DB (nie ľubovoľné adresy) — weby blokujúce Slovensko
 (aps.dz, elmoudjahid.dz) vrátia chybu aj tu.
 
+## Relé cez DS1512 (sťahovanie z alžírskej IP)
+
+aps.dz, elmoudjahid.dz a niektoré ďalšie weby zo Slovenska nejdú (timeout, 403), z Alžírska áno. DS1621 sa preto
+spojí cez OpenVPN s DS1512 a sťahuje cez **Proxy Server** na DS1512. Cez VPN ide len táto proxy, nie celá
+prevádzka DS1621. Všetko sa nastavuje v GUI.
+
+```
+dz-app / extract_bulk (DS1621, SK) ──OpenVPN──► Proxy Server 10.8.0.1:3128 (DS1512, DZ) ──► aps.dz …
+```
+
+**Predpoklad:** router v Alžírsku má verejnú IP (alebo DDNS) a dá sa na ňom presmerovať port. Over to v SRM
+*Centrum siete → Stav*: WAN IP sa má zhodovať s IP, ktorú ukáže napr. whatismyip.com (inak je to CGNAT, vtedy
+treba opačný smer: VPN Server na DS1621).
+
+### 1. DS1512 — VPN Server (DSM 6.2)
+1. *Centrum balíkov* → nainštaluj **VPN Server**.
+2. *Ovládací panel → Používateľ* → vytvor používateľa `relay` (silné heslo, bez prístupu k zložkám a aplikáciám).
+3. *VPN Server → Oprávnenie* → pre `relay` nechaj len **OpenVPN** (ostatným používateľom OpenVPN vypni).
+4. *VPN Server → OpenVPN*: zapni OpenVPN server, dynamická IP `10.8.0.0`, max. počet pripojení `1`, port `1194`,
+   protokol **UDP**, šifrovanie AES-256-CBC, zapni **kompresiu na VPN linke**, *Povoliť klientom prístup k LAN
+   servera* **nezapínaj**. Použiť → **Exportovať konfiguráciu** (zip s `VPNConfig.ovpn` a `ca.crt`).
+5. V `VPNConfig.ovpn` (textový editor) nahraď `YOUR_SERVER_IP` verejnou IP alebo DDNS menom routera v Alžírsku.
+6. Router v Alžírsku (SRM): *Centrum siete → Presmerovanie portov* → UDP `1194` → LAN IP DS1512.
+
+### 2. DS1512 — Proxy Server
+1. *Centrum balíkov* → **Proxy Server**. Port `3128`, cache vypni (netreba).
+2. Prístup povoľ len zo siete VPN `10.8.0.0/24` (nastavenie povolených sietí v Proxy Server).
+3. *Ovládací panel → Zabezpečenie → Brána firewall* (ak je zapnutá): TCP `3128` povoliť len zo `10.8.0.0/255.255.255.0`.
+   Port 3128 **nepresmerovávaj** na routeri — proxy nesmie byť dostupná z internetu.
+
+### 3. DS1621 — VPN klient (DSM 7)
+1. *Ovládací panel → Sieť → Sieťové rozhranie → Vytvoriť → Vytvoriť profil VPN* → **OpenVPN (importom súboru .ovpn)**.
+2. Server: verejná IP / DDNS Alžírska, používateľ `relay` + heslo, importuj `VPNConfig.ovpn` a `ca.crt`.
+3. Ďalej: **vypni** *Použiť predvolenú bránu vo vzdialenej sieti* (inak pôjde celý internet DS1621 cez Alžírsko
+   a prestane fungovať prístup zvonka), **vypni** zdieľanie internetového pripojenia, **zapni** *Znovu pripojiť pri strate VPN*.
+4. Pripojiť. Stav: *Sieťové rozhranie* → profil VPN = Pripojené.
+
+### 4. Zapnutie v aplikácii
+1. Overenie spojenia (cez SSH na DS1621, len čítanie):
+   `curl -x http://10.8.0.1:3128 -s -o /dev/null -w "%{http_code}\n" -m 120 https://www.aps.dz/fr`
+2. V lokálnom `.env`: `FETCH_RELAY_PROXY=http://10.8.0.1:3128` (`FETCH_RELAY_DOMAINS=aps.dz,elmoudjahid.dz`) → `./deploy.sh`.
+3. V logu `dznews.extract_bulk.log` sú riadky `relé (doména v FETCH_RELAY_DOMAINS)` a `… → skúšam relé`.
+   Ak relé nie je dostupné, článok zlyhá ako predtým (`relé zlyhalo` v logu) a skúsi sa pri ďalšom behu.
+
 ## Manuálny deploy (ak automatický zlyhá)
 
 ```bash

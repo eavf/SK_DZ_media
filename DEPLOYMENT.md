@@ -166,7 +166,7 @@ IPsec** medzi routermi — router v SR už smeruje 192.168.1.0/24 do tunela, DS1
 Router v Alžírsku je za CGNAT, VPN server tam preto byť nemôže (a netreba). DS1512 sa nepoužíva.
 
 ```
-dz-app / extract_bulk (DS1621 192.168.0.202) ──IPsec routerov──► RPi 192.168.1.20:3128 (tinyproxy) ──► aps.dz …
+dz-app / extract_bulk (DS1621 192.168.0.202) ──IPsec routerov──► RPi 192.168.1.20:8888 (tinyproxy) ──► aps.dz …
 ```
 
 Overené 21.11.2026:
@@ -174,7 +174,8 @@ Overené 21.11.2026:
 - z RPi: aps.dz 200 (1 s), elmoudjahid.dz 200 (11 s), lexpressiondz.com 403 (aj z DZ; cez proxy to skúsi
   curl_cffi s odtlačkom Chrome — CONNECT tunel odtlačok zachová).
 
-> Presné nastavenie sa ešte doladí — nižšie je kostra postupu.
+Stav 21.11.2026: tinyproxy 1.11.2 (apt) beží, cez proxy z DS1621: aps.dz 200 (1,3 s), elmoudjahid.dz 200 (4,9 s),
+lexpressiondz.com 403. Správa RPi cez web: Cockpit (`sudo apt install cockpit`, `https://192.168.1.20:9090`).
 
 ### 1. Router v Alžírsku (SRM, GUI)
 *Centrum siete → Lokálna sieť → DHCP klienti*: rezervuj pre RPi pevnú adresu `192.168.1.20`.
@@ -183,20 +184,22 @@ Overené 21.11.2026:
 1. `sudo apt install tinyproxy`
 2. V `/etc/tinyproxy/tinyproxy.conf`:
    ```
-   Port 3128
+   Port 8888                # predvolený port balíka
    Timeout 120
-   Allow 192.168.0.202      # len DS1621 (cez IPsec bez NAT — overiť v logu tinyproxy)
+   Allow 127.0.0.1
+   Allow ::1
+   Allow 192.168.0.202      # DS1621 — cez IPsec bez prekladu adries (overené v logu)
    ConnectPort 443
    ConnectPort 80
-   DisableViaHeader Yes
+   DisableViaHeader Yes     # a zakomentovať ViaProxyName
    ```
 3. `sudo systemctl restart tinyproxy && sudo systemctl enable tinyproxy`
-4. Port 3128 **nepresmerovávaj** na routeri — proxy nesmie byť dostupná z internetu.
+4. Port 8888 **nepresmerovávaj** na routeri — proxy nesmie byť dostupná z internetu.
 
 ### 3. Zapnutie v aplikácii
 1. Overenie (cez SSH na DS1621, len čítanie):
-   `curl -x http://192.168.1.20:3128 -s -o /dev/null -w "%{http_code}\n" -m 120 https://www.aps.dz/fr`
-2. V lokálnom `.env`: `FETCH_RELAY_PROXY=http://192.168.1.20:3128` (`FETCH_RELAY_DOMAINS=aps.dz,elmoudjahid.dz`) → `./deploy.sh`.
+   `curl -x http://192.168.1.20:8888 -s -o /dev/null -w "%{http_code}\n" -m 120 https://www.aps.dz/fr`
+2. V lokálnom `.env`: `FETCH_RELAY_PROXY=http://192.168.1.20:8888` (`FETCH_RELAY_DOMAINS=aps.dz,elmoudjahid.dz`) → `./deploy.sh`.
 3. V logu `dznews.extract_bulk.log` sú riadky `relé (doména v FETCH_RELAY_DOMAINS)` a `… → skúšam relé`.
    Ak relé nie je dostupné (IPsec dole, RPi vypnuté), článok zlyhá ako predtým (`relé zlyhalo` v logu)
    a skúsi sa pri ďalšom behu. Denný beh je o 04:30 — RPi má vtedy bežať.

@@ -26,7 +26,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import logging
 
 from config.config import get_settings
-from text_filters import find_bad_word
+from text_filters import detect_language, find_bad_word
 
 s = get_settings()
 log = logging.getLogger("extract_articles")
@@ -508,6 +508,8 @@ def extract_candidate(item: CandidateArticle) -> ExtractionResult:
                 log.warning("PDF_LEGACY_ENCODING url=%s", final_url)
                 result.fetch_error = "PDF_LEGACY_ENCODING"
                 return result
+            # PDF nemá metadáta jazyka — určí sa z textu (inak by sa neskôr hádal z titulku)
+            lang = detect_language(text_out)
         else:
             text_out, published_real, lang = extract_text_and_metadata(html)
             if not text_out:

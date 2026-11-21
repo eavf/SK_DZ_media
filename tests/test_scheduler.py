@@ -146,3 +146,67 @@ class TestEmailBreakdown:
         assert "Znovu videné: 17, z toho v maili: 4" in body
         assert "ostatné: označené ako nerelevantné 3, bez zmienky o Slovensku (zmazané) 10" in body
         assert msg["Subject"] == "DZ News – 2 na posúdenie (14 nových / 17 znovu videných)"
+
+
+class TestEmailArticleDisplay:
+    """PDF v maili: rozsypaný titulok od Google sa vynechá, namiesto snippetu úsek so zmienkou o SK; AI návrh."""
+
+    GARBLED = ("L’Afrique mise sur les compétences ’Afrique mise sur les compétences pour accompa "
+               "pour accompagner ses m gner ses m gner s")
+    TEXT = "Début. " + "x " * 200 + "des délégations venues de Belgique, de Slovaquie et de Syrie. " + "y " * 200
+
+    def test_pdf_garbled_title(self):
+        from scheduler import _display_title_snippet
+        title, snip = _display_title_snippet(self.GARBLED, "snippet", "http://www.mediaexpert.dz/pda/pdf/x.pdf",
+                                             None, self.TEXT)
+        assert title == "PDF mediaexpert.dz"
+        assert "de Slovaquie et de Syrie" in snip and snip.startswith("…")
+
+    def test_pdf_clean_title_kept(self):
+        from scheduler import _display_title_snippet
+        title, _ = _display_title_snippet("L’AFRIQUE VEUT SE DONNER LES MOYENS", None,
+                                          "https://lexpressquotidien.dz/a/1469.pdf", None, self.TEXT)
+        assert title == "PDF lexpressquotidien.dz: L’AFRIQUE VEUT SE DONNER LES MOYENS"
+
+    def test_html_unchanged(self):
+        from scheduler import _display_title_snippet
+        assert _display_title_snippet("T", "S", "https://aps.dz/a", None, None) == ("T", "S")
+
+    def test_ai_line(self):
+        from scheduler import _ai_line
+        assert _ai_line(0, 90, "šport") == "AI: nerelevantné (90 %) – šport"
+        assert _ai_line(1, None, "") == "AI: relevantné"
+        assert _ai_line(None, None, None) is None
+
+    def test_ai_line_in_body(self, monkeypatch):
+        from unittest.mock import MagicMock
+        import scheduler
+        for k, v in {"smtp_host": "smtp.x", "notify_to": "a@b", "smtp_user": "u", "smtp_pass": "p",
+                     "smtp_port": 587}.items():
+            monkeypatch.setattr(scheduler.s, k, v, raising=False)
+        smtp = MagicMock()
+        monkeypatch.setattr(scheduler.smtplib, "SMTP", smtp)
+        art = {"title": "t", "snippet": "s", "url": "https://u", "lang": "fr", "ai": "AI: relevantné (85 %) – návšteva"}
+        scheduler.send_notification(1, 1, None, [art], [{**art, "title": "r"}], [], [])
+        body = smtp.return_value.__enter__.return_value.send_message.call_args[0][0].get_content()
+        assert body.count("   AI: relevantné (85 %) – návšteva\n   https://u") == 2
+
+
+class TestTextHelpers:
+    def test_detect_language(self):
+        from text_filters import detect_language
+        assert detect_language("L’AFRIQUE VEUT SE DONNER LES MOYENS DE SES AMBITIONS ÉNERGÉTIQUES") == "fr"
+        assert detect_language("الجزائر وسلوفاكيا توقعان اتفاقية تعاون في مجال الطاقة") == "ar"
+        assert detect_language("123 456") is None and detect_language(None) is None
+
+    def test_garbled(self):
+        from text_filters import is_garbled_title
+        assert is_garbled_title(TestEmailArticleDisplay.GARBLED)
+        assert not is_garbled_title("Le président de la République reçoit les vœux de présidents de pays frères")
+        assert not is_garbled_title(None)
+
+    def test_excerpt(self):
+        import re
+        from text_filters import slovak_excerpt
+        assert slovak_excerpt("bez zmienky", re.compile("slovaqu", re.I)) is None
+        assert slovak_excerpt("La Slovaquie", re.compile("slovaqu", re.I), width=5) == "La Slovaquie"

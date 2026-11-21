@@ -21,6 +21,7 @@ import sys
 import time
 from datetime import date, datetime
 from email.message import EmailMessage
+from urllib.parse import urlparse
 
 from config.config import init_context
 
@@ -52,15 +53,8 @@ def _is_arabic(text: str | None) -> bool:
 
 def _detect_lang(text: str | None) -> str:
     """Detekuje jazyk z textu. Vracia kód jazyka alebo '?'."""
-    if not text or len(text.strip()) < 10:
-        return "?"
-    if _is_arabic(text):
-        return "ar"
-    try:
-        from langdetect import detect, LangDetectException
-        return detect(text)
-    except Exception:
-        return "?"
+    from text_filters import detect_language
+    return detect_language(text) or "?"
 
 
 def _translate_missing_for_email(engine, rows) -> dict[int, dict]:
@@ -119,6 +113,45 @@ def _mentions_slovakia(*texts: str | None) -> bool:
     terms = [t.lower() for t in s.search_terms.get("slovakia", [])]
     combined = " ".join(t for t in texts if t).lower()
     return any(term in combined for term in terms)
+
+
+# ── zobrazenie článku v maili ─────────────────────────────────────────────────
+
+def _is_pdf_url(*urls: str | None) -> bool:
+    return any(u and urlparse(u).path.lower().endswith(".pdf") for u in urls)
+
+
+def _display_title_snippet(title, snippet, url, final_url, text_body) -> tuple[str | None, str | None]:
+    """Titulok a druhý riadok do mailu. PDF je celé vydanie novín: titulok od Google patrí článku
+    z prvej strany (často rozsypaný pri čítaní stĺpcov) — namiesto snippetu ide úsek okolo zmienky o SK."""
+    if not _is_pdf_url(url, final_url):
+        return title, snippet
+    from ai_relevance import SLOVAK_RE
+    from text_filters import is_garbled_title, slovak_excerpt
+    domain = urlparse(final_url or url).netloc.removeprefix("www.")
+    clean = None if is_garbled_title(title) else title
+    head = f"PDF {domain}" + (f": {clean}" if clean else "")
+    return head, slovak_excerpt(text_body, SLOVAK_RE) or (snippet if clean else None)
+
+
+def _ai_line(ai_rel, conf, reason) -> str | None:
+    """„AI: nerelevantné (90 %) – dôvod“ alebo None (neposúdené, napr. mfa.gov.dz)."""
+    if ai_rel is None:
+        return None
+    label = "relevantné" if int(ai_rel) == 1 else "nerelevantné"
+    pct = f" ({conf} %)" if conf is not None else ""
+    return f"AI: {label}{pct}" + (f" – {reason}" if reason else "")
+
+
+def _ai_select(conn) -> str:
+    """Stĺpce AI návrhu do SELECTu; bez migrácie 004 NULL (mail funguje aj bez nej)."""
+    try:
+        from ai_relevance import columns_ready
+        if columns_ready(conn):
+            return "a.ai_relevance, a.ai_relevance_conf, a.ai_relevance_reason"
+    except Exception as e:
+        logger.warning("AI návrh do mailu nedostupný: %s", e)
+    return "NULL AS ai_relevance, NULL AS ai_relevance_conf, NULL AS ai_relevance_reason"
 
 
 # Prečo článok nie je v maili — poradie = priorita (článok patrí do prvej zhodnej kategórie)
@@ -199,21 +232,24 @@ def fetch_reseen_articles(run_ids: list[int], run_start: datetime) -> list[dict]
         params["run_start"] = run_start.strftime("%Y-%m-%d %H:%M:%S")
         with engine.begin() as conn:
             rows = conn.execute(text(f"""
-                SELECT COALESCE(a.title_fr, a.title), a.title, a.url,
-                       COALESCE(a.lang_detected, a.language, '?')
+                SELECT COALESCE(a.title_fr, a.title) AS title, a.title AS orig_title, a.url, a.final_url,
+                       COALESCE(a.lang_detected, a.language, '?') AS lang, {_ai_select(conn)},
+                       CASE WHEN a.url LIKE '%.pdf' OR a.final_url LIKE '%.pdf' THEN a.content_text END AS pdf_text
                 FROM articles a
                 JOIN run_articles ra ON ra.article_id = a.id
                 WHERE ra.run_id IN ({placeholders})
                   AND a.first_seen_at < :run_start
                   AND a.content_text IS NOT NULL
                   AND {_EMAIL_FILTER_SQL}
-            """), params).fetchall()
+            """), params).mappings().fetchall()
         result = []
         for r in rows:
-            display_title, orig_title, url, lang = r[0], r[1], r[2], r[3]
+            lang = r["lang"]
             if not lang or lang == "?":
-                lang = _detect_lang(orig_title)
-            result.append({"title": display_title, "url": url, "lang": lang})
+                lang = _detect_lang(r["orig_title"])
+            title, _ = _display_title_snippet(r["title"], None, r["url"], r["final_url"], r["pdf_text"])
+            result.append({"title": title, "url": r["url"], "lang": lang,
+                           "ai": _ai_line(r["ai_relevance"], r["ai_relevance_conf"], r["ai_relevance_reason"])})
         return result
     except Exception as e:
         logger.warning("Nepodarilo sa načítať znovu videné články: %s", e)
@@ -236,7 +272,9 @@ def fetch_todays_articles(run_ids: list[int], run_start: datetime) -> tuple[list
         with engine.begin() as conn:
             rows = conn.execute(text(f"""
                 SELECT a.id, a.title, a.title_fr, a.snippet, a.snippet_fr, a.url,
-                       a.content_text IS NOT NULL AS has_text, COALESCE(a.lang_detected, a.language, '?') AS lang
+                       a.content_text IS NOT NULL AS has_text, COALESCE(a.lang_detected, a.language, '?') AS lang,
+                       a.final_url, {_ai_select(conn)},
+                       CASE WHEN a.url LIKE '%.pdf' OR a.final_url LIKE '%.pdf' THEN a.content_text END AS pdf_text
                 FROM articles a
                 JOIN run_articles ra ON ra.article_id = a.id
                 WHERE ra.run_id IN ({placeholders})
@@ -253,15 +291,20 @@ def fetch_todays_articles(run_ids: list[int], run_start: datetime) -> tuple[list
 
         verified, unverified = [], []
         for r in rows:
-            article_id, title, title_fr, snippet, snippet_fr, url, has_text, lang_detected = r
+            (article_id, title, title_fr, snippet, snippet_fr, url, has_text, lang_detected,
+             final_url, ai_rel, ai_conf, ai_reason, pdf_text) = r
             tr = translations.get(article_id, {})
             if not lang_detected or lang_detected == "?":
                 lang_detected = _detect_lang(title or snippet)
+            shown_title, shown_snippet = _display_title_snippet(
+                tr.get("title_fr") or title_fr or title, tr.get("snippet_fr") or snippet_fr or snippet,
+                url, final_url, pdf_text)
             (verified if has_text else unverified).append({
-                "title":   tr.get("title_fr") or title_fr or title,
-                "snippet": tr.get("snippet_fr") or snippet_fr or snippet,
+                "title":   shown_title,
+                "snippet": shown_snippet,
                 "url":     url,
                 "lang":    lang_detected,
+                "ai":      _ai_line(ai_rel, ai_conf, ai_reason),
             })
         return verified, unverified
     except Exception as e:
@@ -336,6 +379,8 @@ def send_notification(
                 lines.append(f"{i}. [jazyk:{a['lang']}] {a['title'] or '(bez názvu)'}")
                 if a["snippet"]:
                     lines.append(f"   {a['snippet']}")
+                if a.get("ai"):
+                    lines.append(f"   {a['ai']}")
                 lines.append(f"   {a['url']}")
         if unverified:
             lines.append("")
@@ -348,6 +393,8 @@ def send_notification(
             lines.append(f"--- Znovu videné články ({len(reseen)}) ---")
             for i, a in enumerate(reseen, 1):
                 lines.append(f"{i}. [jazyk:{a['lang']}] {a['title'] or '(bez názvu)'}")
+                if a.get("ai"):
+                    lines.append(f"   {a['ai']}")
                 lines.append(f"   {a['url']}")
         body = "\n".join(lines)
 
@@ -420,6 +467,36 @@ def backfill_missing_language(limit: int = 500) -> int:
         return 0
 
 
+def backfill_pdf_language(limit: int = 200) -> int:
+    """Doplní lang_detected pre PDF s textom — PDF nemá metadáta jazyka, staršie články mali jazyk
+    len odhadnutý z titulku (VEĽKÉ PÍSMENÁ → 'de'). Vracia počet aktualizovaných."""
+    try:
+        from config.config import get_db_engine
+        from sqlalchemy import text
+        from text_filters import detect_language
+        engine = get_db_engine()
+        with engine.begin() as conn:
+            rows = conn.execute(text("""
+                SELECT id, LEFT(content_text, 3000) FROM articles
+                WHERE lang_detected IS NULL AND content_text IS NOT NULL AND deleted_at IS NULL
+                  AND (url LIKE '%.pdf' OR final_url LIKE '%.pdf')
+                ORDER BY id DESC LIMIT :limit
+            """), {"limit": limit}).fetchall()
+            updated = 0
+            for article_id, body in rows:
+                lang = detect_language(body)
+                if lang:
+                    conn.execute(text("UPDATE articles SET lang_detected = :lang WHERE id = :id"),
+                                 {"lang": lang, "id": article_id})
+                    updated += 1
+        if rows:
+            logger.info("backfill_pdf_language: aktualizovaných %s/%s PDF", updated, len(rows))
+        return updated
+    except Exception as e:
+        logger.warning("backfill_pdf_language zlyhal: %s", e)
+        return 0
+
+
 def run_pipeline() -> None:
     logger.info("=== Pipeline start ===")
     run_start = datetime.now()
@@ -444,6 +521,7 @@ def run_pipeline() -> None:
 
     if not failed_step:
         backfill_missing_language()
+        backfill_pdf_language()
         inserted, updated, run_ids = _parse_ingest_output(ingest_output)
         articles, unverified = fetch_todays_articles(run_ids, run_start) if (run_ids and inserted > 0) else ([], [])
         reseen = fetch_reseen_articles(run_ids, run_start) if run_ids else []

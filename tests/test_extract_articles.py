@@ -494,7 +494,7 @@ class TestCommercialCheck:
 
 
 class TestRelay:
-    """resolve_and_fetch cez relé (proxy na DS1512 v Alžírsku)."""
+    """resolve_and_fetch cez relé (proxy na RPi v Alžírsku)."""
     PROXY = "http://10.8.0.1:3128"
 
     def _setup(self, monkeypatch, direct, relay, domains=""):

@@ -982,6 +982,15 @@ docker pull eavfeavf/dz-news:latest
 
 ## Changelog
 
+### 2026-11-18 – 2026-11-21
+- **SerpAPI retry**: dočasná chyba („try again later“) sa pri vyhľadávaní 2× zopakuje po 60 s.
+- **Dashboard „Neúspešná extrakcia“** bez irelevantných, zmazaných a stlmených článkov (číslo aj zoznam po prekliku).
+- **AI návrh relevancie k SK–DZ** (`ai_relevance.py`, migrácia `004_ai_relevance.sql`, model NVIDIA nemotron-3-ultra): len návrh v zozname, detaile a filtri, nikdy nemení `relevance`; meranie `eval_ai_relevance.py` — 95 % zhoda mimo mfa.gov.dz. CSV export s textom (`?text=1`), dátové CSV mimo gitu.
+- **Deploy** overí `GIT_COMMIT` bežiacich kontajnerov (server bežal zo starého image); `--restart` stiahne nový image.
+- **Denný mail**: rozpis, prečo sa nové a znovu videné články do mailu nedostali (šport, duplikát, reklama, nečitateľné, irelevantné, bez SK kontextu, nestiahnuté), AI návrh pri každom článku, PDF ako `PDF <doména>` s úryvkom okolo zmienky o Slovensku (rozsypané titulky sa zahodia), jazyk PDF z textu. Denný beh presunutý z 15:00 na **04:30** (`SCHEDULE_TIME`).
+- **MCP pre claude.ai**: kontajner `dz-mcp` (`https://mcp.eavf1621.synology.me/mcp/<MCP_TOKENS>`, DSM reverzný proxy), nástroje `list_articles`, `get_article`, `fetch_article_page` (záloha, keď Claude stránku nestiahne sám; API `/api/articles/<id>/page`), `get_filters`, `zadanie_prehladu` + prompt `prehlad_sk_dz` — prehľad stačí vypýtať krátkou správou („prehľad 14 dní, plyn“), Claude hľadá aj sám na webe. Kópie článkov (rovnaký text pod inou URL, napr. aktualizované verzie na radioalgerie.dz) API zlučuje do poľa `copies` (PDF celých čísel novín sa nezlučujú).
+- **Relé cez Alžírsko**: tinyproxy na Raspberry Pi `192.168.1.20:8888` v alžírskej LAN, dostupné z DS1621 cez existujúci IPsec routerov (router v DZ je za CGNAT, DS1512 sa nepoužíva). `FETCH_RELAY_DOMAINS` (aps.dz, elmoudjahid.dz) idú vždy cez relé, ostatné weby pri timeoute / 403. Overené: aps.dz a elmoudjahid.dz sa stiahnu (#3993, #4011), lexpressiondz.com blokuje aj z DZ. SSH alias `rpi`.
+
 ### 2026-11-16
 - Analýza relé cez DS1512 (Alžírsko) pre weby blokované zo SK, s logikou ponechanou na DS1621.
 - Reverzný SSH tunel na DS1621 cez internet (`eavf1621.synology.me:22222`) funguje ako spojenie, ale sshd v DSM má vypnuté `AllowTcpForwarding` (úprava len cez príkazový riadok — zamietnuté). VPN medzi DZ a SK občas vypadáva.

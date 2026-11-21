@@ -150,6 +150,8 @@ claude.ai pri vlastnom konektore nevie poslať hlavičku s API kľúčom; bez pl
 parametre `dni` a voliteľné `zameranie`). Hovorí, čo do prehľadu patrí (pravidlá ako pri ručnom označovaní),
 že DZ News je len jeden zdroj a Claude má hľadať aj sám na webe (FR/AR/EN, alžírske aj slovenské zdroje),
 a predpisuje výstup vrátane sekcií „Nájdené mimo DB“ a „Poznámky k DB“. Text: `build_overview_prompt()`.
+Stačí aj krátka správa, napr. *„prehľad za 14 dní, zameraj sa na plyn“* — Claude si rovnaké zadanie
+vytiahne nástrojom `zadanie_prehladu` (pokyn je v inštrukciách servera). Nástroje DZ News musia byť v chate zapnuté.
 Články bez textu si Claude najprv stiahne sám z `url`; `fetch_article_page` je záloha, keď to zlyhá.
 
 Claude Code / iní klienti môžu namiesto kľúča v ceste poslať `Authorization: Bearer <kľúč>` na `https://…/mcp`.

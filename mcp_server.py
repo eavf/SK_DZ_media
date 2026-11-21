@@ -40,7 +40,9 @@ server = MCPServer(
         "Ak článok nemá text (has_text = false, fetch_error uvádza dôvod), stiahni stránku z poľa url najprv "
         "vlastným nástrojom na čítanie webu; až keď to zlyhá (blokovanie, 403), použi fetch_article_page — stiahne "
         "ju zo servera aplikácie; pri method = page_text je v texte aj menu webu, vyber z neho len článok. "
-        "Táto databáza je len jeden zdroj — pri prehľadoch hľadaj aj sám na webe (prompt prehlad_sk_dz). "
+        "Keď používateľ chce prehľad / súhrn / čo sa udialo (aj krátko, napr. „prehľad 14 dní, plyn“), "
+        "najprv zavolaj zadanie_prehladu(dni, zameranie) a postupuj presne podľa vráteného zadania — "
+        "databáza je len jeden zdroj, hľadaj aj sám na webe. "
         "Arabské články majú francúzsky preklad v poliach *_fr. Odpovedaj po slovensky, ak používateľ nepíše inak."
     ),
 )
@@ -217,6 +219,19 @@ def prehlad_sk_dz(dni: str = "7", zameranie: str = "") -> str:
         zameranie: voliteľné — napr. „ekonomika“, „návšteva ministra“, „plyn“
     """
     return build_overview_prompt(dni, zameranie)
+
+
+@server.tool()
+def zadanie_prehladu(dni: int = 7, zameranie: str = "") -> str:
+    """Úplné zadanie prehľadu vzťahov Slovensko–Alžírsko (čo patrí/nepatrí, zdroje, formát výstupu).
+
+    Zavolaj ako prvé, keď používateľ chce prehľad alebo súhrn za obdobie, a potom postupuj podľa neho.
+
+    Args:
+        dni: počet dní dozadu (predvolene 7)
+        zameranie: voliteľné — napr. „ekonomika“, „plyn“, „návšteva ministra“
+    """
+    return build_overview_prompt(str(dni), zameranie)
 
 
 # ── vzdialený režim (HTTP) ─────────────────────────────────────────────────────

@@ -73,3 +73,13 @@ class TestOverviewPrompt:
         import asyncio
         names = [p.name for p in asyncio.run(mcp_server.server.list_prompts())]
         assert "prehlad_sk_dz" in names
+
+
+class TestOverviewTool:
+    def test_tool_listed_and_returns_prompt(self):
+        import asyncio
+        names = [t.name for t in asyncio.run(mcp_server.server.list_tools())]
+        assert "zadanie_prehladu" in names
+        text = mcp_server.zadanie_prehladu(14, "plyn")
+        assert text == mcp_server.build_overview_prompt("14", "plyn")
+        assert "zadanie_prehladu" in mcp_server.server.instructions

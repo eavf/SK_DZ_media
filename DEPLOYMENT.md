@@ -271,6 +271,8 @@ sudo /usr/local/bin/docker exec -it dz-app python create_admin.py
 |---|---|
 | `002_user_roles.sql` | CHECK constraint na roly `user` / `power` / `admin` |
 | `003_ai_classification.sql` | stĺpce `ai_label`, `ai_checked_at` + index (AI filter športu) — **nutná pred deployom verzie s AI filtrom**, inak `/browse` spadne |
+| `004_ai_relevance.sql` | stĺpce `ai_relevance*` (AI návrh relevancie) — bez nej sa návrh preskočí |
+| `005_user_password_change.sql` | stĺpce `users.must_change_password`, `password_changed_at` — vynútená zmena hesla adminom; bez nej funguje len zmena vlastného hesla |
 
 Príklad (003) — vlož do phpMyAdmin → SQL:
 

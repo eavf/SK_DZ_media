@@ -93,10 +93,11 @@ _ROLE_RANK = {"user": 1, "power": 2, "admin": 3}
 
 
 class User(UserMixin):
-    def __init__(self, id: int, username: str, role: str):
+    def __init__(self, id: int, username: str, role: str, must_change_password: bool = False):
         self.id = id
         self.username = username
         self.role = role
+        self.must_change_password = bool(must_change_password)
 
     def has_role(self, minimum: str) -> bool:
         return _ROLE_RANK.get(self.role, 0) >= _ROLE_RANK.get(minimum, 99)
@@ -116,16 +117,58 @@ login_manager.login_message = "Pre túto akciu sa musíš prihlásiť."
 login_manager.login_message_category = "warn"
 
 
+MIN_PASSWORD_LEN = 8
+_password_columns_ready = False
+
+
+def password_columns_ready(conn) -> bool:
+    """Existuje stĺpec users.must_change_password (migrácia 005)? Pamätá si len kladný výsledok."""
+    global _password_columns_ready
+    if not _password_columns_ready:
+        _password_columns_ready = bool(conn.execute(text("""
+            SELECT COUNT(*) FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'must_change_password'
+        """)).scalar())
+    return _password_columns_ready
+
+
+def _must_change_sql(conn) -> str:
+    return "must_change_password" if password_columns_ready(conn) else "0"
+
+
 @login_manager.user_loader
 def load_user(user_id: str):
     engine = get_db_engine()
     with engine.connect() as conn:
         row = conn.execute(
-            text("SELECT id, username, role FROM users WHERE id = :id"),
+            text(f"SELECT id, username, role, {_must_change_sql(conn)} FROM users WHERE id = :id"),
             {"id": int(user_id)},
         ).fetchone()
     if row:
-        return User(row[0], row[1], row[2])
+        return User(row[0], row[1], row[2], row[3])
+    return None
+
+
+# po vynútení adminom smie používateľ len zmeniť heslo alebo sa odhlásiť
+_PASSWORD_CHANGE_ALLOWED = {"account_password", "logout", "login", "static"}
+
+
+@app.before_request
+def enforce_password_change():
+    if (request.endpoint not in _PASSWORD_CHANGE_ALLOWED and not request.path.startswith("/api/")
+            and current_user.is_authenticated and current_user.must_change_password):
+        flash("Administrátor požaduje zmenu hesla. Pred ďalšou prácou si nastav nové heslo.", "warn")
+        return redirect(url_for("account_password"))
+
+
+def validate_new_password(new: str, confirm: str, current: str | None = None) -> str | None:
+    """Chybová hláška alebo None, ak je nové heslo v poriadku."""
+    if len(new) < MIN_PASSWORD_LEN:
+        return f"Nové heslo musí mať aspoň {MIN_PASSWORD_LEN} znakov."
+    if new != confirm:
+        return "Nové heslo a jeho potvrdenie sa nezhodujú."
+    if current is not None and new == current:
+        return "Nové heslo musí byť iné ako súčasné."
     return None
 
 
@@ -1931,12 +1974,61 @@ _VALID_ROLES = ("user", "power", "admin")
 def users_page():
     engine = get_db_engine()
     with engine.connect() as conn:
-        rows = conn.execute(text("""
-            SELECT id, username, role, created_at
+        ready = password_columns_ready(conn)
+        cols = "must_change_password, password_changed_at" if ready else "0 AS must_change_password, NULL AS password_changed_at"
+        rows = conn.execute(text(f"""
+            SELECT id, username, role, created_at, {cols}
             FROM users
             ORDER BY role DESC, username
         """)).mappings().fetchall()
-    return render_template("users.html", users=rows)
+    return render_template("users.html", users=rows, password_ready=ready, min_len=MIN_PASSWORD_LEN)
+
+
+@app.post("/user/<int:user_id>/force-password")
+@admin_required
+def user_force_password(user_id: int):
+    """Vynúti (alebo zruší) zmenu hesla pri ďalšej požiadavke používateľa."""
+    if user_id == current_user.id:
+        flash("Vlastné heslo si zmeň cez „Zmeniť heslo“ v hornom menu.", "warn")
+        return redirect(url_for("users_page"))
+    force = 1 if request.form.get("force", "1") == "1" else 0
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        if not password_columns_ready(conn):
+            flash("Najprv spusti migráciu 005_user_password_change.sql.", "warn")
+            return redirect(url_for("users_page"))
+        n = conn.execute(text("UPDATE users SET must_change_password = :f WHERE id = :id"),
+                         {"f": force, "id": user_id}).rowcount
+    if not n:
+        flash("Používateľ neexistuje.", "warn")
+    else:
+        logger.info("Force password change: id=%s force=%s by=%s", user_id, force, current_user.username)
+        flash("Používateľ si pri ďalšej akcii musí zmeniť heslo." if force else "Vynútená zmena hesla zrušená.", "ok")
+    return redirect(url_for("users_page"))
+
+
+@app.post("/user/<int:user_id>/reset-password")
+@admin_required
+def user_reset_password(user_id: int):
+    """Admin nastaví dočasné heslo; po migrácii 005 si ho používateľ musí pri prihlásení zmeniť."""
+    if user_id == current_user.id:
+        flash("Vlastné heslo si zmeň cez „Zmeniť heslo“ v hornom menu.", "warn")
+        return redirect(url_for("users_page"))
+    new = request.form.get("password", "")
+    if len(new) < MIN_PASSWORD_LEN:
+        flash(f"Heslo musí mať aspoň {MIN_PASSWORD_LEN} znakov.", "warn")
+        return redirect(url_for("users_page"))
+    engine = get_db_engine()
+    with engine.begin() as conn:
+        extra = ", must_change_password = 1" if password_columns_ready(conn) else ""
+        n = conn.execute(text(f"UPDATE users SET password_hash = :h{extra} WHERE id = :id"),
+                         {"h": generate_password_hash(new), "id": user_id}).rowcount
+    if not n:
+        flash("Používateľ neexistuje.", "warn")
+    else:
+        logger.info("Password reset: id=%s by=%s", user_id, current_user.username)
+        flash("Heslo nastavené." + (" Používateľ si ho pri prihlásení musí zmeniť." if extra else ""), "ok")
+    return redirect(url_for("users_page"))
 
 
 @app.post("/user/create")
@@ -1961,8 +2053,10 @@ def user_create():
         if existing:
             flash(f"Používateľ '{username}' už existuje.", "warn")
             return redirect(url_for("users_page"))
+        force = request.form.get("force_change") == "1" and password_columns_ready(conn)
         conn.execute(
-            text("INSERT INTO users (username, password_hash, role) VALUES (:u, :h, :r)"),
+            text("INSERT INTO users (username, password_hash, role{c}) VALUES (:u, :h, :r{v})".format(
+                c=", must_change_password" if force else "", v=", 1" if force else "")),
             {"u": username, "h": generate_password_hash(password), "r": role},
         )
     logger.info("User created: username=%s role=%s by=%s", username, role, current_user.username)
@@ -2021,16 +2115,44 @@ def login():
         engine = get_db_engine()
         with engine.connect() as conn:
             row = conn.execute(
-                text("SELECT id, username, password_hash, role FROM users WHERE username = :u"),
+                text(f"SELECT id, username, password_hash, role, {_must_change_sql(conn)} FROM users WHERE username = :u"),
                 {"u": username},
             ).fetchone()
         if row and check_password_hash(row[2], password):
-            user = User(row[0], row[1], row[3])
+            user = User(row[0], row[1], row[3], row[4])
             login_user(user)
             next_page = request.args.get("next")
             return redirect(next_page or url_for("dashboard"))
         flash("Nesprávne meno alebo heslo.", "error")
     return render_template("login.html")
+
+
+@app.route("/account/password", methods=["GET", "POST"])
+def account_password():
+    if not current_user.is_authenticated:
+        return login_manager.unauthorized()
+    if request.method == "POST":
+        current = request.form.get("current_password", "")
+        new = request.form.get("new_password", "")
+        confirm = request.form.get("confirm_password", "")
+        engine = get_db_engine()
+        with engine.begin() as conn:
+            row = conn.execute(text("SELECT password_hash FROM users WHERE id = :id"),
+                               {"id": current_user.id}).fetchone()
+            if not row or not check_password_hash(row[0], current):
+                flash("Súčasné heslo nie je správne.", "error")
+                return redirect(url_for("account_password"))
+            error = validate_new_password(new, confirm, current)
+            if error:
+                flash(error, "warn")
+                return redirect(url_for("account_password"))
+            extra = ", must_change_password = 0, password_changed_at = NOW()" if password_columns_ready(conn) else ""
+            conn.execute(text(f"UPDATE users SET password_hash = :h{extra} WHERE id = :id"),
+                         {"h": generate_password_hash(new), "id": current_user.id})
+        logger.info("Password changed: username=%s", current_user.username)
+        flash("Heslo bolo zmenené.", "ok")
+        return redirect(url_for("dashboard"))
+    return render_template("account_password.html", min_len=MIN_PASSWORD_LEN)
 
 
 @app.post("/logout")

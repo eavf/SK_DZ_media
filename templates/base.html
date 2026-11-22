@@ -30,6 +30,10 @@
         {% block topbar_right_extra %}{% endblock %}
         {% if current_user.is_authenticated %}
           <span class="pill admin">{{ current_user.username }} ({{ current_user.role }})</span>
+          <a class="pill {% if request.path == '/account/password' %}ok{% endif %}" href="/account/password">Zmeniť heslo</a>
+          {% if current_user.is_admin %}
+            <a class="pill {% if request.path == '/users' %}ok{% endif %}" href="/users">Používatelia</a>
+          {% endif %}
           <form method="post" action="/logout" style="display:inline">
             <button type="submit" class="pill">Odhlásiť</button>
           </form>
@@ -49,7 +53,6 @@
       {% if current_user.is_admin %}
         <span class="pill admin" style="opacity:.7;font-size:11px">Admin</span>
         <a class="pill {% if request.path == '/sources' %}ok{% endif %}" href="/sources">Zdroje</a>
-        <a class="pill {% if request.path == '/users' %}ok{% endif %}" href="/users">Používatelia</a>
         <a class="pill {% if request.path == '/admin/search-terms' %}ok{% endif %}" href="/admin/search-terms">Search Terms</a>
         <a class="pill {% if request.path == '/admin/queries' %}ok{% endif %}" href="/admin/queries">Queries</a>
         <a class="pill {% if request.path == '/admin/maintenance' %}ok{% endif %}" href="/admin/maintenance">Údržba</a>

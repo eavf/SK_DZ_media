@@ -104,7 +104,7 @@ Web dashboard              (browse, label, translate, export)
   - `/admin/queries`, `/admin/search-terms`, `/admin/maintenance` (translator backend, fix-dates, DB backup/restore)
 - **api.py** — Read-only JSON API blueprint (`/api`) for AI agents. Auth: `API_KEYS` from `.env` (comma-separated) via `Authorization: Bearer <key>` or `X-API-Key`; without keys the API returns 503. Endpoints: `GET /api/articles` (period `from`/`to`, default last 7 days, `date_field=found|published`, filters `relevance`, `topic` (computed from `topics.json` keywords), `lang`, `source`, `has_text`, `include_text`, `limit`/`offset`), `GET /api/articles/<id>` (full text), `GET /api/articles/<id>/page` (fetches the original page live via `resolve_and_fetch` → trafilatura text, else whole visible page text `html2txt`, or PDF Slovak pages; read-only, nothing stored; list items carry `fetch_error` when text is missing; copies — the same text under another URL, e.g. updated versions on radioalgerie.dz, which exact `content_hash` dedup misses — are merged by `group_copies()`: 5-word shingles, ≥ 80 % of the shorter text contained in the longer, texts ≥ 150 shingles, PDFs excluded (whole newspaper issues); the longest version stays with the others in `copies`, `copies_merged` in the response, `copies=1` disables), `GET /api/meta`, `GET /api/openapi.json` (public). Deleted articles are never returned.
 - **mcp_server.py** — MCP server (`mcp` SDK 2.x, `requirements-mcp.txt`, installed in the image) exposing tools `list_articles`, `get_article`, `fetch_article_page` (fallback when Claude's own web fetch of `url` fails), `get_filters` over the REST API (`list_articles` returns copies merged, `include_copies` to list them), `zadanie_prehladu` (returns the overview brief so a short chat message like "prehľad 14 dní" is enough; the server instructions tell Claude to call it first), and prompt `prehlad_sk_dz` (args `dni`, `zameranie`; `build_overview_prompt()` — what counts as SK–DZ relevant, search the web too with terms from `config/search_terms.json` + `sources.json`, fixed output sections incl. articles missing from the DB). Two modes: stdio on the AI client's machine (`DZ_API_URL` + `DZ_API_KEY`), or remote `--http` in container `dz-mcp` (streamable HTTP, stateless, `127.0.0.1:5090`, behind DSM reverse proxy `https://mcp.eavf1621.synology.me`) for claude.ai custom connectors. `TokenAuth` ASGI wrapper accepts `/mcp/<key>` (claude.ai cannot send headers) or `/mcp` with `Authorization: Bearer`; keys `MCP_TOKENS`, default `API_KEYS`; anything else → 404; `/health` → ok; uvicorn access log is off (it would log the key). Setup steps in `DEPLOYMENT.md`.
-- **Roles** — hierarchy `user < power < admin` (`User.has_role()`), decorators `user_required`, `power_required`, `admin_required`.
+- **Roles** — hierarchy `user < power < admin` (`User.has_role()`), decorators `user_required`, `power_required`, `admin_required`. Passwords: every logged-in user changes their own at `/account/password` (current password required, min. `MIN_PASSWORD_LEN` 8 chars); admin on `/users` can force a change (`/user/<id>/force-password`, column `users.must_change_password`) or set a temporary password (`/user/<id>/reset-password`, also forces the change); new users get the force flag by default. `enforce_password_change()` (before_request) redirects a forced user to `/account/password` (only logout allowed; `/api` untouched). Columns come from migration `005_user_password_change.sql` (`password_columns_ready()`); without it only own password change works. "Zmeniť heslo" and (admin) "Používatelia" are in the top bar.
 
 ### Configuration
 
@@ -141,7 +141,7 @@ Static config files in `config/`:
 
 ### Database
 
-MySQL with utf8mb4 (MariaDB 11.4). Every connection sets `time_zone` to the process' UTC offset (`TZ`, `Africa/Algiers`) in `get_db_engine()`, so `NOW()` matches run folder names (MariaDB on Synology runs in CET/CEST; rows written before 11/2026 in summer are 1 h ahead). Main tables: `articles`, `sources`, `runs`, `run_articles`, `users`. Schema and migrations live in `migrations/` (`000_init_schema.sql`, `001_add_users.sql`, `002_user_roles.sql`, `003_ai_classification.sql`, `004_ai_relevance.sql`). The app uses soft-delete (`deleted_at` timestamp) and domain muting (`sources.is_avoided`).
+MySQL with utf8mb4 (MariaDB 11.4). Every connection sets `time_zone` to the process' UTC offset (`TZ`, `Africa/Algiers`) in `get_db_engine()`, so `NOW()` matches run folder names (MariaDB on Synology runs in CET/CEST; rows written before 11/2026 in summer are 1 h ahead). Main tables: `articles`, `sources`, `runs`, `run_articles`, `users`. Schema and migrations live in `migrations/` (`000_init_schema.sql`, `001_add_users.sql`, `002_user_roles.sql`, `003_ai_classification.sql`, `004_ai_relevance.sql`, `005_user_password_change.sql`). The app uses soft-delete (`deleted_at` timestamp) and domain muting (`sources.is_avoided`).
 
 #### Table: `articles`
 
@@ -192,7 +192,7 @@ CREATE TABLE `articles` (
 
 #### Table: `users`
 
-`id`, `username` (UNIQUE), `password_hash`, `role` (`user`/`power`/`admin`, CHECK constraint), `created_at`.
+`id`, `username` (UNIQUE), `password_hash`, `role` (`user`/`power`/`admin`, CHECK constraint), `created_at`, `must_change_password` (tinyint, default 0), `password_changed_at` (migration 005).
 
 ### Docker
 

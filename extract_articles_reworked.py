@@ -212,7 +212,7 @@ FETCH_TIMEOUT: tuple[int, int] = (15, 60)
 # Relé: HTTP proxy (tinyproxy) na RPi v Alžírsku cez IPsec routerov (FETCH_RELAY_PROXY, napr. http://192.168.1.20:8888).
 # Niektoré alžírske weby zo Slovenska nejdú (timeout, 403), z alžírskej IP áno. Domény z FETCH_RELAY_DOMAINS
 # idú rovno cez relé, ostatné len keď priame stiahnutie zlyhá timeoutom, chybou spojenia alebo 403/451.
-RELAY_TIMEOUT: tuple[int, int] = (20, 90)   # stratová linka DZ→SK (~5 KB/s)
+RELAY_TIMEOUT: tuple[int, int] = (10, 90)   # spojenie s proxy cez IPsec; čítanie: stratová linka DZ→SK
 RELAY_STATUSES = (403, 451)
 
 
@@ -279,7 +279,12 @@ def resolve_and_fetch(url: str, timeout: tuple[int, int] | None = None) -> tuple
     proxy = _relay_proxy()
     if proxy and wants_relay(url):
         log.info("relé (doména v FETCH_RELAY_DOMAINS): %s", url)
-        return _fetch(url, RELAY_TIMEOUT, proxy)
+        try:
+            return _fetch(url, RELAY_TIMEOUT, proxy)
+        except requests.ConnectionError as e:
+            # relé nedostupné (IPsec dole, RPi vypnuté) — web niekedy ide aj priamo zo SK
+            log.warning("relé nedostupné (%s: %s) → skúšam priamo: %s", type(e).__name__, e, url)
+            return _fetch(url, timeout)
     try:
         return _fetch(url, timeout)
     except requests.RequestException as e:

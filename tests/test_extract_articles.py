@@ -528,6 +528,19 @@ class TestRelay:
         assert ear.resolve_and_fetch("https://www.aps.dz/fr/a")[1] == 200
         assert calls == [(self.PROXY, ear.RELAY_TIMEOUT)]
 
+    def test_relay_domain_proxy_down_tries_direct(self, monkeypatch):
+        import requests, extract_articles_reworked as ear
+        calls = self._setup(monkeypatch, direct=200, relay=requests.ConnectTimeout("ipsec dole"), domains="aps.dz")
+        assert ear.resolve_and_fetch("https://www.aps.dz/fr/a")[1] == 200
+        assert [c[0] for c in calls] == [self.PROXY, None]
+
+    def test_relay_domain_read_timeout_not_retried_direct(self, monkeypatch):
+        import pytest, requests, extract_articles_reworked as ear
+        calls = self._setup(monkeypatch, direct=200, relay=requests.ReadTimeout("pomalý web"), domains="aps.dz")
+        with pytest.raises(requests.ReadTimeout):
+            ear.resolve_and_fetch("https://www.aps.dz/fr/a")
+        assert len(calls) == 1
+
     def test_timeout_falls_back_to_relay(self, monkeypatch):
         import requests, extract_articles_reworked as ear
         calls = self._setup(monkeypatch, direct=requests.ReadTimeout("t"), relay=200)
